@@ -157,10 +157,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
         <div className="container mx-auto px-4 mt-12 pt-8 border-t border-border/50 text-center space-y-4">
-          <div className="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-6 text-sm font-medium text-muted-foreground">
-            <span>Sponsored by <span className="text-foreground font-bold">Lions Club Of Gampaha Metro</span></span>
-            <span className="hidden md:block w-1.5 h-1.5 rounded-full bg-border" />
-            <span>Powered By <span className="text-foreground font-bold">Leo Club Of Gampaha Metro Juniors</span></span>
+          <div className="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-6 text-sm font-bold text-foreground uppercase tracking-wider">
+            <span>Sponsored by Lions Club Of Gampaha Metro</span>
+            <span className="hidden md:block w-1.5 h-1.5 rounded-full bg-primary" />
+            <span>Powered By Leo Club Of Gampaha Metro Juniors</span>
           </div>
           <p className="text-xs text-muted-foreground opacity-70">
             © 2026 Gampahin Husmak. All rights reserved.

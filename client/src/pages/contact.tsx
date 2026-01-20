@@ -86,30 +86,33 @@ export default function Contact() {
             {/* Sponsors */}
             <div className="space-y-6">
               <div className="flex items-center gap-3 text-primary">
-                <ShieldCheck className="w-8 h-8" />
-                <h3 className="font-heading font-bold text-2xl uppercase tracking-wider">Our Sponsors</h3>
+                <ShieldCheck className="w-10 h-10" />
+                <h2 className="font-heading font-black text-4xl uppercase tracking-tight">SPONSOR</h2>
               </div>
-              <ul className="space-y-3 text-muted-foreground text-lg">
-                <li className="font-bold text-foreground text-xl">Lions Club Of Gampaha Metro Juniors</li>
-                <li>State Ministry of Environment</li>
-                <li>Private Sector Partners</li>
-                <li>Local Business Councils</li>
-              </ul>
+              <div className="space-y-4">
+                <p className="font-bold text-foreground text-2xl leading-tight">Lions Club Of Gampaha Metro Juniors</p>
+                <div className="h-1 w-20 bg-primary/20 rounded-full" />
+                <ul className="space-y-3 text-muted-foreground text-lg">
+                  <li>State Ministry of Environment</li>
+                  <li>Private Sector Partners</li>
+                  <li>Local Business Councils</li>
+                </ul>
+              </div>
             </div>
 
             {/* Development Info */}
             <div className="space-y-6">
               <div className="flex items-center gap-3 text-primary">
-                <Code className="w-8 h-8" />
-                <h3 className="font-heading font-bold text-2xl uppercase tracking-wider">Web App Info</h3>
+                <Code className="w-10 h-10" />
+                <h2 className="font-heading font-black text-4xl uppercase tracking-tight">DEVELOPER TEAM</h2>
               </div>
               <div className="space-y-4">
                 <p className="text-muted-foreground text-lg leading-relaxed">
                   Gampahin Husmak is a Progressive Web Application (PWA) built for high-performance and environmental impact tracking.
                 </p>
-                <div className="p-6 bg-muted rounded-2xl border-2 border-primary/20 shadow-inner">
-                  <p className="text-sm font-bold text-muted-foreground uppercase mb-2">Developed by</p>
-                  <p className="text-2xl font-black text-primary tracking-tight">DEVELOPER TEAM</p>
+                <div className="p-8 bg-primary/5 rounded-3xl border-2 border-primary/20 shadow-inner">
+                  <p className="text-sm font-black text-primary uppercase mb-2 tracking-widest">Proudly Crafted by</p>
+                  <p className="text-4xl font-black text-foreground tracking-tighter">DEVELOPER TEAM</p>
                 </div>
               </div>
             </div>
