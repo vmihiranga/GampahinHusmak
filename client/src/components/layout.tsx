@@ -136,6 +136,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <li>District Secretariat, Gampaha</li>
               <li>info@gampahinhusmak.lk</li>
               <li>+94 33 222 2222</li>
+              <li className="pt-2 text-xs opacity-70">Developed by <span className="font-semibold">Developer Team</span></li>
             </ul>
           </div>
 
