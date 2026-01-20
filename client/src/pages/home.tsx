@@ -21,7 +21,7 @@ export default function Home() {
           <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
         </div>
         
-        <div className="container relative z-10 px-4 text-center text-white space-y-6 max-w-4xl mx-auto">
+        <div className="container relative z-10 px-4 text-center text-white space-y-6 max-w-4xl mx-auto pt-20">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-sm font-medium animate-in fade-in slide-in-from-bottom-4 duration-700">
             <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
             Launch Initiative for Independence Day

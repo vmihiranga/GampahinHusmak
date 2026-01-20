@@ -53,13 +53,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </Link>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-4">
+          <nav className="hidden md:flex items-center gap-2">
             <NavLink href="/">Home</NavLink>
             <NavLink href="/gallery">Gallery</NavLink>
             <NavLink href="/contact">Contact</NavLink>
             <NavLink href="/dashboard">Dashboard</NavLink>
             <NavLink href="/admin">Admin</NavLink>
-            <div className={cn("h-4 w-px mx-4", isHome ? "bg-white/20" : "bg-border")} />
+            <div className={cn("h-4 w-px mx-2", isHome ? "bg-white/20" : "bg-border")} />
             <Link href="/auth">
               <Button 
                 variant="default" 
