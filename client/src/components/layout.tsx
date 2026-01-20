@@ -55,6 +55,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-2">
             <NavLink href="/">Home</NavLink>
+            <NavLink href="/gallery">Gallery</NavLink>
+            <NavLink href="/contact">Contact</NavLink>
             <NavLink href="/dashboard">Dashboard</NavLink>
             <NavLink href="/admin">Admin</NavLink>
             <div className={cn("h-4 w-px mx-2", isHome ? "bg-white/20" : "bg-border")} />
@@ -89,6 +91,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             isHome ? "bg-black/60 backdrop-blur-lg border-white/10" : "bg-background border-border"
           )}>
             <NavLink href="/">Home</NavLink>
+            <NavLink href="/gallery">Gallery</NavLink>
+            <NavLink href="/contact">Contact</NavLink>
             <NavLink href="/dashboard">Dashboard</NavLink>
             <NavLink href="/admin">Admin</NavLink>
             <Link href="/auth">
@@ -123,10 +127,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div>
             <h3 className="font-heading font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="#" className="hover:text-primary">About Us</a></li>
-              <li><a href="#" className="hover:text-primary">Our Mission</a></li>
-              <li><a href="#" className="hover:text-primary">Gallery</a></li>
-              <li><a href="#" className="hover:text-primary">Contact</a></li>
+              <li><Link href="/gallery" className="hover:text-primary">Gallery</Link></li>
+              <li><Link href="/contact" className="hover:text-primary">Contact</Link></li>
+              <li><Link href="/dashboard" className="hover:text-primary">Dashboard</Link></li>
+              <li><Link href="/admin" className="hover:text-primary">Admin</Link></li>
             </ul>
           </div>
 
