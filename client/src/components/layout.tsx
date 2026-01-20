@@ -10,14 +10,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const NavLink = ({ href, children, icon: Icon }: { href: string; children: React.ReactNode; icon?: any }) => {
     const isActive = location === href;
+    const isHome = location === "/";
     return (
       <Link href={href}>
         <a 
           className={cn(
             "flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors rounded-md",
             isActive 
-              ? "bg-primary/10 text-primary" 
-              : "text-muted-foreground hover:text-primary hover:bg-primary/5"
+              ? (isHome ? "bg-white/20 text-white" : "bg-primary/10 text-primary")
+              : (isHome ? "text-white/80 hover:text-white hover:bg-white/10" : "text-muted-foreground hover:text-primary hover:bg-primary/5")
           )}
           onClick={() => setIsMobileMenuOpen(false)}
         >
@@ -28,17 +29,25 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     );
   };
 
+  const isHome = location === "/";
+
   return (
     <div className="min-h-screen flex flex-col bg-background font-sans">
-      <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
+      <header className={cn(
+        "absolute top-0 z-50 w-full bg-transparent transition-all duration-300",
+        !isHome && "relative bg-background border-b"
+      )}>
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <Link href="/">
             <a className="flex items-center gap-2 group">
               <div className="bg-primary text-primary-foreground p-2 rounded-lg group-hover:scale-105 transition-transform">
                 <Leaf className="w-5 h-5" />
               </div>
-              <span className="font-heading font-bold text-xl text-foreground tracking-tight">
-                Gampahin <span className="text-primary">Husmak</span>
+              <span className={cn(
+                "font-heading font-bold text-xl tracking-tight",
+                isHome ? "text-white" : "text-foreground"
+              )}>
+                Gampahin <span className={isHome ? "text-green-400" : "text-primary"}>Husmak</span>
               </span>
             </a>
           </Link>
@@ -48,9 +57,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <NavLink href="/">Home</NavLink>
             <NavLink href="/dashboard">Dashboard</NavLink>
             <NavLink href="/admin">Admin</NavLink>
-            <div className="h-4 w-px bg-border mx-2" />
+            <div className={cn("h-4 w-px mx-2", isHome ? "bg-white/20" : "bg-border")} />
             <Link href="/auth">
-              <Button variant="default" size="sm" className="gap-2">
+              <Button 
+                variant="default" 
+                size="sm" 
+                className={cn(
+                  "gap-2",
+                  isHome ? "bg-green-600 hover:bg-green-500 text-white border-none shadow-lg shadow-green-900/20" : ""
+                )}
+              >
                 <LogIn className="w-4 h-4" />
                 Login
               </Button>
@@ -59,7 +75,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
           {/* Mobile Menu Toggle */}
           <button 
-            className="md:hidden p-2 text-foreground"
+            className={cn("md:hidden p-2", isHome ? "text-white" : "text-foreground")}
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
             {isMobileMenuOpen ? <X /> : <Menu />}
@@ -68,12 +84,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
         {/* Mobile Nav */}
         {isMobileMenuOpen && (
-          <div className="md:hidden border-t bg-background p-4 flex flex-col gap-2 shadow-lg">
+          <div className={cn(
+            "md:hidden border-t p-4 flex flex-col gap-2 shadow-lg",
+            isHome ? "bg-black/60 backdrop-blur-lg border-white/10" : "bg-background border-border"
+          )}>
             <NavLink href="/">Home</NavLink>
             <NavLink href="/dashboard">Dashboard</NavLink>
             <NavLink href="/admin">Admin</NavLink>
             <Link href="/auth">
-              <Button className="w-full mt-4 gap-2">
+              <Button className={cn(
+                "w-full mt-4 gap-2",
+                isHome ? "bg-green-600 hover:bg-green-500 text-white border-none" : ""
+              )}>
                 <LogIn className="w-4 h-4" />
                 Login
               </Button>
