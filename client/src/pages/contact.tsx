@@ -70,12 +70,12 @@ export default function Contact() {
         <div className="pt-16 border-t border-border/50">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             {/* Supporting People */}
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div className="flex items-center gap-3 text-primary">
-                <Heart className="w-6 h-6" />
-                <h3 className="font-heading font-bold text-xl uppercase tracking-wider">Supporting People</h3>
+                <Heart className="w-8 h-8" />
+                <h3 className="font-heading font-bold text-2xl uppercase tracking-wider">Supporting People</h3>
               </div>
-              <ul className="space-y-2 text-muted-foreground">
+              <ul className="space-y-3 text-muted-foreground text-lg">
                 <li>Local Community Volunteers</li>
                 <li>District Agricultural Officers</li>
                 <li>Environmental Activists</li>
@@ -84,32 +84,32 @@ export default function Contact() {
             </div>
 
             {/* Sponsors */}
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div className="flex items-center gap-3 text-primary">
-                <ShieldCheck className="w-6 h-6" />
-                <h3 className="font-heading font-bold text-xl uppercase tracking-wider">Our Sponsors</h3>
+                <ShieldCheck className="w-8 h-8" />
+                <h3 className="font-heading font-bold text-2xl uppercase tracking-wider">Our Sponsors</h3>
               </div>
-              <ul className="space-y-2 text-muted-foreground">
+              <ul className="space-y-3 text-muted-foreground text-lg">
+                <li className="font-bold text-foreground text-xl">Lions Club Of Gampaha Metro Juniors</li>
                 <li>State Ministry of Environment</li>
                 <li>Private Sector Partners</li>
                 <li>Local Business Councils</li>
-                <li>Eco-Friendly Foundations</li>
               </ul>
             </div>
 
             {/* Development Info */}
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div className="flex items-center gap-3 text-primary">
-                <Code className="w-6 h-6" />
-                <h3 className="font-heading font-bold text-xl uppercase tracking-wider">Web App Info</h3>
+                <Code className="w-8 h-8" />
+                <h3 className="font-heading font-bold text-2xl uppercase tracking-wider">Web App Info</h3>
               </div>
-              <div className="space-y-3">
-                <p className="text-muted-foreground text-sm leading-relaxed">
+              <div className="space-y-4">
+                <p className="text-muted-foreground text-lg leading-relaxed">
                   Gampahin Husmak is a Progressive Web Application (PWA) built for high-performance and environmental impact tracking.
                 </p>
-                <div className="p-3 bg-muted rounded-lg border border-border">
-                  <p className="text-xs font-medium text-foreground">Developed by</p>
-                  <p className="text-sm font-bold text-primary">Developer Team</p>
+                <div className="p-6 bg-muted rounded-2xl border-2 border-primary/20 shadow-inner">
+                  <p className="text-sm font-bold text-muted-foreground uppercase mb-2">Developed by</p>
+                  <p className="text-2xl font-black text-primary tracking-tight">DEVELOPER TEAM</p>
                 </div>
               </div>
             </div>
