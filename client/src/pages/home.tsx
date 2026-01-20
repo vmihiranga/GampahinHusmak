@@ -11,7 +11,7 @@ export default function Home() {
   return (
     <Layout>
       {/* Hero Section */}
-      <section className="relative min-h-[600px] flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-[750px] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img 
             src={heroImage} 
@@ -21,7 +21,7 @@ export default function Home() {
           <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
         </div>
         
-        <div className="container relative z-10 px-4 text-center text-white space-y-6 max-w-4xl mx-auto pt-20">
+        <div className="container relative z-10 px-4 text-center text-white space-y-8 max-w-4xl mx-auto pt-24 pb-32">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-sm font-medium animate-in fade-in slide-in-from-bottom-4 duration-700">
             <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
             Launch Initiative for Independence Day
@@ -42,9 +42,9 @@ export default function Home() {
                 Join Now
               </Button>
             </Link>
-            <Link href="/about">
+            <Link href="/gallery">
               <Button size="lg" variant="outline" className="bg-white/10 hover:bg-white/20 text-white border-white/20 min-w-[160px] h-12 text-base backdrop-blur-sm">
-                Learn More
+                Gallery
               </Button>
             </Link>
           </div>
@@ -54,7 +54,7 @@ export default function Home() {
       {/* Stats Section */}
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 -mt-32 relative z-20">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 -mt-36 relative z-20">
             <StatCard icon={TreePine} value={STATS.totalTrees} label="Trees Planted" />
             <StatCard icon={Users} value={STATS.activeUsers} label="Active Volunteers" />
             <StatCard icon={Map} value={STATS.locations} label="Plantation Sites" />
