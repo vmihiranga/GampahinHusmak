@@ -1,0 +1,190 @@
+Project Name
+
+Gampahin Husmak
+
+Project Overview
+
+Gampahin Husmak is a Progressive Web Application (PWA) designed to support tree plantation, monitoring, and environmental responsibility in the Gampaha District, launched in line with Sri Lanka’s Independence Day initiatives.
+
+The platform allows citizens to record trees they have planted, track their growth over time, and report issues, while providing a powerful, role-based admin management system for monitoring, approvals, and decision-making.
+
+Application Type
+
+Progressive Web App (PWA)
+
+Installable on mobile and desktop
+
+Offline-friendly basic pages
+
+Fast and responsive performance
+
+User Roles & Access Control
+1️⃣ Normal User (Citizen / Volunteer)
+🔐 Registration & Approval Flow
+
+Users can register for an account
+
+After registration:
+
+Account status = Pending Approval
+
+User can log in but cannot access the dashboard
+
+A clear message is shown:
+“Your account is pending admin approval”
+
+Only after admin approval:
+
+User gains full dashboard access
+
+🌳 Tree Management
+
+Add planted tree details:
+
+Tree type
+
+Plantation date
+
+Location (address + GPS coordinates)
+
+Initial tree photo
+
+View and manage only their own trees
+
+📸 Monthly Updates
+
+Upload monthly progress photos
+
+Add notes about tree growth and condition
+
+Track historical updates per tree
+
+🚨 Tree Issue Reporting
+
+Submit requests if:
+
+Tree is damaged
+
+Tree is cut down
+
+Tree is dying or unhealthy
+
+View admin replies and request status
+
+2️⃣ Admin System (CRUD-Based Management)
+🔐 Admin Types
+
+Two admin roles are available:
+
+🔸 Super Admin
+
+Full system access
+
+Manage all data (CRUD)
+
+Access Admin Management Tab
+
+Create, edit, assign roles, or remove admins
+
+🔸 Normal Admin
+
+Manage trees, users, and requests
+
+Cannot access Admin Management Tab
+
+Cannot create or remove admins
+
+🛠️ Admin Features
+
+Approve or reject user registrations
+
+View all trees submitted by users
+
+CRUD operations for:
+
+Trees
+
+Tree updates
+
+User requests
+
+Respond to tree issue requests
+
+Identify inactive trees (no monthly updates)
+
+View all data in list and detailed views
+
+🗺️ Map & Monitoring System
+
+Interactive map showing all planted tree locations
+
+Status indicators:
+
+Healthy
+
+Needs attention
+
+Issue reported
+
+No recent updates
+
+Location-based visualization for district-wide monitoring
+
+🎨 UI / UX Design Requirements
+Design Theme
+
+Nature-inspired color palette:
+
+Green
+
+Earth brown
+
+Soft natural tones
+
+Clean, calm, eco-friendly visual style
+
+Frontend Design
+
+Static public frontend with:
+
+High-quality nature photography
+
+Minimal animations (subtle and smooth)
+
+Unique layout (avoid typical template designs)
+
+Buttons:
+
+Non-rounded (sharp or soft-edge, not pill-style)
+
+Clean typography
+
+Modern, professional look with originality
+
+🌐 Public (Static) Pages
+
+Home page with project vision
+
+About the initiative
+
+Tree plantation impact summary
+
+Visual gallery with nature imagery
+
+Simple stats (total trees, locations)
+
+⚙️ Technical Expectations
+
+Secure authentication & role-based access
+
+Image upload and storage
+
+Scalable and cost-effective backend
+
+Responsive design for all devices
+
+PWA standards (manifest, service worker)
+
+🎯 Project Goal
+
+To build a transparent, community-driven digital platform that encourages environmental responsibility, ensures long-term monitoring of planted trees, and empowers administrators with structured, role-based management tools for sustainability in the Gampaha District.
