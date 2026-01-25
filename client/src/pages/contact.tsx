@@ -68,7 +68,7 @@ export default function Contact() {
 
         {/* Support & Partners Section */}
         <div className="pt-16 border-t border-border/50">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
             {/* Supporting People */}
             <div className="space-y-6">
               <div className="flex items-center gap-3 text-primary">
@@ -100,22 +100,7 @@ export default function Contact() {
               </div>
             </div>
 
-            {/* Development Info */}
-            <div className="space-y-6">
-              <div className="flex items-center gap-3 text-primary">
-                <Code className="w-10 h-10" />
-                <h2 className="font-heading font-black text-4xl uppercase tracking-tight">DEVELOPER TEAM</h2>
-              </div>
-              <div className="space-y-4">
-                <p className="text-muted-foreground text-lg leading-relaxed">
-                  Gampahin Husmak is a Progressive Web Application (PWA) built for high-performance and environmental impact tracking.
-                </p>
-                <div className="p-8 bg-primary/5 rounded-3xl border-2 border-primary/20 shadow-inner">
-                  <p className="text-sm font-black text-primary uppercase mb-2 tracking-widest">Proudly Crafted by</p>
-                  <p className="text-4xl font-black text-foreground tracking-tighter">DEVELOPER TEAM</p>
-                </div>
-              </div>
-            </div>
+
           </div>
         </div>
       </div>

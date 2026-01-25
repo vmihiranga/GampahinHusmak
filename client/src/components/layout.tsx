@@ -1,12 +1,52 @@
 import { Link, useLocation } from "wouter";
-import { Leaf, User, LayoutDashboard, LogIn, Menu, X } from "lucide-react";
-import { useState } from "react";
+import { Leaf, User, LayoutDashboard, LogIn, LogOut, Menu, X } from "lucide-react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { authAPI } from "@/lib/api";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Check authentication status on mount
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    try {
+      const response = await authAPI.me();
+      setUser(response.user);
+    } catch (error) {
+      setUser(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await authAPI.logout();
+      setUser(null);
+      navigate("/");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
+
+  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
 
   const NavLink = ({ href, children, icon: Icon }: { href: string; children: React.ReactNode; icon?: any }) => {
     const isActive = location === href;
@@ -57,22 +97,88 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <NavLink href="/">Home</NavLink>
             <NavLink href="/gallery">Gallery</NavLink>
             <NavLink href="/contact">Contact</NavLink>
-            <NavLink href="/dashboard">Dashboard</NavLink>
-            <NavLink href="/admin">Admin</NavLink>
+            
+            {/* Show Dashboard only when logged in */}
+            {user && <NavLink href="/dashboard">Dashboard</NavLink>}
+            
+            {/* Show Admin only for admin/superadmin */}
+            {isAdmin && <NavLink href="/admin">Admin</NavLink>}
+            
             <div className={cn("h-4 w-px mx-2", isHome ? "bg-white/20" : "bg-border")} />
-            <Link href="/auth">
-              <Button 
-                variant="default" 
-                size="sm" 
-                className={cn(
-                  "gap-2",
-                  isHome ? "bg-green-600 hover:bg-green-500 text-white border-none shadow-lg shadow-green-900/20" : ""
-                )}
-              >
-                <LogIn className="w-4 h-4" />
-                Login
-              </Button>
-            </Link>
+            
+            {/* Show Login button when not authenticated */}
+            {!user && !isLoading && (
+              <Link href="/auth">
+                <Button 
+                  variant="default" 
+                  size="sm" 
+                  className={cn(
+                    "gap-2",
+                    isHome ? "bg-green-600 hover:bg-green-500 text-white border-none shadow-lg shadow-green-900/20" : ""
+                  )}
+                >
+                  <LogIn className="w-4 h-4" />
+                  Login
+                </Button>
+              </Link>
+            )}
+            
+            {/* Show User Menu when authenticated */}
+            {user && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className={cn(
+                      "gap-2",
+                      isHome ? "text-white hover:bg-white/10" : ""
+                    )}
+                  >
+                    <Avatar className="w-6 h-6">
+                      <AvatarImage src={user.profileImage} alt={user.fullName} />
+                      <AvatarFallback className="text-xs">
+                        {user.fullName?.charAt(0) || user.username?.charAt(0) || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="hidden lg:inline">{user.fullName || user.username}</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium">{user.fullName}</p>
+                      <p className="text-xs text-muted-foreground">{user.email}</p>
+                      <p className="text-xs text-primary capitalize">{user.role}</p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard">
+                      <a className="flex items-center w-full cursor-pointer">
+                        <LayoutDashboard className="w-4 h-4 mr-2" />
+                        Dashboard
+                      </a>
+                    </Link>
+                  </DropdownMenuItem>
+                  {isAdmin && (
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin">
+                        <a className="flex items-center w-full cursor-pointer">
+                          <User className="w-4 h-4 mr-2" />
+                          Admin Panel
+                        </a>
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </nav>
 
           {/* Mobile Menu Toggle */}
@@ -93,17 +199,67 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <NavLink href="/">Home</NavLink>
             <NavLink href="/gallery">Gallery</NavLink>
             <NavLink href="/contact">Contact</NavLink>
-            <NavLink href="/dashboard">Dashboard</NavLink>
-            <NavLink href="/admin">Admin</NavLink>
-            <Link href="/auth">
-              <Button className={cn(
-                "w-full mt-4 gap-2",
-                isHome ? "bg-green-600 hover:bg-green-500 text-white border-none" : ""
-              )}>
-                <LogIn className="w-4 h-4" />
-                Login
-              </Button>
-            </Link>
+            
+            {/* Show Dashboard only when logged in */}
+            {user && <NavLink href="/dashboard">Dashboard</NavLink>}
+            
+            {/* Show Admin only for admin/superadmin */}
+            {isAdmin && <NavLink href="/admin">Admin</NavLink>}
+            
+            {/* Show Login button when not authenticated */}
+            {!user && !isLoading && (
+              <Link href="/auth">
+                <Button className={cn(
+                  "w-full mt-4 gap-2",
+                  isHome ? "bg-green-600 hover:bg-green-500 text-white border-none" : ""
+                )}>
+                  <LogIn className="w-4 h-4" />
+                  Login
+                </Button>
+              </Link>
+            )}
+            
+            {/* Show User Info and Logout when authenticated */}
+            {user && (
+              <div className="mt-4 space-y-2">
+                <div className={cn(
+                  "p-3 rounded-lg border",
+                  isHome ? "bg-white/10 border-white/20" : "bg-muted"
+                )}>
+                  <div className="flex items-center gap-3">
+                    <Avatar className="w-10 h-10">
+                      <AvatarImage src={user.profileImage} alt={user.fullName} />
+                      <AvatarFallback>
+                        {user.fullName?.charAt(0) || user.username?.charAt(0) || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className={cn(
+                        "text-sm font-medium truncate",
+                        isHome ? "text-white" : "text-foreground"
+                      )}>
+                        {user.fullName || user.username}
+                      </p>
+                      <p className={cn(
+                        "text-xs truncate",
+                        isHome ? "text-white/60" : "text-muted-foreground"
+                      )}>
+                        {user.email}
+                      </p>
+                      <p className="text-xs text-primary capitalize mt-0.5">{user.role}</p>
+                    </div>
+                  </div>
+                </div>
+                <Button 
+                  onClick={handleLogout}
+                  variant="destructive"
+                  className="w-full gap-2"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Logout
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </header>
@@ -156,13 +312,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
         </div>
-        <div className="container mx-auto px-4 mt-12 pt-8 border-t border-border/50 text-center space-y-4">
-          <div className="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-6 text-sm font-bold text-foreground uppercase tracking-wider">
+        <div className="container mx-auto px-4 mt-12 pt-8 border-t border-border/50 text-center space-y-2">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-4 text-[10px] md:text-xs font-medium text-muted-foreground/60 uppercase tracking-[0.2em]">
             <span>Sponsored by Lions Club Of Gampaha Metro</span>
-            <span className="hidden md:block w-1.5 h-1.5 rounded-full bg-primary" />
+            <span className="hidden md:block w-1 h-1 rounded-full bg-muted-foreground/30" />
             <span>Powered By Leo Club Of Gampaha Metro Juniors</span>
           </div>
-          <p className="text-xs text-muted-foreground opacity-70">
+          <p className="text-[10px] text-muted-foreground/40 tracking-wider">
             © 2026 Gampahin Husmak. All rights reserved.
           </p>
         </div>

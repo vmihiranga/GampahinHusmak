@@ -1,13 +1,20 @@
 import Layout from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { STATS } from "@/lib/mockData";
 import { Link } from "wouter";
 import { ArrowRight, TreePine, Users, Map, Sprout } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { statsAPI } from "@/lib/api";
 import heroImage from "@assets/generated_images/community_tree_planting_hero_image.png";
 import forestImage from "@assets/generated_images/lush_green_forest_landscape.png";
 
 export default function Home() {
+  // Fetch real stats from API
+  const { data: stats } = useQuery({
+    queryKey: ['stats'],
+    queryFn: () => statsAPI.getGeneral(),
+  });
+
   return (
     <Layout>
       {/* Hero Section */}
@@ -55,10 +62,10 @@ export default function Home() {
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 -mt-36 relative z-20">
-            <StatCard icon={TreePine} value={STATS.totalTrees} label="Trees Planted" />
-            <StatCard icon={Users} value={STATS.activeUsers} label="Active Volunteers" />
-            <StatCard icon={Map} value={STATS.locations} label="Plantation Sites" />
-            <StatCard icon={Sprout} value={STATS.co2Offset} label="CO₂ Offset" />
+            <StatCard icon={TreePine} value={stats?.totalTrees || 0} label="Trees Planted" />
+            <StatCard icon={Users} value={stats?.totalUsers || 0} label="Active Volunteers" />
+            <StatCard icon={Map} value={stats?.upcomingEvents || 0} label="Upcoming Events" />
+            <StatCard icon={Sprout} value={stats?.co2Offset || '0 kg/year'} label="CO₂ Offset" />
           </div>
 
           <div className="mt-24 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">

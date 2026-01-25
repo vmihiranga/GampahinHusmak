@@ -10,6 +10,7 @@ import Dashboard from "@/pages/dashboard";
 import Admin from "@/pages/admin";
 import Gallery from "@/pages/gallery";
 import Contact from "@/pages/contact";
+import TreeDetails from "@/pages/tree-details";
 
 function Router() {
   return (
@@ -20,6 +21,7 @@ function Router() {
       <Route path="/admin" component={Admin} />
       <Route path="/gallery" component={Gallery} />
       <Route path="/contact" component={Contact} />
+      <Route path="/trees/:id" component={TreeDetails} />
       <Route component={NotFound} />
     </Switch>
   );

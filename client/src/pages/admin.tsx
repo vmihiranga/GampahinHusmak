@@ -4,16 +4,72 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { USERS, TREES, REQUESTS } from "@/lib/mockData";
-import { Check, X, UserCheck, AlertTriangle, TreePine, Map as MapIcon, MoreHorizontal } from "lucide-react";
+import { Check, X, UserCheck, AlertTriangle, TreePine, MoreHorizontal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { useQuery } from "@tanstack/react-query";
+import { treesAPI, statsAPI, contactAPI, adminAPI } from "@/lib/api";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import TreeMap from "@/components/TreeMap";
 
 export default function Admin() {
+  // Fetch trees data
+  const { data: treesData } = useQuery({
+    queryKey: ['admin-trees'],
+    queryFn: () => treesAPI.getAll(),
+  });
+
+  // Fetch stats
+  const { data: stats } = useQuery({
+    queryKey: ['admin-stats'],
+    queryFn: () => statsAPI.getGeneral(),
+  });
+
+  // Fetch contacts/issues
+  const { data: contactsData } = useQuery({
+    queryKey: ['admin-contacts'],
+    queryFn: () => contactAPI.getAll(),
+  });
+
+  // Fetch users
+  const { data: usersData } = useQuery({
+    queryKey: ['admin-users'],
+    queryFn: () => adminAPI.getUsers(),
+  });
+
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const verifyMutation = useMutation({
+    mutationFn: ({ userId, isVerified }: { userId: string, isVerified: boolean }) => 
+      adminAPI.verifyUser(userId, isVerified),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      toast({
+        title: "Success",
+        description: "User verification status updated.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update user",
+        variant: "destructive",
+      });
+    }
+  });
+
+
+  const trees = treesData?.trees || [];
+  const contacts = contactsData?.contacts || [];
+
   const statusColors: Record<string, string> = {
-    healthy: "bg-green-100 text-green-700",
-    needs_attention: "bg-orange-100 text-orange-700",
-    issue_reported: "bg-red-100 text-red-700",
+    excellent: "bg-green-100 text-green-700",
+    good: "bg-lime-100 text-lime-700",
+    fair: "bg-yellow-100 text-yellow-700",
+    poor: "bg-orange-100 text-orange-700",
+    dead: "bg-red-100 text-red-700",
   };
 
   return (
@@ -27,32 +83,32 @@ export default function Admin() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Approvals</CardTitle>
-              <UserCheck className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">12</div>
-              <p className="text-xs text-muted-foreground">+2 from yesterday</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Tree Issues</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">4</div>
-              <p className="text-xs text-muted-foreground">Requires immediate attention</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Planted</CardTitle>
+              <CardTitle className="text-sm font-medium">Total Trees</CardTitle>
               <TreePine className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">1,250</div>
-              <p className="text-xs text-muted-foreground">+45 this month</p>
+              <div className="text-2xl font-bold">{stats?.totalTrees || 0}</div>
+              <p className="text-xs text-muted-foreground">Active plantations</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Contact Messages</CardTitle>
+              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{contacts.filter((c: any) => c.status === 'new').length}</div>
+              <p className="text-xs text-muted-foreground">Requires attention</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+              <UserCheck className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats?.totalUsers || 0}</div>
+              <p className="text-xs text-muted-foreground">Registered volunteers</p>
             </CardContent>
           </Card>
         </div>
@@ -83,14 +139,14 @@ export default function Admin() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {TREES.map((tree) => (
-                      <TableRow key={tree.id}>
-                        <TableCell className="font-medium">{tree.type}</TableCell>
-                        <TableCell>{tree.location}</TableCell>
-                        <TableCell>{format(new Date(tree.plantedAt), "MMM d, yyyy")}</TableCell>
+                    {trees.map((tree: any) => (
+                      <TableRow key={tree._id}>
+                        <TableCell className="font-medium">{tree.commonName}</TableCell>
+                        <TableCell>{tree.location.address}</TableCell>
+                        <TableCell>{format(new Date(tree.plantedDate), "MMM d, yyyy")}</TableCell>
                         <TableCell>
-                          <Badge className={statusColors[tree.status]}>
-                            {tree.status.replace('_', ' ')}
+                          <Badge className={statusColors[tree.currentHealth]}>
+                            {tree.currentHealth}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
@@ -110,47 +166,15 @@ export default function Admin() {
             <Card className="overflow-hidden">
               <CardHeader>
                 <CardTitle>District Monitoring Map</CardTitle>
-                <CardDescription>Visual health tracking of all plantation sites.</CardDescription>
+                <CardDescription>Visual health tracking of all plantation sites across Gampaha.</CardDescription>
               </CardHeader>
-              <CardContent className="p-0">
-                <div className="relative h-[600px] w-full bg-muted flex items-center justify-center">
-                  <div className="absolute inset-0 opacity-40 bg-[url('https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Sri_Lanka_Gampaha_district_locator_map.svg/1024px-Sri_Lanka_Gampaha_district_locator_map.svg.png')] bg-center bg-no-repeat bg-contain grayscale" />
-                  
-                  {/* Mock Map Markers */}
-                  {TREES.map((tree, i) => (
-                    <div 
-                      key={tree.id}
-                      className="absolute group cursor-pointer"
-                      style={{ 
-                        top: `${30 + (i * 15)}%`, 
-                        left: `${40 + (i * 10)}%` 
-                      }}
-                    >
-                      <div className={cn(
-                        "w-4 h-4 rounded-full border-2 border-white shadow-lg transition-transform hover:scale-150 animate-bounce",
-                        tree.status === 'healthy' ? "bg-green-500" : tree.status === 'needs_attention' ? "bg-orange-500" : "bg-red-500"
-                      )} />
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-background p-3 rounded-lg shadow-xl border border-border opacity-0 group-hover:opacity-100 transition-opacity z-50">
-                        <p className="text-sm font-bold">{tree.type}</p>
-                        <p className="text-xs text-muted-foreground">{tree.location}</p>
-                        <Badge variant="outline" className="mt-2 text-[10px] capitalize">Status: {tree.status.replace('_', ' ')}</Badge>
-                      </div>
-                    </div>
-                  ))}
-
-                  <div className="absolute bottom-6 right-6 bg-background/90 backdrop-blur-md p-4 rounded-xl shadow-2xl border border-border space-y-2">
-                    <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Map Legend</p>
-                    <div className="flex items-center gap-2 text-xs">
-                      <div className="w-3 h-3 rounded-full bg-green-500" /> Healthy
-                    </div>
-                    <div className="flex items-center gap-2 text-xs">
-                      <div className="w-3 h-3 rounded-full bg-orange-500" /> Needs Attention
-                    </div>
-                    <div className="flex items-center gap-2 text-xs">
-                      <div className="w-3 h-3 rounded-full bg-red-500" /> Issue Reported
-                    </div>
-                  </div>
-                </div>
+              <CardContent className="p-6">
+                <TreeMap 
+                  trees={trees} 
+                  center={{ lat: 7.0917, lng: 80.0167 }}
+                  zoom={11}
+                  height="600px"
+                />
               </CardContent>
             </Card>
           </TabsContent>
@@ -158,28 +182,61 @@ export default function Admin() {
           <TabsContent value="approvals" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Pending User Registrations</CardTitle>
-                <CardDescription>Review and approve new user accounts.</CardDescription>
+                <CardTitle>User Management</CardTitle>
+                <CardDescription>Manage registered users and their permissions.</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {USERS.filter(u => u.status === 'pending').map((user) => (
-                    <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg bg-card hover:bg-muted/50 transition-colors">
-                      <div className="space-y-1">
-                        <p className="font-medium leading-none">{user.name}</p>
-                        <p className="text-sm text-muted-foreground">{user.email}</p>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline" className="text-destructive hover:bg-destructive/10">
-                          <X className="w-4 h-4 mr-1" /> Reject
-                        </Button>
-                        <Button size="sm" className="bg-primary hover:bg-primary/90">
-                          <Check className="w-4 h-4 mr-1" /> Approve
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>User</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Joined Date</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {usersData?.users?.map((user: any) => (
+                      <TableRow key={user._id}>
+                        <TableCell>
+                          <div className="font-medium">{user.fullName || user.username}</div>
+                          <div className="text-sm text-muted-foreground">{user.email}</div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="capitalize">
+                            {user.role}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {user.isVerified ? (
+                            <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Verified</Badge>
+                          ) : (
+                            <Badge variant="secondary" className="text-yellow-600 bg-yellow-50 hover:bg-yellow-50">Pending</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>{format(new Date(user.createdAt), "MMM d, yyyy")}</TableCell>
+                        <TableCell className="text-right">
+                          <Button 
+                            size="sm" 
+                            variant={user.isVerified ? "destructive" : "default"}
+                            onClick={() => verifyMutation.mutate({ userId: user._id, isVerified: !user.isVerified })}
+                            disabled={verifyMutation.isPending}
+                          >
+                            {user.isVerified ? "Revoke" : "Approve"}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {(!usersData?.users || usersData?.users.length === 0) && (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                          No users found.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
               </CardContent>
             </Card>
           </TabsContent>
@@ -187,27 +244,38 @@ export default function Admin() {
           <TabsContent value="issues">
             <Card>
               <CardHeader>
-                <CardTitle>Reported Tree Issues</CardTitle>
-                <CardDescription>Monitor health reports from volunteers.</CardDescription>
+                <CardTitle>Contact Messages</CardTitle>
+                <CardDescription>Review messages and inquiries from users.</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {REQUESTS.map((req) => (
-                    <div key={req.id} className="p-4 border rounded-lg bg-card space-y-3">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <Badge variant="destructive" className="mb-2">Damaged</Badge>
-                          <h4 className="font-semibold">Tree ID #{req.treeId} at Gampaha Botanical Gardens</h4>
-                        </div>
-                        <span className="text-sm text-muted-foreground">{req.date}</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground">{req.description}</p>
-                      <div className="flex justify-end gap-2">
-                        <Button size="sm" variant="outline">View Details</Button>
-                        <Button size="sm">Respond</Button>
-                      </div>
+                  {contacts.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <p>No messages yet</p>
                     </div>
-                  ))}
+                  ) : (
+                    contacts.slice(0, 10).map((contact: any) => (
+                      <div key={contact._id} className="p-4 border rounded-lg bg-card space-y-3">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <Badge variant={contact.status === 'new' ? 'destructive' : 'outline'} className="mb-2">
+                              {contact.status}
+                            </Badge>
+                            <h4 className="font-semibold">{contact.subject}</h4>
+                            <p className="text-sm text-muted-foreground">{contact.name} - {contact.email}</p>
+                          </div>
+                          <span className="text-sm text-muted-foreground">
+                            {format(new Date(contact.createdAt), "MMM d, yyyy")}
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{contact.message}</p>
+                        <div className="flex justify-end gap-2">
+                          <Button size="sm" variant="outline">View Details</Button>
+                          <Button size="sm">Respond</Button>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>

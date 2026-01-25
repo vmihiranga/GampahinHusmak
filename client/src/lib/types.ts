@@ -1,0 +1,122 @@
+// API Response Types
+
+export interface User {
+  _id: string;
+  username: string;
+  email: string;
+  fullName?: string;
+  role: 'user' | 'admin' | 'superadmin';
+  isVerified: boolean;
+  profileImage?: string;
+  createdAt: string;
+}
+
+export interface Tree {
+  _id: string;
+  treeId: string;
+  species: string;
+  commonName: string;
+  plantedDate: string;
+  location: {
+    address: string;
+    coordinates: [number, number];
+    district: string;
+  };
+  status: string;
+  currentHealth: string;
+  currentHeight?: number;
+  images?: string[];
+  notes?: string;
+  plantedBy?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TreeUpdate {
+  _id: string;
+  updateDate: string;
+  height: number;
+  health: string;
+  notes?: string;
+  images?: string[];
+}
+
+export interface Event {
+  _id: string;
+  title: string;
+  description: string;
+  date: string;
+  location: string;
+  organizer: string;
+  maxParticipants?: number;
+  participants: string[];
+  images?: string[];
+  status: string;
+  createdAt: string;
+}
+
+export interface Contact {
+  _id: string;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  status: 'new' | 'in-progress' | 'resolved';
+  createdAt: string;
+}
+
+export interface Stats {
+  totalTrees: number;
+  totalUsers: number;
+  locations: number;
+  co2Offset: string;
+  upcomingEvents?: number;
+}
+
+export interface GalleryItem {
+  _id: string;
+  title: string;
+  description?: string;
+  images: string[];
+  tags?: string[];
+  likes?: string[];
+  uploadedBy?: User;
+  createdAt: string;
+}
+
+// API Response Wrappers
+export interface AuthResponse {
+  user: User;
+  message?: string;
+}
+
+export interface TreesResponse {
+  trees: Tree[];
+}
+
+export interface TreeDetailsResponse {
+  tree: Tree;
+  updates: TreeUpdate[];
+}
+
+export interface EventsResponse {
+  events: Event[];
+}
+
+export interface ContactsResponse {
+  contacts: Contact[];
+}
+
+export interface GalleryResponse {
+  items: GalleryItem[];
+}
+
+export interface UsersResponse {
+  users: User[];
+}
+
+export interface StatsResponse extends Stats {}
+
+export interface MessageResponse {
+  message: string;
+}

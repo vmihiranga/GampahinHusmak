@@ -1,0 +1,26 @@
+﻿client/src/components/layout.tsx(31,15): error TS18046: 'response' is of type 'unknown'.
+client/src/components/TreeMap.tsx(25,34): error TS2503: Cannot find namespace 'google'.
+client/src/components/TreeMap.tsx(27,29): error TS2503: Cannot find namespace 'google'.
+client/src/components/TreeMap.tsx(51,31): error TS2304: Cannot find name 'google'.
+client/src/components/TreeMap.tsx(90,24): error TS2304: Cannot find name 'google'.
+client/src/components/TreeMap.tsx(99,26): error TS2304: Cannot find name 'google'.
+client/src/components/TreeMap.tsx(104,17): error TS2304: Cannot find name 'google'.
+client/src/components/TreeMap.tsx(111,20): error TS2304: Cannot find name 'google'.
+client/src/components/TreeMap.tsx(115,30): error TS2304: Cannot find name 'google'.
+client/src/components/TreeMap.tsx(197,20): error TS2304: Cannot find name 'google'.
+client/src/pages/admin.tsx(64,28): error TS2339: Property 'trees' does not exist on type '{}'.
+client/src/pages/admin.tsx(65,34): error TS2339: Property 'contacts' does not exist on type '{}'.
+client/src/pages/admin.tsx(90,59): error TS2339: Property 'totalTrees' does not exist on type '{}'.
+client/src/pages/admin.tsx(110,59): error TS2339: Property 'totalUsers' does not exist on type '{}'.
+client/src/pages/admin.tsx(200,33): error TS2339: Property 'users' does not exist on type '{}'.
+client/src/pages/admin.tsx(231,35): error TS2339: Property 'users' does not exist on type '{}'.
+client/src/pages/admin.tsx(231,55): error TS2339: Property 'users' does not exist on type '{}'.
+client/src/pages/dashboard.tsx(32,26): error TS2339: Property 'user' does not exist on type '{}'.
+client/src/pages/dashboard.tsx(80,28): error TS2339: Property 'trees' does not exist on type '{}'.
+client/src/pages/gallery.tsx(22,30): error TS2339: Property 'items' does not exist on type '{}'.
+client/src/pages/home.tsx(66,46): error TS18046: 'stats' is of type 'unknown'.
+client/src/pages/home.tsx(67,43): error TS18046: 'stats' is of type 'unknown'.
+client/src/pages/home.tsx(68,41): error TS18046: 'stats' is of type 'unknown'.
+client/src/pages/home.tsx(69,44): error TS18046: 'stats' is of type 'unknown'.
+client/src/pages/tree-details.tsx(44,11): error TS2339: Property 'tree' does not exist on type '{}'.
+client/src/pages/tree-details.tsx(44,17): error TS2339: Property 'updates' does not exist on type '{}'.

@@ -4,17 +4,119 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Leaf } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Leaf, Upload, User } from "lucide-react";
 import { useLocation } from "wouter";
+import { useState, useRef } from "react";
+import { authAPI } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Auth() {
   const [_, setLocation] = useLocation();
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock login - redirect based on simple check or default
-    // In real app, this would check credentials
-    setLocation("/dashboard");
+    setIsLoading(true);
+    
+    const formData = new FormData(e.target as HTMLFormElement);
+    const data = {
+      email: formData.get('email'),
+      password: formData.get('password'),
+    };
+
+    try {
+      await authAPI.login(data);
+      toast({
+        title: "Login successful!",
+        description: "Welcome back!",
+      });
+      // Reload to update auth state
+      window.location.href = "/dashboard";
+    } catch (error: any) {
+      toast({
+        title: "Login failed",
+        description: error.message || "Invalid credentials",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    let profileImageUrl = "";
+    
+    try {
+      // 1. Upload profile image if exists
+      if (profileImageFile) {
+        const imgFormData = new FormData();
+        imgFormData.append("image", profileImageFile);
+        
+        const response = await fetch(`https://api.imgbb.com/1/upload?key=${import.meta.env.VITE_IMGBB_API_KEY}`, {
+          method: "POST",
+          body: imgFormData,
+        });
+        
+        const resData = await response.json();
+        if (resData.success) {
+          profileImageUrl = resData.data.url;
+        }
+      }
+
+      // 2. Register user
+      const formData = new FormData(e.target as HTMLFormElement);
+      const data = {
+        username: formData.get('username'),
+        email: formData.get('email'),
+        password: formData.get('password'),
+        fullName: `${formData.get('firstName')} ${formData.get('lastName')}`,
+        phoneNumber: formData.get('phoneNumber'),
+        address: formData.get('address'),
+        profileImage: profileImageUrl || undefined,
+      };
+
+      await authAPI.register(data);
+      toast({
+        title: "Registration successful!",
+        description: "Welcome to Gampahin Husmak!",
+      });
+      // Reload to update auth state
+      window.location.href = "/dashboard";
+    } catch (error: any) {
+      toast({
+        title: "Registration failed",
+        description: error.message || "Please try again",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setProfileImageFile(file);
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        setImagePreview(result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
   };
 
   return (
@@ -45,11 +147,11 @@ export default function Auth() {
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="email">Email</Label>
-                      <Input id="email" type="email" placeholder="m@example.com" required />
+                      <Input id="email" name="email" type="email" placeholder="m@example.com" required />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="password">Password</Label>
-                      <Input id="password" type="password" required />
+                      <Input id="password" name="password" type="password" required />
                     </div>
                   </CardContent>
                   <CardFooter>
@@ -65,33 +167,80 @@ export default function Auth() {
                   <CardTitle>Create Account</CardTitle>
                   <CardDescription>Join the initiative and start planting today.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="firstName">First Name</Label>
-                      <Input id="firstName" placeholder="Saman" />
+                <form onSubmit={handleRegister}>
+                  <CardContent className="space-y-4">
+                    {/* Profile Photo Upload */}
+                    <div className="flex flex-col items-center space-y-3">
+                      <Avatar className="w-24 h-24 cursor-pointer" onClick={triggerFileInput}>
+                        <AvatarImage src={imagePreview} alt="Profile" />
+                        <AvatarFallback className="bg-primary/10">
+                          {imagePreview ? (
+                            <User className="w-12 h-12 text-primary" />
+                          ) : (
+                            <Upload className="w-8 h-8 text-muted-foreground" />
+                          )}
+                        </AvatarFallback>
+                      </Avatar>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="hidden"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={triggerFileInput}
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload Photo
+                      </Button>
+                      <p className="text-xs text-muted-foreground">Optional profile picture</p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="firstName">First Name</Label>
+                        <Input id="firstName" name="firstName" placeholder="Saman" required />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="lastName">Last Name</Label>
+                        <Input id="lastName" name="lastName" placeholder="Perera" required />
+                      </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="lastName">Last Name</Label>
-                      <Input id="lastName" placeholder="Perera" />
+                      <Label htmlFor="username">Username</Label>
+                      <Input id="username" name="username" placeholder="samanp" required />
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email-reg">Email</Label>
-                    <Input id="email-reg" type="email" placeholder="m@example.com" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="nic">NIC Number</Label>
-                    <Input id="nic" placeholder="National ID" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password-reg">Password</Label>
-                    <Input id="password-reg" type="password" />
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button className="w-full">Create Account</Button>
-                </CardFooter>
+                    <div className="space-y-2">
+                      <Label htmlFor="email-reg">Email</Label>
+                      <Input id="email-reg" name="email" type="email" placeholder="saman@example.com" required />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="phoneNumber">Phone Number</Label>
+                        <Input id="phoneNumber" name="phoneNumber" placeholder="0712345678" required />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="nic">NIC Number</Label>
+                        <Input id="nic" name="nic" placeholder="National ID" required />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="address">Address</Label>
+                      <Input id="address" name="address" placeholder="123, Main Street, Gampaha" required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="password-reg">Password</Label>
+                      <Input id="password-reg" name="password" type="password" required />
+                    </div>
+                  </CardContent>
+                  <CardFooter>
+                    <Button type="submit" className="w-full">Create Account</Button>
+                  </CardFooter>
+                </form>
               </Card>
             </TabsContent>
           </Tabs>
