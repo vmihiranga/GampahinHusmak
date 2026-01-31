@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { authAPI, contactAPI } from "@/lib/api";
+import { useLanguage } from "@/hooks/use-language";
+import { Globe, Languages } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +22,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { language, setLanguage, t } = useLanguage();
 
   // Check authentication status on mount
   useEffect(() => {
@@ -111,18 +114,45 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-2">
-            <NavLink href="/">Home</NavLink>
-            <NavLink href="/gallery">Gallery</NavLink>
-            <NavLink href="/contact">Contact</NavLink>
+            <NavLink href="/">{t.nav.home}</NavLink>
+            <NavLink href="/gallery">{t.nav.gallery}</NavLink>
+            <NavLink href="/contact">{t.nav.contact}</NavLink>
             
             {/* Show Dashboard only when logged in */}
-            {user && <NavLink href="/dashboard" badge={unreadCount}>Dashboard</NavLink>}
+            {user && <NavLink href="/dashboard" badge={unreadCount}>{t.nav.dashboard}</NavLink>}
             
             {/* Show Admin only for admin/superadmin */}
-            {isAdmin && <NavLink href="/admin">Admin</NavLink>}
+            {isAdmin && <NavLink href="/admin">{t.nav.admin}</NavLink>}
             
             <div className={cn("h-4 w-px mx-2", isHome ? "bg-white/20" : "bg-border")} />
             
+            {/* Language Switcher */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className={cn(
+                    "gap-2 px-3",
+                    isHome ? "text-white hover:bg-white/10" : ""
+                  )}
+                >
+                  <Languages className="w-4 h-4" />
+                  <span className="text-xs font-bold uppercase tracking-wider">{language === 'en' ? 'EN' : 'සිං'}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setLanguage('en')} className={cn(language === 'en' && "bg-primary/10 text-primary font-bold")}>
+                  English
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLanguage('si')} className={cn(language === 'si' && "bg-primary/10 text-primary font-bold")}>
+                  සිංහල (Sinhala)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <div className={cn("h-4 w-px mx-2", isHome ? "bg-white/20" : "bg-border")} />
+
             {/* Show Login button when not authenticated */}
             {!user && !isLoading && (
               <Link href="/auth">
@@ -135,7 +165,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   )}
                 >
                   <LogIn className="w-4 h-4" />
-                  Login
+                  {language === 'en' ? 'Login' : 'ඇතුළු වන්න'}
                 </Button>
               </Link>
             )}
@@ -174,7 +204,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     <Link href="/dashboard">
                       <a className="flex items-center w-full cursor-pointer">
                         <LayoutDashboard className="w-4 h-4 mr-2" />
-                        Dashboard
+                        {t.nav.dashboard}
                       </a>
                     </Link>
                   </DropdownMenuItem>
@@ -183,7 +213,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                       <Link href="/admin">
                         <a className="flex items-center w-full cursor-pointer">
                           <User className="w-4 h-4 mr-2" />
-                          Admin Panel
+                          {t.nav.admin_panel}
                         </a>
                       </Link>
                     </DropdownMenuItem>
@@ -191,7 +221,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600">
                     <LogOut className="w-4 h-4 mr-2" />
-                    Logout
+                    {t.nav.logout}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -213,25 +243,49 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             "md:hidden border-t p-4 flex flex-col gap-2 shadow-lg",
             isHome ? "bg-black/60 backdrop-blur-lg border-white/10" : "bg-background border-border"
           )}>
-            <NavLink href="/">Home</NavLink>
-            <NavLink href="/gallery">Gallery</NavLink>
-            <NavLink href="/contact">Contact</NavLink>
+            <NavLink href="/">{t.nav.home}</NavLink>
+            <NavLink href="/gallery">{t.nav.gallery}</NavLink>
+            <NavLink href="/contact">{t.nav.contact}</NavLink>
             
             {/* Show Dashboard only when logged in */}
-            {user && <NavLink href="/dashboard" badge={unreadCount}>Dashboard</NavLink>}
+            {user && <NavLink href="/dashboard" badge={unreadCount}>{t.nav.dashboard}</NavLink>}
             
             {/* Show Admin only for admin/superadmin */}
-            {isAdmin && <NavLink href="/admin">Admin</NavLink>}
+            {isAdmin && <NavLink href="/admin">{t.nav.admin}</NavLink>}
             
+            <div className={cn("h-px w-full my-2", isHome ? "bg-white/10" : "bg-border")} />
+            
+            {/* Language Selection in Mobile */}
+            <div className="flex gap-2">
+              <Button 
+                variant={language === 'en' ? "default" : "outline"} 
+                size="sm" 
+                className="flex-1"
+                onClick={() => setLanguage('en')}
+              >
+                English
+              </Button>
+              <Button 
+                variant={language === 'si' ? "default" : "outline"} 
+                size="sm" 
+                className="flex-1"
+                onClick={() => setLanguage('si')}
+              >
+                සිංහල
+              </Button>
+            </div>
+
+            <div className={cn("h-px w-full my-2", isHome ? "bg-white/10" : "bg-border")} />
+
             {/* Show Login button when not authenticated */}
             {!user && !isLoading && (
               <Link href="/auth">
                 <Button className={cn(
-                  "w-full mt-4 gap-2",
+                  "w-full mt-2 gap-2",
                   isHome ? "bg-green-600 hover:bg-green-500 text-white border-none" : ""
                 )}>
                   <LogIn className="w-4 h-4" />
-                  Login
+                  {t.nav.login}
                 </Button>
               </Link>
             )}
@@ -273,7 +327,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   className="w-full gap-2"
                 >
                   <LogOut className="w-4 h-4" />
-                  Logout
+                  {t.nav.logout}
                 </Button>
               </div>
             )}
@@ -293,27 +347,27 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <span className="font-heading font-bold text-lg">Gampahin Husmak</span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              A community initiative to restore green cover in Gampaha District through sustainable tree plantation and monitoring.
+              {t.footer.description}
             </p>
           </div>
           
           <div>
-            <h3 className="font-heading font-semibold mb-4">Quick Links</h3>
+            <h3 className="font-heading font-semibold mb-4">{t.footer.quick_links}</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link href="/gallery" className="hover:text-primary">Gallery</Link></li>
-              <li><Link href="/contact" className="hover:text-primary">Contact</Link></li>
-              <li><Link href="/dashboard" className="hover:text-primary">Dashboard</Link></li>
-              <li><Link href="/admin" className="hover:text-primary">Admin</Link></li>
+              <li><Link href="/gallery" className="hover:text-primary">{t.nav.gallery}</Link></li>
+              <li><Link href="/contact" className="hover:text-primary">{t.nav.contact}</Link></li>
+              <li><Link href="/dashboard" className="hover:text-primary">{t.nav.dashboard}</Link></li>
+              <li><Link href="/admin" className="hover:text-primary">{t.nav.admin}</Link></li>
             </ul>
           </div>
-
+ 
           <div>
-            <h3 className="font-heading font-semibold mb-4">Contact</h3>
+            <h3 className="font-heading font-semibold mb-4">{t.footer.contact}</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li>District Secretariat, Gampaha</li>
+              <li>{t.footer.address}</li>
               <li>info@gampahinhusmak.lk</li>
               <li>+94 33 222 2222</li>
-              <li className="pt-2 text-xs opacity-70">Developed by <span className="font-semibold">Developer Team</span></li>
+              <li className="pt-2 text-xs opacity-70">{t.footer.developed_by} <span className="font-semibold">{t.footer.team}</span></li>
             </ul>
           </div>
 

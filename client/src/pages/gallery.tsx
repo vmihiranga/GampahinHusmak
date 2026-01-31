@@ -10,8 +10,10 @@ import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { galleryAPI } from "@/lib/api";
 import { Link } from "wouter";
+import { useLanguage } from "@/hooks/use-language";
 
 export default function Gallery() {
+  const { t, language } = useLanguage();
   const [activeIndices, setActiveIndices] = useState<Record<string, number>>({});
   
   // Fetch gallery items from API
@@ -22,30 +24,24 @@ export default function Gallery() {
 
   const items = galleryData?.items || [];
 
-  const statusColors: Record<string, string> = {
-    healthy: "bg-green-100 text-green-700 border-green-200",
-    needs_attention: "bg-orange-100 text-orange-700 border-orange-200",
-    issue_reported: "bg-red-100 text-red-700 border-red-200",
-  };
-
   return (
     <Layout>
       <div className="container mx-auto px-4 py-16 space-y-12">
         <div className="text-center space-y-4">
-          <h1 className="text-4xl md:text-5xl font-heading font-bold text-foreground">Community Tree Gallery</h1>
+          <h1 className="text-4xl md:text-5xl font-heading font-bold text-foreground">{t.gallery.title}</h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Explore the planted trees across Gampaha District and track their latest growth updates.
+            {t.gallery.subtitle}
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {isLoading ? (
             <div className="col-span-full text-center py-12">
-              <p className="text-muted-foreground">Loading gallery...</p>
+              <p className="text-muted-foreground">{t.gallery.loading}</p>
             </div>
           ) : items.length === 0 ? (
             <div className="col-span-full text-center py-12">
-              <p className="text-muted-foreground">No gallery items yet. Start planting trees!</p>
+              <p className="text-muted-foreground">{t.gallery.no_items}</p>
             </div>
           ) : (
             items.map((item: any) => {
@@ -72,7 +68,7 @@ export default function Gallery() {
                               {item.relatedTree && (
                                 <Badge className="bg-primary/20 hover:bg-primary/30 text-white border-white/20 text-[10px] backdrop-blur-md">
                                   <TreePine className="w-3 h-3 mr-1" />
-                                  Tree Record
+                                  {t.gallery.tree_record}
                                 </Badge>
                               )}
                             </div>
@@ -138,7 +134,7 @@ export default function Gallery() {
                         <DialogHeader>
                           <div className="flex items-center gap-2 text-primary mb-2">
                             <Tag className="w-4 h-4" />
-                            <span className="text-xs font-bold uppercase tracking-widest">Gallery</span>
+                            <span className="text-xs font-bold uppercase tracking-widest">{t.nav.gallery}</span>
                           </div>
                           <DialogTitle className="text-2xl font-heading font-bold leading-tight">{item.title}</DialogTitle>
                         </DialogHeader>
@@ -155,7 +151,7 @@ export default function Gallery() {
                               <Calendar className="w-5 h-5" />
                             </div>
                             <div>
-                              <p className="text-xs text-muted-foreground uppercase font-bold tracking-tighter">Uploaded</p>
+                              <p className="text-xs text-muted-foreground uppercase font-bold tracking-tighter">{t.gallery.uploaded}</p>
                               <p className="font-semibold">{format(new Date(item.createdAt), "MMMM d, yyyy")}</p>
                             </div>
                           </div>
@@ -166,11 +162,11 @@ export default function Gallery() {
                                 <Activity className="w-5 h-5" />
                               </div>
                               <div>
-                                <p className="text-xs text-muted-foreground uppercase font-bold tracking-tighter">Uploaded By</p>
+                                <p className="text-xs text-muted-foreground uppercase font-bold tracking-tighter">{t.gallery.uploaded_by}</p>
                                 <p className="font-semibold">
                                   {typeof item.uploadedBy === 'object' 
                                     ? (item.uploadedBy.fullName || item.uploadedBy.username) 
-                                    : 'District Member'}
+                                    : (language === 'en' ? 'District Member' : 'දිස්ත්‍රික් සාමාජිකයෙක්')}
                                 </p>
                               </div>
                             </div>
@@ -181,7 +177,7 @@ export default function Gallery() {
                               <Button className="w-full gap-2" variant="outline" asChild>
                                 <Link href={`/trees/${item.relatedTree._id || item.relatedTree}`}>
                                   <TreePine className="w-4 h-4" />
-                                  View Tree Details
+                                  {t.gallery.view_details}
                                 </Link>
                               </Button>
                             </div>
@@ -200,7 +196,9 @@ export default function Gallery() {
 
                         <div className="pt-6">
                           <div className="p-5 rounded-2xl bg-primary/5 border border-primary/10">
-                            <p className="text-xs font-bold text-primary uppercase mb-2 tracking-widest">Image {currentIndex + 1} of {item.images.length}</p>
+                            <p className="text-xs font-bold text-primary uppercase mb-2 tracking-widest">
+                                {t.gallery.image_counter} {currentIndex + 1} {t.gallery.of} {item.images.length}
+                            </p>
                           </div>
                         </div>
                       </div>
