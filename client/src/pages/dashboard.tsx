@@ -6,12 +6,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Filter, AlertCircle, MapPin as MapPinIcon, LocateFixed, Loader2, Clock } from "lucide-react";
+import { Plus, Search, Filter, AlertCircle, MapPin as MapPinIcon, LocateFixed, Loader2, Clock, MessageSquare, CheckCircle2, History, TreePine, Camera } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { treesAPI, authAPI } from "@/lib/api";
+import { treesAPI, authAPI, contactAPI } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 export default function Dashboard() {
   const { toast } = useToast();
@@ -23,6 +27,11 @@ export default function Dashboard() {
   const [isLocating, setIsLocating] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [coordinates, setCoordinates] = useState<[number, number] | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [requestTreeId, setRequestTreeId] = useState("");
+  const [requestType, setRequestType] = useState("");
+  const [selectedViewContact, setSelectedViewContact] = useState<any>(null);
 
   // Fetch user profile
   const { data: userData, isLoading: isUserLoading } = useQuery({
@@ -37,6 +46,14 @@ export default function Dashboard() {
     queryFn: () => treesAPI.getAll(),
     enabled: !!user?.isVerified, // Only fetch trees if verified
   });
+
+  // Fetch user's requests/contacts
+  const { data: contactsData } = useQuery({
+    queryKey: ['my-contacts'],
+    queryFn: () => contactAPI.getMyContacts(),
+    enabled: !!user,
+  });
+  const myContacts = contactsData?.contacts || [];
 
   const createTreeMutation = useMutation({
     mutationFn: (data: any) => treesAPI.create(data),
@@ -78,6 +95,20 @@ export default function Dashboard() {
   });
 
   const trees = treesData?.trees || [];
+
+  // Filter trees based on search query and status filter
+  const filteredTrees = trees.filter((tree: any) => {
+    const matchesSearch = searchQuery === "" || 
+      tree.commonName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      tree.species?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      tree.location?.address?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesFilter = filterStatus === "all" || 
+      tree.currentHealth === filterStatus || 
+      tree.status === filterStatus;
+    
+    return matchesSearch && matchesFilter;
+  });
 
   const handleGetLocation = () => {
     setIsLocating(true);
@@ -236,13 +267,54 @@ export default function Dashboard() {
     }
   };
 
-  const handleSendRequest = (e: React.FormEvent) => {
+  const handleSendRequest = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsRequestDialogOpen(false);
-    toast({
-      title: "Request Submitted",
-      description: "Your request has been sent to the district administrators.",
-    });
+    const formData = new FormData(e.target as HTMLFormElement);
+    const imageFile = (document.getElementById('req-image') as HTMLInputElement).files?.[0];
+
+    setIsUploading(true);
+    let imageUrl = "";
+
+    try {
+      if (imageFile) {
+        const imgFormData = new FormData();
+        imgFormData.append("image", imageFile);
+        const response = await fetch(`https://api.imgbb.com/1/upload?key=${import.meta.env.VITE_IMGBB_API_KEY}`, {
+          method: "POST",
+          body: imgFormData,
+        });
+        const resData = await response.json();
+        if (resData.success) imageUrl = resData.data.url;
+      }
+
+      const requestData = {
+        relatedTreeId: requestTreeId,
+        subject: requestType,
+        message: formData.get('req-notes'),
+        image: imageUrl,
+        name: user?.fullName || user?.username,
+        email: user?.email,
+      };
+
+      await contactAPI.submit(requestData);
+      
+      queryClient.invalidateQueries({ queryKey: ['my-contacts'] });
+      setIsRequestDialogOpen(false);
+      setRequestTreeId("");
+      setRequestType("");
+      toast({
+        title: "Request Submitted",
+        description: "Your request has been sent to the district administrators.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to submit request",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   if (isUserLoading) {
@@ -295,7 +367,7 @@ export default function Dashboard() {
                   Submit Request
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[500px]">
+              <DialogContent className="w-[95vw] sm:max-w-[500px] max-h-[95vh] overflow-y-auto custom-scrollbar">
                 <DialogHeader>
                   <DialogTitle>Submit a Tree Request</DialogTitle>
                   <DialogDescription>
@@ -305,7 +377,7 @@ export default function Dashboard() {
                 <form onSubmit={handleSendRequest} className="space-y-4 py-4">
                   <div className="space-y-2">
                     <Label htmlFor="tree-select">Select Tree</Label>
-                    <Select required name="tree-select">
+                    <Select required value={requestTreeId} onValueChange={setRequestTreeId}>
                       <SelectTrigger>
                         <SelectValue placeholder="Choose a tree" />
                       </SelectTrigger>
@@ -320,7 +392,7 @@ export default function Dashboard() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="request-type">Request Type</Label>
-                    <Select required name="request-type">
+                    <Select required value={requestType} onValueChange={setRequestType}>
                       <SelectTrigger>
                         <SelectValue placeholder="Choose type" />
                       </SelectTrigger>
@@ -336,9 +408,34 @@ export default function Dashboard() {
                     <Label htmlFor="req-notes">Details</Label>
                     <Textarea id="req-notes" name="req-notes" placeholder="Describe the situation..." required />
                   </div>
+                   <div className="space-y-2">
+                    <Label htmlFor="req-image" className="flex items-center justify-between">
+                      Attach Photo (Optional)
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 px-2 text-primary hover:text-primary hover:bg-primary/10"
+                        onClick={() => document.getElementById('req-image')?.click()}
+                      >
+                        <Camera className="w-4 h-4 mr-2" />
+                        Capture
+                      </Button>
+                    </Label>
+                    <Input 
+                      id="req-image" 
+                      name="req-image" 
+                      type="file" 
+                      accept="image/*" 
+                      capture="environment" 
+                      className="cursor-pointer"
+                    />
+                  </div>
                   <div className="pt-4 flex justify-end gap-2">
                     <Button variant="outline" type="button" onClick={() => setIsRequestDialogOpen(false)}>Cancel</Button>
-                    <Button type="submit">Send Request</Button>
+                    <Button type="submit" disabled={isUploading}>
+                      {isUploading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Sending...</> : "Send Request"}
+                    </Button>
                   </div>
                 </form>
               </DialogContent>
@@ -352,7 +449,7 @@ export default function Dashboard() {
                   Add New Tree
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[500px]">
+              <DialogContent className="w-[95vw] sm:max-w-[550px] max-h-[95vh] overflow-y-auto custom-scrollbar">
                 <DialogHeader>
                   <DialogTitle>Record a New Tree</DialogTitle>
                   <DialogDescription>
@@ -403,8 +500,20 @@ export default function Dashboard() {
                     <Textarea id="notes" name="notes" placeholder="Any specific details about the planting..." />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="image">Upload Photo</Label>
-                    <Input id="image" name="image" type="file" accept="image/*" />
+                    <Label htmlFor="image" className="flex items-center justify-between">
+                      Upload Photo
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 px-2 text-primary hover:text-primary hover:bg-primary/10"
+                        onClick={() => document.getElementById('image')?.click()}
+                      >
+                        <Camera className="w-4 h-4 mr-2" />
+                        Capture
+                      </Button>
+                    </Label>
+                    <Input id="image" name="image" type="file" accept="image/*" capture="environment" className="cursor-pointer" />
                   </div>
                   <div className="pt-4 flex justify-end gap-2">
                     <Button variant="outline" type="button" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
@@ -423,7 +532,7 @@ export default function Dashboard() {
 
             {/* Update Dialog */}
             <Dialog open={isUpdateDialogOpen} onOpenChange={setIsUpdateDialogOpen}>
-              <DialogContent className="sm:max-w-[500px]">
+              <DialogContent className="w-[95vw] sm:max-w-[500px] max-h-[95vh] overflow-y-auto custom-scrollbar">
                 <DialogHeader>
                   <DialogTitle>Update Tree Progress</DialogTitle>
                   <DialogDescription>
@@ -457,8 +566,20 @@ export default function Dashboard() {
                     <Textarea id="notes" name="notes" placeholder="Any changes or observations..." />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="update-image">Update Photo</Label>
-                    <Input id="update-image" name="image" type="file" accept="image/*" />
+                    <Label htmlFor="update-image" className="flex items-center justify-between">
+                      Update Photo
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 px-2 text-primary hover:text-primary hover:bg-primary/10"
+                        onClick={() => document.getElementById('update-image')?.click()}
+                      >
+                        <Camera className="w-4 h-4 mr-2" />
+                        Capture
+                      </Button>
+                    </Label>
+                    <Input id="update-image" name="image" type="file" accept="image/*" capture="environment" className="cursor-pointer" />
                   </div>
                   <div className="pt-4 flex justify-end gap-2">
                     <Button variant="outline" type="button" onClick={() => setIsUpdateDialogOpen(false)}>Cancel</Button>
@@ -477,39 +598,238 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Filters & Search */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input className="pl-9" placeholder="Search your trees..." />
-          </div>
-          <Button variant="outline" className="gap-2">
-            <Filter className="w-4 h-4" />
-            Filter
-          </Button>
-        </div>
+        {/* Main Content Tabs */}
+        <Tabs defaultValue="trees" className="w-full">
+          <TabsList className="mb-6">
+            <TabsTrigger value="trees" className="gap-2">
+              <TreePine className="w-4 h-4" />
+              My Trees
+            </TabsTrigger>
+            <TabsTrigger value="requests" className="gap-2">
+              <MessageSquare className="w-4 h-4" />
+              My Requests
+              {myContacts.filter(c => c.status === 'replied').length > 0 && (
+                <Badge className="ml-2 bg-primary text-primary-foreground h-5 w-5 p-0 flex items-center justify-center rounded-full text-[10px]">
+                  {myContacts.filter(c => c.status === 'replied').length}
+                </Badge>
+              )}
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Tree Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {trees.length === 0 ? (
-            <div className="col-span-full text-center py-12">
-              <p className="text-muted-foreground">No trees planted yet. Start by adding your first tree!</p>
+          <TabsContent value="trees" className="space-y-6">
+            {/* Filters & Search */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input 
+                  className="pl-9" 
+                  placeholder="Search your trees..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger className="w-[180px]">
+                  <Filter className="w-4 h-4 mr-2" />
+                  <SelectValue placeholder="Filter" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Trees</SelectItem>
+                  <SelectItem value="excellent">Excellent</SelectItem>
+                  <SelectItem value="good">Good</SelectItem>
+                  <SelectItem value="fair">Fair</SelectItem>
+                  <SelectItem value="poor">Poor</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          ) : (
-            trees.map((tree: any) => (
-              <TreeCard 
-                key={tree._id} 
-                tree={tree} 
-                showActions={true} 
-                onAddUpdate={() => {
-                  setSelectedTree(tree);
-                  setIsUpdateDialogOpen(true);
-                }} 
-              />
-            ))
-          )}
-        </div>
+
+            {/* Tree Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {trees.length === 0 ? (
+                <div className="col-span-full text-center py-12">
+                  <p className="text-muted-foreground">No trees planted yet. Start by adding your first tree!</p>
+                </div>
+              ) : filteredTrees.length === 0 ? (
+                <div className="col-span-full text-center py-12">
+                  <p className="text-muted-foreground">No trees found matching your search.</p>
+                </div>
+              ) : (
+                filteredTrees.map((tree: any) => (
+                  <TreeCard 
+                    key={tree._id} 
+                    tree={tree} 
+                    showActions={true} 
+                    onAddUpdate={() => {
+                      setSelectedTree(tree);
+                      setIsUpdateDialogOpen(true);
+                    }} 
+                  />
+                ))
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="requests" className="space-y-6">
+            <div className="grid grid-cols-1 gap-4">
+              {myContacts.length === 0 ? (
+                <Card className="p-12 text-center border-dashed">
+                  <div className="flex flex-col items-center gap-2">
+                    <MessageSquare className="w-12 h-12 text-muted-foreground opacity-20" />
+                    <p className="text-muted-foreground font-medium">You haven't submitted any requests yet.</p>
+                    <p className="text-sm text-muted-foreground">Need help? Use the "Submit Request" button above.</p>
+                  </div>
+                </Card>
+              ) : (
+                myContacts.map((contact: any) => (
+                  <Card key={contact._id} className="overflow-hidden border-none shadow-md bg-white/50 backdrop-blur-sm">
+                    <div className="p-6 space-y-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                          <div className="flex items-center gap-3 mb-1">
+                            <h3 className="font-bold text-lg">{contact.subject}</h3>
+                            <Badge className={cn(
+                              "capitalize",
+                              contact.status === 'replied' ? "bg-green-100 text-green-700" :
+                              contact.status === 'read' ? "bg-blue-100 text-blue-700" :
+                              "bg-orange-100 text-orange-700"
+                            )}>
+                              {contact.status}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground flex items-center gap-2">
+                            <History className="w-3 h-3" />
+                            {format(new Date(contact.createdAt), "MMM d, yyyy h:mm a")}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="bg-muted/30 p-4 rounded-xl space-y-3">
+                        <p className="text-sm leading-relaxed">{contact.message}</p>
+                        {contact.image && (
+                          <div className="w-32 h-32 rounded-lg overflow-hidden border">
+                            <img src={contact.image} alt="Attachment" className="w-full h-full object-cover" />
+                          </div>
+                        )}
+                      </div>
+
+                      {contact.status === 'replied' && (
+                        <div className="pt-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="w-full gap-2 text-xs h-8 border-primary/20 hover:bg-primary/5 hover:text-primary transition-all shadow-sm"
+                            onClick={() => {
+                              setSelectedViewContact(contact);
+                              if (contact.status === 'replied') {
+                                contactAPI.markAsSeen(contact._id).then(() => {
+                                  queryClient.invalidateQueries({ queryKey: ['my-contacts'] });
+                                });
+                              }
+                            }}
+                          >
+                            <MessageSquare className="w-3 h-3" />
+                            View Response
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+                ))
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
+
+      {/* View Response Dialog */}
+      <Dialog open={!!selectedViewContact} onOpenChange={(open) => !open && setSelectedViewContact(null)}>
+        <DialogContent className="w-[95vw] sm:max-w-[600px] max-h-[95vh] overflow-y-auto custom-scrollbar p-6 bg-background/95 backdrop-blur-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageSquare className="w-5 h-5 text-primary" />
+              Request Details
+            </DialogTitle>
+            <DialogDescription>
+              Sent on {selectedViewContact && format(new Date(selectedViewContact.createdAt), "MMMM d, yyyy")}
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedViewContact && (
+            <div className="space-y-6 py-4">
+              {/* Original Message */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground" />
+                  Your Message
+                </div>
+                <div className="p-4 bg-muted/50 rounded-2xl text-sm border">
+                  <p className="font-semibold mb-1">{selectedViewContact.subject}</p>
+                  <p>{selectedViewContact.message}</p>
+                  {selectedViewContact.image && (
+                    <div className="mt-3 rounded-lg overflow-hidden border max-w-xs">
+                      <img src={selectedViewContact.image} alt="Attached" className="w-full h-auto" />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Related Tree Info */}
+              {selectedViewContact.relatedTreeId && (
+                <div className="p-3 bg-primary/5 rounded-xl border border-primary/10 flex items-center gap-3">
+                  <TreePine className="w-4 h-4 text-primary" />
+                  <div className="text-xs">
+                    <p className="font-bold text-primary">Related Tree</p>
+                    <p className="text-muted-foreground">{selectedViewContact.relatedTreeId.commonName} ({selectedViewContact.relatedTreeId.treeId})</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Conversation History */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-xs font-bold text-primary uppercase tracking-wider">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                  Administrator Responses
+                </div>
+                
+                <div className="space-y-4">
+                  {selectedViewContact.responses && selectedViewContact.responses.length > 0 ? (
+                    selectedViewContact.responses.map((resp: any, i: number) => (
+                      <div key={i} className="flex flex-col gap-1">
+                        <div className="p-4 bg-primary/10 text-foreground rounded-2xl rounded-tl-none text-sm border border-primary/20">
+                          {resp.message}
+                        </div>
+                        <span className="text-[10px] text-muted-foreground ml-2">
+                          {format(new Date(resp.respondedAt), "MMM d, h:mm a")}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    selectedViewContact.reply ? (
+                      <div className="flex flex-col gap-1">
+                        <div className="p-4 bg-primary/10 text-foreground rounded-2xl rounded-tl-none text-sm border border-primary/20">
+                          {selectedViewContact.reply}
+                        </div>
+                        {selectedViewContact.repliedAt && (
+                          <span className="text-[10px] text-muted-foreground ml-2">
+                            {format(new Date(selectedViewContact.repliedAt), "MMM d, h:mm a")}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground italic pl-2">No responses yet. Our team will get back to you soon.</p>
+                    )
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <div className="flex justify-end">
+            <Button variant="outline" onClick={() => setSelectedViewContact(null)}>Close</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 }

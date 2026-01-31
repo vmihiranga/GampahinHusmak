@@ -2,7 +2,7 @@ import Layout from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "wouter";
-import { ArrowRight, TreePine, Users, Map, Sprout } from "lucide-react";
+import { ArrowRight, TreePine, Users, Activity, Sprout } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { statsAPI } from "@/lib/api";
 import heroImage from "@assets/generated_images/community_tree_planting_hero_image.png";
@@ -64,7 +64,7 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 -mt-36 relative z-20">
             <StatCard icon={TreePine} value={stats?.totalTrees || 0} label="Trees Planted" />
             <StatCard icon={Users} value={stats?.totalUsers || 0} label="Active Volunteers" />
-            <StatCard icon={Map} value={stats?.upcomingEvents || 0} label="Upcoming Events" />
+            <StatCard icon={Activity} value="94%" label="Survival Rate" />
             <StatCard icon={Sprout} value={stats?.co2Offset || '0 kg/year'} label="CO₂ Offset" />
           </div>
 
@@ -129,13 +129,15 @@ export default function Home() {
 
 function StatCard({ icon: Icon, value, label }: { icon: any, value: string | number, label: string }) {
   return (
-    <Card className="bg-card/80 backdrop-blur-md border border-border/50 shadow-lg hover:translate-y-[-5px] transition-transform duration-300">
-      <CardContent className="p-6 flex flex-col items-center text-center space-y-2">
-        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-2">
-          <Icon className="w-6 h-6" />
+    <Card className="group relative overflow-hidden bg-white/40 backdrop-blur-xl border border-white/40 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] hover:shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] transition-all duration-500 rounded-[2rem]">
+      <CardContent className="p-8 flex flex-col items-center text-center space-y-5 relative z-10">
+        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary transform transition-all group-hover:scale-110 duration-500">
+          <Icon className="w-7 h-7" />
         </div>
-        <div className="text-3xl font-bold font-heading text-foreground">{value}</div>
-        <div className="text-sm text-muted-foreground font-medium uppercase tracking-wide">{label}</div>
+        <div className="space-y-1">
+          <div className="text-4xl font-bold font-heading text-slate-900 tracking-tight">{value}</div>
+          <div className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em]">{label}</div>
+        </div>
       </CardContent>
     </Card>
   );

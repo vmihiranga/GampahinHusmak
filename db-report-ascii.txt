@@ -1,0 +1,56 @@
+[dotenv@17.2.3] injecting env (6) from .env -- tip: ??????  write to custom object with { processEnv: myObject }
+{
+  "totalTrees": 6,
+  "trees": [
+    {
+      "id": "696f660a2e4ab7c02d4e507b",
+      "name": "Mango Tree",
+      "imagesCount": 1,
+      "hasImages": true
+    },
+    {
+      "id": "696f660a2e4ab7c02d4e507c",
+      "name": "Jackfruit Tree",
+      "imagesCount": 1,
+      "hasImages": true
+    },
+    {
+      "id": "696f660a2e4ab7c02d4e507d",
+      "name": "Neem Tree",
+      "imagesCount": 1,
+      "hasImages": true
+    },
+    {
+      "id": "696f660a2e4ab7c02d4e507f",
+      "name": "Tamarind Tree",
+      "imagesCount": 1,
+      "hasImages": true
+    },
+    {
+      "id": "696f660a2e4ab7c02d4e507e",
+      "name": "Coconut Palm",
+      "imagesCount": 1,
+      "hasImages": true
+    },
+    {
+      "id": "6973c2e3edf9a029173f6260",
+      "name": "ggg",
+      "imagesCount": 1,
+      "hasImages": true
+    }
+  ],
+  "totalGalleryItems": 3,
+  "galleryItems": [
+    {
+      "title": "Young Saplings Growing Strong",
+      "relatedTree": "696f660a2e4ab7c02d4e507b"
+    },
+    {
+      "title": "Independence Day Success"
+    },
+    {
+      "title": "Community Coming Together"
+    }
+  ],
+  "totalUpdates": 3
+}

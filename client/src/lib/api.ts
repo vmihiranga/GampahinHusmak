@@ -8,7 +8,8 @@ import type {
   GalleryResponse,
   UsersResponse, 
   StatsResponse,
-  MessageResponse
+  MessageResponse,
+  ContactActionResponse
 } from './types';
 
 
@@ -122,6 +123,8 @@ export const contactAPI = {
   }),
   
   getAll: () => fetchAPI<ContactsResponse>('/contact'),
+  getMyContacts: () => fetchAPI<ContactsResponse>('/my-contacts'),
+  markAsSeen: (id: string) => fetchAPI<MessageResponse>(`/my-contacts/${id}/seen`, { method: 'PUT' }),
 };
 
 // Stats API
@@ -138,5 +141,19 @@ export const adminAPI = {
   verifyUser: (userId: string, isVerified: boolean) => fetchAPI<MessageResponse>(`/admin/users/${userId}/verify`, {
     method: 'PUT',
     body: JSON.stringify({ isVerified }),
+  }),
+  
+  updateContactStatus: (id: string, status: string) => fetchAPI<MessageResponse>(`/admin/contacts/${id}/status`, {
+    method: 'PUT',
+    body: JSON.stringify({ status }),
+  }),
+  
+  respondToContact: (id: string, reply: string) => fetchAPI<ContactActionResponse>(`/admin/contacts/${id}/respond`, {
+    method: 'POST',
+    body: JSON.stringify({ reply }),
+  }),
+  
+  sendTreeReminder: (id: string) => fetchAPI<MessageResponse>(`/admin/trees/${id}/remind`, {
+    method: 'POST'
   }),
 };

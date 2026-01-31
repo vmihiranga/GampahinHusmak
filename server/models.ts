@@ -172,28 +172,44 @@ const GallerySchema = new Schema<IGallery>({
 
 // Contact/Inquiry Schema
 export interface IContact extends Document {
+  userId?: mongoose.Types.ObjectId;
+  relatedTreeId?: mongoose.Types.ObjectId;
   name: string;
   email: string;
   phone?: string;
   subject: string;
   message: string;
-  status: 'new' | 'read' | 'replied' | 'closed';
-  reply?: string;
+  image?: string;
+  status: 'new' | 'read' | 'replied' | 'seen' | 'closed';
+  reply?: string; // Kept for legacy compatibility
   repliedBy?: mongoose.Types.ObjectId;
   repliedAt?: Date;
+  responses: {
+    message: string;
+    respondedBy: mongoose.Types.ObjectId;
+    respondedAt: Date;
+  }[];
   createdAt: Date;
 }
 
 const ContactSchema = new Schema<IContact>({
+  userId: { type: Schema.Types.ObjectId, ref: 'User' },
+  relatedTreeId: { type: Schema.Types.ObjectId, ref: 'Tree' },
   name: { type: String, required: true },
   email: { type: String, required: true },
   phone: { type: String },
   subject: { type: String, required: true },
   message: { type: String, required: true },
-  status: { type: String, enum: ['new', 'read', 'replied', 'closed'], default: 'new' },
+  image: { type: String },
+  status: { type: String, enum: ['new', 'read', 'replied', 'seen', 'closed'], default: 'new' },
   reply: { type: String },
   repliedBy: { type: Schema.Types.ObjectId, ref: 'User' },
   repliedAt: { type: Date },
+  responses: [{
+    message: { type: String, required: true },
+    respondedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    respondedAt: { type: Date, default: Date.now }
+  }],
 }, { timestamps: true });
 
 // Achievement/Badge Schema

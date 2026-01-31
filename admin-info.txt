@@ -1,0 +1,8 @@
+﻿[dotenv@17.2.3] injecting env (6) from .env -- tip: ­ƒøá´©Å  run anywhere with `dotenvx run -- yourcommand`
+=== Admin Accounts ===
+
+Username: admin
+Email: admin@gampahinhusmak.lk
+Role: admin
+Full Name: System Administrator
+---

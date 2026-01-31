@@ -3,7 +3,8 @@ import { Leaf, User, LayoutDashboard, LogIn, LogOut, Menu, X } from "lucide-reac
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { authAPI } from "@/lib/api";
+import { useQuery } from "@tanstack/react-query";
+import { authAPI, contactAPI } from "@/lib/api";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,6 +37,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const { data: contactsData } = useQuery({
+    queryKey: ['my-contacts'],
+    queryFn: () => contactAPI.getMyContacts(),
+    enabled: !!user,
+    refetchInterval: 30000, 
+  });
+
+  const unreadCount = contactsData?.contacts?.filter((c: any) => c.status === 'replied').length || 0;
+
   const handleLogout = async () => {
     try {
       await authAPI.logout();
@@ -48,7 +58,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
 
-  const NavLink = ({ href, children, icon: Icon }: { href: string; children: React.ReactNode; icon?: any }) => {
+  const NavLink = ({ href, children, icon: Icon, badge }: { href: string; children: React.ReactNode; icon?: any; badge?: number }) => {
     const isActive = location === href;
     const isHome = location === "/";
     return (
@@ -63,7 +73,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           onClick={() => setIsMobileMenuOpen(false)}
         >
           {Icon && <Icon className="w-4 h-4" />}
-          {children}
+          <span className="flex items-center gap-1.5">
+            {children}
+            {badge !== undefined && badge > 0 && (
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground animate-in zoom-in duration-300">
+                {badge}
+              </span>
+            )}
+          </span>
         </a>
       </Link>
     );
@@ -99,7 +116,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <NavLink href="/contact">Contact</NavLink>
             
             {/* Show Dashboard only when logged in */}
-            {user && <NavLink href="/dashboard">Dashboard</NavLink>}
+            {user && <NavLink href="/dashboard" badge={unreadCount}>Dashboard</NavLink>}
             
             {/* Show Admin only for admin/superadmin */}
             {isAdmin && <NavLink href="/admin">Admin</NavLink>}
@@ -201,7 +218,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <NavLink href="/contact">Contact</NavLink>
             
             {/* Show Dashboard only when logged in */}
-            {user && <NavLink href="/dashboard">Dashboard</NavLink>}
+            {user && <NavLink href="/dashboard" badge={unreadCount}>Dashboard</NavLink>}
             
             {/* Show Admin only for admin/superadmin */}
             {isAdmin && <NavLink href="/admin">Admin</NavLink>}

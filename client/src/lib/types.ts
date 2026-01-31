@@ -27,7 +27,7 @@ export interface Tree {
   currentHeight?: number;
   images?: string[];
   notes?: string;
-  plantedBy?: string;
+  plantedBy?: any; // Can be ID or populated User object
   createdAt: string;
   updatedAt: string;
 }
@@ -61,8 +61,16 @@ export interface Contact {
   email: string;
   subject: string;
   message: string;
-  status: 'new' | 'in-progress' | 'resolved';
+  status: 'new' | 'read' | 'replied' | 'seen' | 'closed';
   createdAt: string;
+  reply?: string;
+  repliedAt?: string;
+  image?: string;
+  responses?: {
+    message: string;
+    respondedBy: string | any;
+    respondedAt: string;
+  }[];
 }
 
 export interface Stats {
@@ -119,4 +127,9 @@ export interface StatsResponse extends Stats {}
 
 export interface MessageResponse {
   message: string;
+}
+
+export interface ContactActionResponse {
+  message: string;
+  contact: Contact;
 }

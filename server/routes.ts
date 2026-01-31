@@ -393,16 +393,72 @@ export async function registerRoutes(
   // Get gallery items
   app.get("/api/gallery", async (req, res) => {
     try {
-      const { limit = 20 } = req.query;
+      const { limit = 30 } = req.query;
 
-      const items = await Gallery.find()
+      // 1. Fetch curated gallery items
+      const galleryItems = await Gallery.find()
         .populate("uploadedBy", "username fullName")
-        .populate("relatedTree", "treeId species")
+        .populate("relatedTree")
         .populate("relatedEvent", "title")
+        .sort({ createdAt: -1 });
+
+      // 2. Fetch latest trees with images to show community plantings
+      const latestTrees = await Tree.find({ images: { $not: { $size: 0 } } })
+        .populate("plantedBy", "username fullName")
         .limit(Number(limit))
         .sort({ createdAt: -1 });
 
-      res.json({ items });
+      // 3. Process curated items to include growth updates
+      const processedCurated = await Promise.all(
+        galleryItems.map(async (item: any) => {
+          let allImages = [...(item.images || [])];
+          
+          if (item.relatedTree) {
+            const updates = await TreeUpdate.find({ treeId: item.relatedTree._id }).sort({ updateDate: 1 });
+            const updateImages = updates.flatMap(u => u.images || []);
+            allImages = Array.from(new Set([...allImages, ...updateImages]));
+          }
+          
+          return {
+            ...item.toObject(),
+            images: allImages
+          };
+        })
+      );
+
+      // 4. Create items for trees not already in gallery
+      const curatedTreeIds = galleryItems
+        .filter(item => item.relatedTree)
+        .map(item => item.relatedTree._id.toString());
+
+      const treeGalleryItems = await Promise.all(
+        latestTrees
+          .filter(tree => !curatedTreeIds.includes(tree._id.toString()))
+          .map(async (tree) => {
+            const updates = await TreeUpdate.find({ treeId: tree._id }).sort({ updateDate: 1 });
+            const updateImages = updates.flatMap(u => u.images || []);
+            const allImages = Array.from(new Set([...(tree.images || []), ...updateImages]));
+
+            return {
+              _id: tree._id,
+              title: `${tree.commonName} Planting`,
+              description: tree.notes || `A young ${tree.commonName} tree planted in Gampaha.`,
+              images: allImages,
+              uploadedBy: tree.plantedBy,
+              relatedTree: tree,
+              tags: ["community", tree.commonName.toLowerCase()],
+              createdAt: tree.createdAt,
+              likes: [],
+              isCommunityPost: true
+            };
+          })
+      );
+
+      const allItems = [...processedCurated, ...treeGalleryItems]
+        .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, Number(limit));
+
+      res.json({ items: allItems });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
@@ -459,8 +515,40 @@ export async function registerRoutes(
   // Submit contact form
   app.post("/api/contact", async (req, res) => {
     try {
-      const contact = await Contact.create(req.body);
+      const userId = (req.session as any).userId;
+      const contactData = { ...req.body };
+      if (userId) contactData.userId = userId;
+      
+      const contact = await Contact.create(contactData);
       res.status(201).json({ message: "Message sent successfully", contact });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get user's own contacts
+  app.get("/api/my-contacts", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const contacts = await Contact.find({ userId })
+        .populate("relatedTreeId", "commonName treeId")
+        .sort({ createdAt: -1 });
+      res.json({ contacts });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Mark contact as seen by user
+  app.put("/api/my-contacts/:id/seen", requireAuth, async (req, res) => {
+    try {
+      const contact = await Contact.findOneAndUpdate(
+        { _id: req.params.id, userId: (req.session as any).userId },
+        { status: 'seen' },
+        { new: true }
+      );
+      if (!contact) return res.status(404).json({ message: "Contact not found" });
+      res.json({ message: "Marked as seen", contact });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
@@ -479,7 +567,9 @@ export async function registerRoutes(
         return res.status(403).json({ message: "Unauthorized" });
       }
 
-      const contacts = await Contact.find().sort({ createdAt: -1 });
+      const contacts = await Contact.find()
+        .populate("relatedTreeId", "treeId commonName location")
+        .sort({ createdAt: -1 });
       res.json({ contacts });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -646,6 +736,85 @@ export async function registerRoutes(
       }
 
       res.json({ message: `User ${isVerified ? 'verified' : 'unverified'} successfully`, user });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Update contact status (admin only)
+  app.put("/api/admin/contacts/:id/status", requireAuth, requireAdmin, async (req, res) => {
+    try {
+      const { status } = req.body;
+      const contact = await Contact.findByIdAndUpdate(
+        req.params.id,
+        { status },
+        { new: true }
+      );
+      if (!contact) return res.status(404).json({ message: "Contact not found" });
+      res.json({ message: "Status updated", contact });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Respond to contact (admin only)
+  app.post("/api/admin/contacts/:id/respond", requireAuth, requireAdmin, async (req, res) => {
+    try {
+      const { reply } = req.body;
+      const userId = (req.session as any).userId;
+      
+      const contact = await Contact.findByIdAndUpdate(
+        req.params.id,
+        { 
+          $set: { 
+            status: 'replied',
+            reply, // Update legacy fields
+            repliedBy: userId,
+            repliedAt: new Date()
+          },
+          $push: { 
+            responses: {
+              message: reply,
+              respondedBy: userId,
+              respondedAt: new Date()
+            }
+          }
+        },
+        { new: true }
+      );
+      if (!contact) return res.status(404).json({ message: "Contact not found" });
+      res.json({ message: "Response recorded", contact });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Send update reminder for a tree (admin only)
+  app.post("/api/admin/trees/:id/remind", requireAuth, requireAdmin, async (req, res) => {
+    try {
+      const tree = await Tree.findById(req.params.id);
+      if (!tree) return res.status(404).json({ message: "Tree not found" });
+
+      const adminId = (req.session as any).userId;
+      const admin = await User.findById(adminId);
+
+      // Create a contact message targeted to the user
+      await Contact.create({
+        userId: tree.plantedBy,
+        relatedTreeId: tree._id,
+        name: "District Administrator",
+        email: admin?.email || "admin@gampahinhusmak.lk",
+        subject: `Update Reminder: ${tree.commonName}`,
+        message: `Hello! Please take a moment to update your ${tree.commonName}. Uploading regular updates helps us track the reforestation progress.`,
+        status: 'replied', // Set to replied so it shows as a notification badge
+        responses: [{
+          message: `Hello! Please take a moment to update your ${tree.commonName}. Uploading regular updates helps us track the reforestation progress.`,
+          respondedBy: adminId,
+          respondedAt: new Date()
+        }]
+      });
+
+      res.json({ message: "Reminder sent successfully" });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
