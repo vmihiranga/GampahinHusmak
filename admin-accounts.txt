@@ -1,7 +1,0 @@
-=== Admin Accounts ===
-
-Username: admin
-Email: admin@gampahinhusmak.lk
-Role: admin
-Full Name: System Administrator
----

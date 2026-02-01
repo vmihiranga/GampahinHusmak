@@ -224,7 +224,6 @@ export default function Gallery() {
                               </Button>
                             </div>
                           </div>
-                        </div>
                       </div>
                     </div>
                   </DialogContent>
