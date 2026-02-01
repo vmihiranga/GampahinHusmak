@@ -29,7 +29,7 @@ export default function TreeDetails({ params }: { params: { id: string } }) {
   const searchParams = new URLSearchParams(window.location.search);
   const fromAdmin = searchParams.get("from") === "admin";
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error } = useQuery<TreeDetailsResponse>({
     queryKey: ["tree", params.id],
     queryFn: () => treesAPI.getOne(params.id),
   });

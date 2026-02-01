@@ -12,7 +12,7 @@ import forestImage from "@assets/generated_images/lush_green_forest_landscape.pn
 export default function Home() {
   const { t } = useLanguage();
   // Fetch real stats from API
-  const { data: stats } = useQuery({
+  const { data: stats } = useQuery<StatsResponse>({
     queryKey: ['stats'],
     queryFn: () => statsAPI.getGeneral(),
   });

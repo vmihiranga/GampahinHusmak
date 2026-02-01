@@ -6,11 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Filter, AlertCircle, MapPin as MapPinIcon, LocateFixed, Loader2, Clock, MessageSquare, CheckCircle2, History, TreePine, Camera } from "lucide-react";
+import { Plus, Search, Filter, AlertCircle, MapPin as MapPinIcon, LocateFixed, Loader2, Clock, MessageSquare, CheckCircle2, History, TreePine, Camera, Trophy } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { treesAPI, authAPI, contactAPI } from "@/lib/api";
+import { treesAPI, authAPI, contactAPI, statsAPI } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -34,26 +34,33 @@ export default function Dashboard() {
   const [selectedViewContact, setSelectedViewContact] = useState<any>(null);
 
   // Fetch user profile
-  const { data: userData, isLoading: isUserLoading } = useQuery({
+  const { data: userData, isLoading: isUserLoading } = useQuery<AuthResponse>({
     queryKey: ['user-profile'],
     queryFn: () => authAPI.me(),
   });
   const user = userData?.user;
 
   // Fetch user's trees
-  const { data: treesData, isLoading: isTreesLoading } = useQuery({
+  const { data: treesData, isLoading: isTreesLoading } = useQuery<TreesResponse>({
     queryKey: ['user-trees'],
     queryFn: () => treesAPI.getAll(),
     enabled: !!user?.isVerified, // Only fetch trees if verified
   });
 
   // Fetch user's requests/contacts
-  const { data: contactsData } = useQuery({
+  const { data: contactsData } = useQuery<ContactsResponse>({
     queryKey: ['my-contacts'],
     queryFn: () => contactAPI.getMyContacts(),
     enabled: !!user,
   });
   const myContacts = contactsData?.contacts || [];
+
+  // Fetch user stats/achievements
+  const { data: userStats } = useQuery({
+    queryKey: ['user-stats', user?._id],
+    queryFn: () => statsAPI.getUser(user!._id),
+    enabled: !!user?._id,
+  });
 
   const createTreeMutation = useMutation({
     mutationFn: (data: any) => treesAPI.create(data),
@@ -614,6 +621,10 @@ export default function Dashboard() {
                 </Badge>
               )}
             </TabsTrigger>
+            <TabsTrigger value="achievements" className="gap-2">
+              <Trophy className="w-4 h-4" />
+              Achievements
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="trees" className="space-y-6">
@@ -734,6 +745,64 @@ export default function Dashboard() {
                         </div>
                       )}
                     </div>
+                  </Card>
+                ))
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="achievements" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <Card className="p-6 text-center space-y-2 bg-primary/5 border-primary/10">
+                <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mx-auto text-primary">
+                  <TreePine className="w-6 h-6" />
+                </div>
+                <div className="text-3xl font-bold">{userStats?.treesPlanted || 0}</div>
+                <p className="text-sm text-muted-foreground uppercase font-bold tracking-tighter">Trees Planted</p>
+              </Card>
+              <Card className="p-6 text-center space-y-2 bg-primary/5 border-primary/10">
+                <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mx-auto text-primary">
+                  <CheckCircle2 className="w-6 h-6" />
+                </div>
+                <div className="text-3xl font-bold">{userStats?.updatesSubmitted || 0}</div>
+                <p className="text-sm text-muted-foreground uppercase font-bold tracking-tighter">Growth Updates</p>
+              </Card>
+              <Card className="p-6 text-center space-y-2 bg-primary/5 border-primary/10">
+                <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mx-auto text-primary">
+                  <Plus className="w-6 h-6" />
+                </div>
+                <div className="text-3xl font-bold">{userStats?.eventsAttended || 0}</div>
+                <p className="text-sm text-muted-foreground uppercase font-bold tracking-tighter">Events Joined</p>
+              </Card>
+              <Card className="p-6 text-center space-y-2 bg-primary/5 border-primary/10">
+                <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mx-auto text-primary">
+                  <Trophy className="w-6 h-6" />
+                </div>
+                <div className="text-3xl font-bold">{userStats?.achievements?.length || 0}</div>
+                <p className="text-sm text-muted-foreground uppercase font-bold tracking-tighter">Badges Earned</p>
+              </Card>
+            </div>
+
+            <h2 className="text-2xl font-heading font-bold mt-12">Earned Badges</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {!userStats?.achievements || userStats.achievements.length === 0 ? (
+                <div className="col-span-full py-12 text-center border-2 border-dashed rounded-3xl">
+                  <Trophy className="w-12 h-12 text-muted-foreground/20 mx-auto mb-4" />
+                  <p className="text-muted-foreground">You haven't earned any badges yet. Start planting to unlock them!</p>
+                </div>
+              ) : (
+                userStats.achievements.map((badge: any) => (
+                  <Card key={badge._id} className="overflow-hidden border-primary/10 bg-gradient-to-br from-white to-primary/5">
+                    <CardContent className="p-6 flex items-center gap-4">
+                      <div className="w-16 h-16 rounded-full bg-white shadow-sm border border-primary/10 flex items-center justify-center text-3xl">
+                        {badge.icon}
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-lg">{badge.badgeName}</h3>
+                        <p className="text-sm text-muted-foreground leading-tight">{badge.description}</p>
+                        <p className="text-[10px] text-primary/60 font-medium mt-2 uppercase">Earned {format(new Date(badge.earnedAt), "MMM d, yyyy")}</p>
+                      </div>
+                    </CardContent>
                   </Card>
                 ))
               )}

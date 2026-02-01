@@ -11,6 +11,7 @@ export const translations = {
       login: "Login",
       logout: "Logout",
       admin_panel: "Admin Panel",
+      leaderboard: "Leaderboard",
     },
     home: {
       hero: {
@@ -101,6 +102,7 @@ export const translations = {
       login: "ඇතුළු වන්න",
       logout: "පිටවෙන්න",
       admin_panel: "පරිපාලක පැනලය",
+      leaderboard: "නායක පුවරුව",
     },
     home: {
       hero: {

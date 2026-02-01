@@ -17,7 +17,7 @@ export default function Gallery() {
   const [activeIndices, setActiveIndices] = useState<Record<string, number>>({});
   
   // Fetch gallery items from API
-  const { data: galleryData, isLoading } = useQuery({
+  const { data: galleryData, isLoading } = useQuery<GalleryResponse>({
     queryKey: ['gallery'],
     queryFn: () => galleryAPI.getAll(),
   });

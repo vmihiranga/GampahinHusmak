@@ -81,6 +81,16 @@ export interface Stats {
   upcomingEvents?: number;
 }
 
+export interface Achievement {
+  _id: string;
+  userId: string;
+  badgeName: string;
+  badgeType: string;
+  description: string;
+  icon: string;
+  earnedAt: string;
+}
+
 export interface GalleryItem {
   _id: string;
   title: string;
@@ -132,4 +142,16 @@ export interface MessageResponse {
 export interface ContactActionResponse {
   message: string;
   contact: Contact;
+}
+
+export interface LeaderboardResponse {
+  topPlanters: {
+    _id: string;
+    count: number;
+    user: {
+      username: string;
+      fullName?: string;
+      profileImage?: string;
+    };
+  }[];
 }

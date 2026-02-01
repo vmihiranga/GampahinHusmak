@@ -9,7 +9,8 @@ import type {
   UsersResponse, 
   StatsResponse,
   MessageResponse,
-  ContactActionResponse
+  ContactActionResponse,
+  LeaderboardResponse
 } from './types';
 
 
@@ -132,6 +133,8 @@ export const statsAPI = {
   getGeneral: () => fetchAPI<StatsResponse>('/stats'),
   
   getUser: (userId: string) => fetchAPI<any>(`/stats/user/${userId}`),
+  
+  getLeaderboard: () => fetchAPI<LeaderboardResponse>('/leaderboard'),
 };
 
 // Admin API

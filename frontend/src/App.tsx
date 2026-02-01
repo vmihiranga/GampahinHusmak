@@ -11,6 +11,7 @@ import Admin from "@/pages/admin";
 import Gallery from "@/pages/gallery";
 import Contact from "@/pages/contact";
 import TreeDetails from "@/pages/tree-details";
+import Leaderboard from "@/pages/leaderboard";
 
 function Router() {
   return (
@@ -22,6 +23,7 @@ function Router() {
       <Route path="/gallery" component={Gallery} />
       <Route path="/contact" component={Contact} />
       <Route path="/trees/:id" component={TreeDetails} />
+      <Route path="/leaderboard" component={Leaderboard} />
       <Route component={NotFound} />
     </Switch>
   );

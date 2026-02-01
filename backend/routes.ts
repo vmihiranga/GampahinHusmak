@@ -241,6 +241,42 @@ export async function registerRoutes(
         plantedBy: userId,
       });
 
+      // Achievement Logic
+      const treeCount = await Tree.countDocuments({ plantedBy: userId });
+      
+      const badgeTemplates = [
+        { count: 1, name: "First Seed", type: "trees_planted", desc: "Planted your very first tree!", icon: "🌱" },
+        { count: 5, name: "Green Thumb", type: "trees_planted", desc: "Planted 5 trees. You're making a difference!", icon: "🌿" },
+        { count: 10, name: "Forest Guardian", type: "trees_planted", desc: "Planted 10 trees. A true environmental hero!", icon: "🌳" },
+        { count: 25, name: "Nature's Champion", type: "trees_planted", desc: "Planted 25 trees. Gampaha thanks you!", icon: "👑" }
+      ];
+
+      const badge = badgeTemplates.find(b => b.count === treeCount);
+      if (badge) {
+        await Achievement.create({
+          userId,
+          badgeName: badge.name,
+          badgeType: badge.type,
+          description: badge.desc,
+          icon: badge.icon
+        });
+
+        // Add a notification for the user
+        await Contact.create({
+          userId,
+          name: "System",
+          email: "system@gampahinhusmak.lk",
+          subject: "Achievement Unlocked!",
+          message: `Congratulations! You've earned the "${badge.name}" badge for planting ${treeCount} tree${treeCount > 1 ? 's' : ''}. Check your profile to see your new badge!`,
+          status: 'replied',
+          responses: [{
+            message: `Congratulations! You've earned the "${badge.name}" badge for planting ${treeCount} tree${treeCount > 1 ? 's' : ''}. Check your profile to see your new badge!`,
+            respondedBy: userId, // Self-responded as system
+            respondedAt: new Date()
+          }]
+        });
+      }
+
       res.status(201).json({ message: "Tree registered successfully", tree });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -599,6 +635,40 @@ export async function registerRoutes(
         recentTrees,
         co2Offset: `${(totalTrees * 22).toFixed(1)} kg/year`, // Approximate
       });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get leaderboard
+  app.get("/api/leaderboard", async (req, res) => {
+    try {
+      const topPlanters = await Tree.aggregate([
+        { $match: { status: "active" } },
+        { $group: { _id: "$plantedBy", count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $limit: 10 },
+        {
+          $lookup: {
+            from: "users",
+            localField: "_id",
+            foreignField: "_id",
+            as: "user"
+          }
+        },
+        { $unwind: "$user" },
+        {
+          $project: {
+            _id: 1,
+            count: 1,
+            "user.username": 1,
+            "user.fullName": 1,
+            "user.profileImage": 1
+          }
+        }
+      ]);
+
+      res.json({ topPlanters });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }

@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { authAPI, contactAPI } from "@/lib/api";
+import { AuthResponse, ContactsResponse } from "@/lib/types";
 import { useLanguage } from "@/hooks/use-language";
 import { Globe, Languages } from "lucide-react";
 import {
@@ -31,7 +32,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const checkAuth = async () => {
     try {
-      const response = await authAPI.me();
+      const response: AuthResponse = await authAPI.me();
       setUser(response.user);
     } catch (error) {
       setUser(null);
@@ -40,7 +41,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const { data: contactsData } = useQuery({
+  const { data: contactsData } = useQuery<ContactsResponse>({
     queryKey: ['my-contacts'],
     queryFn: () => contactAPI.getMyContacts(),
     enabled: !!user,
@@ -117,6 +118,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <NavLink href="/">{t.nav.home}</NavLink>
             <NavLink href="/gallery">{t.nav.gallery}</NavLink>
             <NavLink href="/contact">{t.nav.contact}</NavLink>
+            <NavLink href="/leaderboard">{t.nav.leaderboard}</NavLink>
             
             {/* Show Dashboard only when logged in */}
             {user && <NavLink href="/dashboard" badge={unreadCount}>{t.nav.dashboard}</NavLink>}
@@ -246,6 +248,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <NavLink href="/">{t.nav.home}</NavLink>
             <NavLink href="/gallery">{t.nav.gallery}</NavLink>
             <NavLink href="/contact">{t.nav.contact}</NavLink>
+            <NavLink href="/leaderboard">{t.nav.leaderboard}</NavLink>
             
             {/* Show Dashboard only when logged in */}
             {user && <NavLink href="/dashboard" badge={unreadCount}>{t.nav.dashboard}</NavLink>}

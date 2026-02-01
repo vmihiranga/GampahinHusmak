@@ -66,25 +66,25 @@ import { useState } from "react";
 
 export default function Admin() {
   // Fetch trees data
-  const { data: treesData } = useQuery({
+  const { data: treesData } = useQuery<TreesResponse>({
     queryKey: ["admin-trees"],
     queryFn: () => treesAPI.getAll(),
   });
 
   // Fetch stats
-  const { data: stats } = useQuery({
+  const { data: stats } = useQuery<StatsResponse>({
     queryKey: ["admin-stats"],
     queryFn: () => statsAPI.getGeneral(),
   });
 
   // Fetch contacts/issues
-  const { data: contactsData } = useQuery({
+  const { data: contactsData } = useQuery<ContactsResponse>({
     queryKey: ["admin-contacts"],
     queryFn: () => contactAPI.getAll(),
   });
 
   // Fetch users
-  const { data: usersData } = useQuery({
+  const { data: usersData } = useQuery<UsersResponse>({
     queryKey: ["admin-users"],
     queryFn: () => adminAPI.getUsers(),
   });
