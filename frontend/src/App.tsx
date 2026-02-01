@@ -12,17 +12,30 @@ import Gallery from "@/pages/gallery";
 import Contact from "@/pages/contact";
 import TreeDetails from "@/pages/tree-details";
 import Leaderboard from "@/pages/leaderboard";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/auth" component={Auth} />
-      <Route path="/dashboard" component={Dashboard} />
-      <Route path="/admin" component={Admin} />
+      <Route path="/dashboard">
+        <ProtectedRoute>
+          <Dashboard />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin">
+        <ProtectedRoute adminOnly>
+          <Admin />
+        </ProtectedRoute>
+      </Route>
       <Route path="/gallery" component={Gallery} />
       <Route path="/contact" component={Contact} />
-      <Route path="/trees/:id" component={TreeDetails} />
+      <Route path="/trees/:id">
+        <ProtectedRoute>
+          <TreeDetails />
+        </ProtectedRoute>
+      </Route>
       <Route path="/leaderboard" component={Leaderboard} />
       <Route component={NotFound} />
     </Switch>

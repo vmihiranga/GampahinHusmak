@@ -182,16 +182,7 @@ export default function Gallery() {
                             </div>
                           )}
 
-                          {item.relatedTree && (
-                            <div className="pt-2">
-                              <Button className="w-full gap-2" variant="outline" asChild>
-                                <Link href={`/trees/${item.relatedTree._id || item.relatedTree}`}>
-                                  <TreePine className="w-4 h-4" />
-                                  {t.gallery.view_details}
-                                </Link>
-                              </Button>
-                            </div>
-                          )}
+
 
                           {item.tags && item.tags.length > 0 && (
                             <div className="flex flex-wrap gap-2 pt-2 max-h-24 overflow-y-auto custom-scrollbar">
