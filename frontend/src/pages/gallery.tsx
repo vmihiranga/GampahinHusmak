@@ -16,11 +16,13 @@ import { useLanguage } from "@/hooks/use-language";
 export default function Gallery() {
   const { t, language } = useLanguage();
   const [activeIndices, setActiveIndices] = useState<Record<string, number>>({});
+  const [page, setPage] = useState(1);
+  const limit = 30;
   
   // Fetch gallery items from API
   const { data: galleryData, isLoading } = useQuery<GalleryResponse>({
-    queryKey: ['gallery'],
-    queryFn: () => galleryAPI.getAll(),
+    queryKey: ['gallery', page],
+    queryFn: () => galleryAPI.getAll({ page, limit }),
   });
 
   const queryClient = useQueryClient();
@@ -223,6 +225,41 @@ export default function Gallery() {
             })
           )}
         </div>
+
+        {/* Pagination */}
+        {galleryData?.pagination && galleryData.pagination.totalPages > 1 && (
+          <div className="flex items-center justify-center gap-4 mt-12 pb-8">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setPage(p => Math.max(1, p - 1));
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              disabled={page === 1 || isLoading}
+              className="rounded-xl"
+            >
+              <ChevronLeft className="w-4 h-4 mr-1" />
+              {language === 'en' ? 'Previous' : 'කලින්'}
+            </Button>
+            <div className="text-sm font-medium">
+              {language === 'en' ? `Page ${page} of ${galleryData.pagination.totalPages}` : `${galleryData.pagination.totalPages} න් ${page} වන පිටුව`}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setPage(p => Math.min(galleryData.pagination!.totalPages, p + 1));
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              disabled={page === galleryData.pagination.totalPages || isLoading}
+              className="rounded-xl"
+            >
+              {language === 'en' ? 'Next' : 'මීළඟ'}
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          </div>
+        )}
       </div>
     </Layout>
   );

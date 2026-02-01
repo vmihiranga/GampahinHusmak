@@ -427,9 +427,12 @@ export async function registerRoutes(
   // ============ GALLERY ROUTES ============
 
   // Get gallery items
+  // Get gallery items (merged with latest trees)
   app.get("/api/gallery", async (req, res) => {
     try {
-      const { limit = 30 } = req.query;
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 30;
+      const skip = (page - 1) * limit;
 
       // 1. Fetch curated gallery items
       const galleryItems = await Gallery.find()
@@ -441,7 +444,6 @@ export async function registerRoutes(
       // 2. Fetch latest trees with images to show community plantings
       const latestTrees = await Tree.find({ images: { $not: { $size: 0 } } })
         .populate("plantedBy", "username fullName")
-        .limit(Number(limit))
         .sort({ createdAt: -1 });
 
       // 3. Process curated items to include growth updates
@@ -491,10 +493,20 @@ export async function registerRoutes(
       );
 
       const allItems = [...processedCurated, ...treeGalleryItems]
-        .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        .slice(0, Number(limit));
+        .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-      res.json({ items: allItems });
+      const totalItems = allItems.length;
+      const paginatedItems = allItems.slice(skip, skip + limit);
+
+      res.json({ 
+        items: paginatedItems,
+        pagination: {
+          totalItems,
+          totalPages: Math.ceil(totalItems / limit),
+          currentPage: page,
+          limit
+        }
+      });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
@@ -643,11 +655,24 @@ export async function registerRoutes(
   // Get leaderboard
   app.get("/api/leaderboard", async (req, res) => {
     try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const skip = (page - 1) * limit;
+
+      // Get total count of unique planters
+      const countResult = await Tree.aggregate([
+        { $match: { status: "active" } },
+        { $group: { _id: "$plantedBy" } },
+        { $count: "total" }
+      ]);
+      const totalItems = countResult.length > 0 ? countResult[0].total : 0;
+
       const topPlanters = await Tree.aggregate([
         { $match: { status: "active" } },
         { $group: { _id: "$plantedBy", count: { $sum: 1 } } },
         { $sort: { count: -1 } },
-        { $limit: 10 },
+        { $skip: skip },
+        { $limit: limit },
         {
           $lookup: {
             from: "users",
@@ -668,7 +693,15 @@ export async function registerRoutes(
         }
       ]);
 
-      res.json({ topPlanters });
+      res.json({ 
+        topPlanters, 
+        pagination: {
+          totalItems,
+          totalPages: Math.ceil(totalItems / limit),
+          currentPage: page,
+          limit
+        }
+      });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }

@@ -6,11 +6,17 @@ import { Trophy, Medal, Award, TreePine, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
+import { ChevronLeft, ChevronRight, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function Leaderboard() {
+  const [page, setPage] = useState(1);
+  const limit = 10;
+
   const { data, isLoading } = useQuery<LeaderboardResponse>({
-    queryKey: ['leaderboard'],
-    queryFn: () => statsAPI.getLeaderboard(),
+    queryKey: ['leaderboard', page],
+    queryFn: () => statsAPI.getLeaderboard(page, limit),
   });
 
   const topPlanters = data?.topPlanters || [];
@@ -43,10 +49,10 @@ export default function Leaderboard() {
                 <Card key={item._id} className={`overflow-hidden transition-all duration-300 hover:shadow-md ${index < 3 ? 'border-primary/20 bg-primary/5' : ''}`}>
                   <CardContent className="p-4 sm:p-6 flex items-center gap-4 sm:gap-6">
                     <div className="flex-shrink-0 w-8 sm:w-12 text-center font-heading font-bold text-2xl">
-                      {index === 0 ? <Medal className="w-8 h-8 text-yellow-500 mx-auto" /> :
-                       index === 1 ? <Medal className="w-8 h-8 text-slate-400 mx-auto" /> :
-                       index === 2 ? <Medal className="w-8 h-8 text-amber-600 mx-auto" /> :
-                       index + 1}
+                      {((page - 1) * limit) + index === 0 ? <Medal className="w-8 h-8 text-yellow-500 mx-auto" /> :
+                       ((page - 1) * limit) + index === 1 ? <Medal className="w-8 h-8 text-slate-400 mx-auto" /> :
+                       ((page - 1) * limit) + index === 2 ? <Medal className="w-8 h-8 text-amber-600 mx-auto" /> :
+                       ((page - 1) * limit) + index + 1}
                     </div>
 
                     <Avatar className="w-12 h-12 sm:w-16 sm:h-16 border-2 border-background shadow-sm">
@@ -79,6 +85,35 @@ export default function Leaderboard() {
               ))}
             </div>
           )}
+
+          {/* Pagination */}
+          {data?.pagination && data.pagination.totalPages > 1 && (
+            <div className="flex items-center justify-center gap-4 mt-8">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1 || isLoading}
+                className="rounded-xl"
+              >
+                <ChevronLeft className="w-4 h-4 mr-1" />
+                Previous
+              </Button>
+              <div className="text-sm font-medium">
+                Page {page} of {data.pagination.totalPages}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage(p => Math.min(data.pagination!.totalPages, p + 1))}
+                disabled={page === data.pagination.totalPages || isLoading}
+                className="rounded-xl"
+              >
+                Next
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Global Impact Summary */}
@@ -103,5 +138,3 @@ export default function Leaderboard() {
     </Layout>
   );
 }
-
-import { Users } from "lucide-react";

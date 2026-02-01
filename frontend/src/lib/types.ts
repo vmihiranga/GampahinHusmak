@@ -127,6 +127,12 @@ export interface ContactsResponse {
 
 export interface GalleryResponse {
   items: GalleryItem[];
+  pagination?: {
+    totalItems: number;
+    totalPages: number;
+    currentPage: number;
+    limit: number;
+  };
 }
 
 export interface UsersResponse {
@@ -154,4 +160,10 @@ export interface LeaderboardResponse {
       profileImage?: string;
     };
   }[];
+  pagination?: {
+    totalItems: number;
+    totalPages: number;
+    currentPage: number;
+    limit: number;
+  };
 }

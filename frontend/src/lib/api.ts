@@ -134,7 +134,7 @@ export const statsAPI = {
   
   getUser: (userId: string) => fetchAPI<any>(`/stats/user/${userId}`),
   
-  getLeaderboard: () => fetchAPI<LeaderboardResponse>('/leaderboard'),
+  getLeaderboard: (page = 1, limit = 10) => fetchAPI<LeaderboardResponse>(`/leaderboard?page=${page}&limit=${limit}`),
 };
 
 // Admin API
