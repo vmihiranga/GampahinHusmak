@@ -25,6 +25,7 @@ import {
   TreePine,
   MoreHorizontal,
   MessageSquare,
+  AlertTriangle,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
