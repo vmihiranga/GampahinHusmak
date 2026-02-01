@@ -127,31 +127,29 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             {isAdmin && <NavLink href="/admin">{t.nav.admin}</NavLink>}
             
             <div className={cn("h-4 w-px mx-2", isHome ? "bg-white/20" : "bg-border")} />
-            
-            {/* Language Switcher */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className={cn(
-                    "gap-2 px-3",
-                    isHome ? "text-white hover:bg-white/10" : ""
-                  )}
-                >
-                  <Languages className="w-4 h-4" />
-                  <span className="text-xs font-bold uppercase tracking-wider">{language === 'en' ? 'EN' : 'සිං'}</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setLanguage('en')} className={cn(language === 'en' && "bg-primary/10 text-primary font-bold")}>
-                  English
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setLanguage('si')} className={cn(language === 'si' && "bg-primary/10 text-primary font-bold")}>
-                  සිංහල (Sinhala)
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Language Toggle Switcher */}
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className={cn(
+                "gap-2 px-3 border border-transparent hover:border-primary/20 transition-all",
+                isHome ? "text-white hover:bg-white/10" : "text-foreground hover:bg-primary/5"
+              )}
+              onClick={() => setLanguage(language === 'en' ? 'si' : 'en')}
+              title={language === 'en' ? "සිංහලට මාරු වන්න" : "Switch to English"}
+            >
+              <Languages className="w-4 h-4 text-primary" />
+              <div className="flex items-center gap-1.5 overflow-hidden">
+                <span className={cn(
+                  "text-[10px] font-bold transition-all px-1.5 py-0.5 rounded",
+                  language === 'en' ? "bg-primary text-white" : "opacity-40"
+                )}>EN</span>
+                <span className={cn(
+                  "text-[10px] font-bold transition-all px-1.5 py-0.5 rounded",
+                  language === 'si' ? "bg-primary text-white" : "opacity-40"
+                )}>සිං</span>
+              </div>
+            </Button>
 
             <div className={cn("h-4 w-px mx-2", isHome ? "bg-white/20" : "bg-border")} />
 
@@ -259,24 +257,24 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <div className={cn("h-px w-full my-2", isHome ? "bg-white/10" : "bg-border")} />
             
             {/* Language Selection in Mobile */}
-            <div className="flex gap-2">
-              <Button 
-                variant={language === 'en' ? "default" : "outline"} 
-                size="sm" 
-                className="flex-1"
-                onClick={() => setLanguage('en')}
-              >
-                English
-              </Button>
-              <Button 
-                variant={language === 'si' ? "default" : "outline"} 
-                size="sm" 
-                className="flex-1"
-                onClick={() => setLanguage('si')}
-              >
-                සිංහල
-              </Button>
-            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className={cn(
+                "w-full justify-between gap-4 h-12 px-6 rounded-2xl transition-all",
+                isHome ? "bg-white/10 border-white/20 text-white" : "bg-primary/5 border-primary/20"
+              )}
+              onClick={() => setLanguage(language === 'en' ? 'si' : 'en')}
+            >
+              <div className="flex items-center gap-3">
+                <Languages className="w-5 h-5 text-primary" />
+                <span className="font-bold">{language === 'en' ? "සිංහලට මාරු වන්න" : "Switch to English"}</span>
+              </div>
+              <div className="flex items-center gap-1 bg-background/50 p-1 rounded-xl">
+                <span className={cn("text-[10px] font-bold px-2 py-1 rounded-lg", language === 'en' ? "bg-primary text-white" : "opacity-40")}>EN</span>
+                <span className={cn("text-[10px] font-bold px-2 py-1 rounded-lg", language === 'si' ? "bg-primary text-white" : "opacity-40")}>SI</span>
+              </div>
+            </Button>
 
             <div className={cn("h-px w-full my-2", isHome ? "bg-white/10" : "bg-border")} />
 

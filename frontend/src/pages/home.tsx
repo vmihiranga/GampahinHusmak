@@ -10,7 +10,7 @@ import heroImage from "@assets/generated_images/community_tree_planting_hero_ima
 import forestImage from "@assets/generated_images/lush_green_forest_landscape.png";
 
 export default function Home() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   // Fetch real stats from API
   const { data: stats } = useQuery<StatsResponse>({
     queryKey: ['stats'],
@@ -37,8 +37,17 @@ export default function Home() {
           </div>
           
           <h1 className="text-5xl md:text-7xl font-heading font-bold leading-tight animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
-            {t.home.hero.title.split('Gampaha')[0]} <br />
-            <span className="text-green-400">{t.language === 'en' ? "Gampaha's Future" : "ගම්පහ අනාගතය"}</span>
+            {language === 'en' ? (
+              <>
+                Planting Hope for <br />
+                <span className="text-green-400">Gampaha's Future</span>
+              </>
+            ) : (
+              <>
+                හෙට දිනෙන <br />
+                <span className="text-green-400">හරිත ගම්පහක්</span>
+              </>
+            )}
           </h1>
           
           <p className="text-lg md:text-xl text-white/90 max-w-2xl mx-auto leading-relaxed animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
