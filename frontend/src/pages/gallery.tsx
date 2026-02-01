@@ -2,13 +2,14 @@ import { cn } from "@/lib/utils";
 import Layout from "@/components/layout";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Calendar, MapPin, Activity, Tag, ChevronLeft, ChevronRight, TreePine } from "lucide-react";
+import { Calendar, MapPin, Activity, Tag, ChevronLeft, ChevronRight, TreePine, Heart } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useQuery } from "@tanstack/react-query";
 import { galleryAPI } from "@/lib/api";
+import { GalleryResponse } from "@/lib/types";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { useLanguage } from "@/hooks/use-language";
 
@@ -20,6 +21,15 @@ export default function Gallery() {
   const { data: galleryData, isLoading } = useQuery<GalleryResponse>({
     queryKey: ['gallery'],
     queryFn: () => galleryAPI.getAll(),
+  });
+
+  const queryClient = useQueryClient();
+
+  const likeMutation = useMutation({
+    mutationFn: (id: string) => galleryAPI.like(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['gallery'] });
+    },
   });
 
   const items = galleryData?.items || [];
@@ -194,11 +204,25 @@ export default function Gallery() {
                           )}
                         </div>
 
-                        <div className="pt-6">
                           <div className="p-5 rounded-2xl bg-primary/5 border border-primary/10">
-                            <p className="text-xs font-bold text-primary uppercase mb-2 tracking-widest">
-                                {t.gallery.image_counter} {currentIndex + 1} {t.gallery.of} {item.images.length}
-                            </p>
+                            <div className="flex items-center justify-between mb-2">
+                              <p className="text-xs font-bold text-primary uppercase tracking-widest">
+                                  {t.gallery.image_counter} {currentIndex + 1} {t.gallery.of} {item.images.length}
+                              </p>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-8 gap-1.5 text-primary hover:text-primary hover:bg-primary/10"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  likeMutation.mutate(item._id);
+                                }}
+                                disabled={likeMutation.isPending}
+                              >
+                                <Heart className={cn("w-4 h-4", item.likes?.length > 0 && "fill-primary")} />
+                                <span className="text-xs font-bold">{item.likes?.length || 0}</span>
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       </div>
