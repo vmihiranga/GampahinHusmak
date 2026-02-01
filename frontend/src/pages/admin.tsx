@@ -22,9 +22,9 @@ import {
   Check,
   X,
   UserCheck,
-  AlertTriangle,
   TreePine,
   MoreHorizontal,
+  MessageSquare,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -97,9 +97,11 @@ export default function Admin() {
     name: string;
     isVerified: boolean;
   } | null>(null);
-  const [selectedContact, setSelectedContact] = useState<any>(null);
   const [replyText, setReplyText] = useState("");
   const [, setLocation] = useLocation();
+  const [messageUser, setMessageUser] = useState<{ id: string; name: string } | null>(null);
+  const [msgSubject, setMsgSubject] = useState("");
+  const [msgBody, setMsgBody] = useState("");
 
   const verifyMutation = useMutation({
     mutationFn: ({
@@ -121,6 +123,27 @@ export default function Admin() {
       toast({
         title: "Error",
         description: error.message || "Failed to update user",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const sendMessageMutation = useMutation({
+    mutationFn: ({ userId, data }: { userId: string; data: { subject: string; message: string } }) => 
+      adminAPI.sendMessage(userId, data),
+    onSuccess: () => {
+      setMessageUser(null);
+      setMsgSubject("");
+      setMsgBody("");
+      toast({
+        title: "Message Sent",
+        description: "Your system message has been delivered to the user.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send message",
         variant: "destructive",
       });
     },
@@ -392,7 +415,15 @@ export default function Admin() {
                         <TableCell>
                           {format(new Date(user.createdAt), "MMM d, yyyy")}
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-right flex items-center justify-end gap-2">
+                          <Button
+                            size="icon"
+                            variant="outline"
+                            className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/5 border-primary/10"
+                            onClick={() => setMessageUser({ id: user._id, name: user.fullName || user.username })}
+                          >
+                            <MessageSquare className="w-4 h-4" />
+                          </Button>
                           <Button
                             size="sm"
                             variant={
@@ -673,6 +704,51 @@ export default function Admin() {
               {respondMutation.isPending ? "Saving..." : "Save Response"}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!messageUser} onOpenChange={(open) => !open && setMessageUser(null)}>
+        <DialogContent className="rounded-3xl border-none shadow-2xl overflow-hidden p-0 max-w-md">
+          <div className="bg-primary p-6 text-white">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-heading font-bold">Message {messageUser?.name}</DialogTitle>
+              <DialogDescription className="text-white/80">
+                Send a system notification to this user. They will see it in their dashboard.
+              </DialogDescription>
+            </DialogHeader>
+          </div>
+          <div className="p-6 space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="subject">Subject</Label>
+              <Input 
+                id="subject" 
+                value={msgSubject} 
+                onChange={(e) => setMsgSubject(e.target.value)} 
+                placeholder="e.g. Profile Verification" 
+                className="rounded-xl"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="message">Message</Label>
+              <Textarea 
+                id="message" 
+                value={msgBody} 
+                onChange={(e) => setMsgBody(e.target.value)} 
+                placeholder="Write your message here..." 
+                className="rounded-xl min-h-[120px]"
+              />
+            </div>
+            <DialogFooter className="p-6 pt-0">
+              <Button variant="outline" onClick={() => setMessageUser(null)} className="rounded-xl">Cancel</Button>
+              <Button 
+                onClick={() => sendMessageMutation.mutate({ userId: messageUser!.id, data: { subject: msgSubject, message: msgBody } })}
+                disabled={sendMessageMutation.isPending || !msgBody}
+                className="rounded-xl font-bold"
+              >
+                {sendMessageMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Send Message"}
+              </Button>
+            </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </Layout>

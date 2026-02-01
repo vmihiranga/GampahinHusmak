@@ -13,6 +13,7 @@ import Contact from "@/pages/contact";
 import TreeDetails from "@/pages/tree-details";
 import Leaderboard from "@/pages/leaderboard";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import NotAuthorized from "@/pages/not-authorized";
 
 function Router() {
   return (
@@ -31,6 +32,7 @@ function Router() {
         {(params) => <ProtectedRoute component={TreeDetails} params={params} />}
       </Route>
       <Route path="/leaderboard" component={Leaderboard} />
+      <Route path="/not-authorized" component={NotAuthorized} />
       <Route component={NotFound} />
     </Switch>
   );

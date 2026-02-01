@@ -24,7 +24,7 @@ export default function ProtectedRoute({ component: Component, adminOnly = false
     if (!isLoading && !user) {
       setLocation("/auth");
     } else if (!isLoading && user && adminOnly && user.role !== "admin" && user.role !== "superadmin") {
-      setLocation("/dashboard");
+      setLocation("/not-authorized");
     }
   }, [user, isLoading, adminOnly, setLocation]);
 

@@ -159,4 +159,9 @@ export const adminAPI = {
   sendTreeReminder: (id: string) => fetchAPI<MessageResponse>(`/admin/trees/${id}/remind`, {
     method: 'POST'
   }),
+
+  sendMessage: (userId: string, data: { subject: string; message: string }) => fetchAPI<any>(`/admin/message/${userId}`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
 };

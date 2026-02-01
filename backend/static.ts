@@ -1,6 +1,10 @@
 import express, { type Express } from "express";
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export function serveStatic(app: Express) {
   const distPath = path.resolve(__dirname, "public");
@@ -10,10 +14,18 @@ export function serveStatic(app: Express) {
     );
   }
 
-  app.use(express.static(distPath));
+  // Serve static files with caching
+  app.use(express.static(distPath, {
+    maxAge: '1d', // Cache static assets for 1 day
+    setHeaders: (res, path) => {
+      if (path.match(/\.(jpg|jpeg|png|gif|svg|webp|ico)$/)) {
+        res.setHeader('Cache-Control', 'public, max-age=604800, immutable'); // 7 days for images
+      }
+    }
+  }));
 
   // fall through to index.html if the file doesn't exist
-  app.use("/{*path}", (_req, res) => {
+  app.get("*", (_req, res) => {
     res.sendFile(path.resolve(distPath, "index.html"));
   });
 }

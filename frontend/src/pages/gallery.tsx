@@ -12,6 +12,8 @@ import { GalleryResponse } from "@/lib/types";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { useLanguage } from "@/hooks/use-language";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Gallery() {
   const { t, language } = useLanguage();
@@ -26,12 +28,20 @@ export default function Gallery() {
   });
 
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const likeMutation = useMutation({
     mutationFn: (id: string) => galleryAPI.like(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['gallery'] });
+      queryClient.invalidateQueries({ queryKey: [ 'gallery' ] });
     },
+    onError: (error: any) => {
+      toast({
+        title: language === 'en' ? "Action required" : "ක්‍රියාව අවශ්‍යයි",
+        description: language === 'en' ? "Please login to like images." : "ඡායාරූපවලට කැමැත්ත ප්‍රකාශ කිරීමට කරුණාකර ඇතුළු වන්න.",
+        variant: "destructive"
+      });
+    }
   });
 
   const items = galleryData?.items || [];
@@ -103,7 +113,7 @@ export default function Gallery() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="absolute left-2 top-1/2 -translate-y-1/2 text-white bg-black/20 hover:bg-black/40 rounded-full opacity-0 group-hover/slider:opacity-100 transition-opacity"
+                              className="absolute left-2 top-1/2 -translate-y-1/2 text-white bg-black/40 hover:bg-black/60 rounded-full z-10"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setActiveIndices(prev => ({
@@ -117,7 +127,7 @@ export default function Gallery() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="absolute right-2 top-1/2 -translate-y-1/2 text-white bg-black/20 hover:bg-black/40 rounded-full opacity-0 group-hover/slider:opacity-100 transition-opacity"
+                              className="absolute right-2 top-1/2 -translate-y-1/2 text-white bg-black/40 hover:bg-black/60 rounded-full z-10"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setActiveIndices(prev => ({
@@ -142,8 +152,10 @@ export default function Gallery() {
                           </>
                         )}
                       </div>
-                      <div className="md:col-span-2 p-8 space-y-6 overflow-y-auto bg-card">
-                        <DialogHeader>
+                       <div className="md:col-span-2 flex flex-col h-[500px] md:h-auto bg-card">
+                        <ScrollArea className="flex-1">
+                          <div className="p-8 space-y-6">
+                            <DialogHeader>
                           <div className="flex items-center gap-2 text-primary mb-2">
                             <Tag className="w-4 h-4" />
                             <span className="text-xs font-bold uppercase tracking-widest">{t.nav.gallery}</span>
@@ -217,6 +229,8 @@ export default function Gallery() {
                               </Button>
                             </div>
                           </div>
+                            </div>
+                        </ScrollArea>
                       </div>
                     </div>
                   </DialogContent>

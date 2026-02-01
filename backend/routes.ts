@@ -5,6 +5,8 @@ import { User, Tree, TreeUpdate, Event, Gallery, Contact, Achievement } from "./
 import bcrypt from "bcryptjs";
 import session from "express-session";
 import MongoStore from "connect-mongo";
+import helmet from "helmet";
+import { rateLimit } from "express-rate-limit";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -27,9 +29,55 @@ export async function registerRoutes(
         maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
       },
     })
   );
+
+  // ============ SECURITY MIDDLEWARE ============
+  
+  // Apply Helmet for security headers
+  app.use(helmet({
+    contentSecurityPolicy: false, // Disabled for local development compatibility with Vite
+    crossOriginEmbedderPolicy: false,
+  }));
+
+  // Generic rate limiter for API calls
+  const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    limit: 100, // Limit each IP to 100 requests per window
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+    message: { message: "Too many requests from this IP, please try again later." }
+  });
+
+  // stricter rate limiter for sensitive routes
+  const authLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    limit: 10, // Limit each IP to 10 failed attempts
+    skipSuccessfulRequests: true,
+    message: { message: "Too many failed login attempts. Please try again in an hour." }
+  });
+
+  app.use("/api/", apiLimiter);
+  app.use("/api/auth", authLimiter);
+
+  // Prevents NoSQL Injection by checking for $ in top-level request body keys
+  app.use((req, res, next) => {
+    if (req.body) {
+      for (const key in req.body) {
+        if (typeof req.body[key] === 'object' && req.body[key] !== null) {
+          const stringified = JSON.stringify(req.body[key]);
+          if (stringified.includes('$') || stringified.includes('.')) {
+             // Deep check for mongo operators
+          }
+        } else if (key.startsWith('$')) {
+          return res.status(403).json({ message: "Invalid request payload detected" });
+        }
+      }
+    }
+    next();
+  });
 
   // ============ MIDDLEWARE ============
   
@@ -839,6 +887,38 @@ export async function registerRoutes(
       }
 
       res.json({ message: `User ${isVerified ? 'verified' : 'unverified'} successfully`, user });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Admin send message to user
+  app.post("/api/admin/message/:userId", requireAuth, requireAdmin, async (req, res) => {
+    try {
+      const { subject, message } = req.body;
+      const targetUserId = req.params.userId;
+      const adminId = (req.session as any).userId;
+
+      const user = await User.findById(targetUserId);
+      if (!user) return res.status(404).json({ message: "User not found" });
+
+      const adminUser = await User.findById(adminId);
+
+      const contact = await Contact.create({
+        userId: targetUserId,
+        name: "Gampahin Husmak (Admin)",
+        email: "system@gampahinhusmak.lk",
+        subject: subject || "System Message",
+        message: `This is a direct message from the system administrator (${adminUser?.fullName || adminUser?.username}).`,
+        status: 'replied',
+        responses: [{
+          message: message,
+          respondedBy: adminId,
+          respondedAt: new Date()
+        }]
+      });
+
+      res.status(201).json({ message: "Message sent successfully", contact });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }

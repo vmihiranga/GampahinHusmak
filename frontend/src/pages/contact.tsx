@@ -68,41 +68,6 @@ export default function Contact() {
           </div>
         </div>
 
-        {/* Support & Partners Section */}
-        <div className="pt-16 border-t border-border/50">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-            {/* Supporting People */}
-            <div className="space-y-6">
-              <div className="flex items-center gap-3 text-primary">
-                <Heart className="w-8 h-8" />
-                <h3 className="font-heading font-bold text-2xl uppercase tracking-wider">{t.contact.supporting_title}</h3>
-              </div>
-              <ul className="space-y-3 text-muted-foreground text-lg">
-                <li>Local Community Volunteers</li>
-                <li>District Agricultural Officers</li>
-                <li>Environmental Activists</li>
-                <li>University Researchers</li>
-              </ul>
-            </div>
-
-            {/* Sponsors */}
-            <div className="space-y-6">
-              <div className="flex items-center gap-3 text-primary">
-                <ShieldCheck className="w-10 h-10" />
-                <h2 className="font-heading font-black text-4xl uppercase tracking-tight">{t.contact.sponsor_title}</h2>
-              </div>
-              <div className="space-y-4">
-                <p className="font-bold text-foreground text-2xl leading-tight">Lions Club Of Gampaha Metro Juniors</p>
-                <div className="h-1 w-20 bg-primary/20 rounded-full" />
-                <ul className="space-y-3 text-muted-foreground text-lg">
-                  <li>State Ministry of Environment</li>
-                  <li>Private Sector Partners</li>
-                  <li>Local Business Councils</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </Layout>
   );
