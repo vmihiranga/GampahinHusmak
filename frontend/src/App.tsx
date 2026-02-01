@@ -20,21 +20,15 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/auth" component={Auth} />
       <Route path="/dashboard">
-        <ProtectedRoute>
-          <Dashboard />
-        </ProtectedRoute>
+        {(params) => <ProtectedRoute component={Dashboard} {...params} />}
       </Route>
       <Route path="/admin">
-        <ProtectedRoute adminOnly>
-          <Admin />
-        </ProtectedRoute>
+        {(params) => <ProtectedRoute component={Admin} adminOnly {...params} />}
       </Route>
       <Route path="/gallery" component={Gallery} />
       <Route path="/contact" component={Contact} />
       <Route path="/trees/:id">
-        <ProtectedRoute>
-          <TreeDetails />
-        </ProtectedRoute>
+        {(params) => <ProtectedRoute component={TreeDetails} params={params} />}
       </Route>
       <Route path="/leaderboard" component={Leaderboard} />
       <Route component={NotFound} />

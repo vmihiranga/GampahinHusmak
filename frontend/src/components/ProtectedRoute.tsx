@@ -5,11 +5,12 @@ import { Loader2 } from "lucide-react";
 import { ReactNode, useEffect } from "react";
 
 interface ProtectedRouteProps {
-  children: ReactNode;
+  component: React.ComponentType<any>;
   adminOnly?: boolean;
+  [key: string]: any;
 }
 
-export default function ProtectedRoute({ children, adminOnly = false }: ProtectedRouteProps) {
+export default function ProtectedRoute({ component: Component, adminOnly = false, ...rest }: ProtectedRouteProps) {
   const [, setLocation] = useLocation();
   const { data: authData, isLoading } = useQuery({
     queryKey: ["auth-check"],
@@ -39,5 +40,5 @@ export default function ProtectedRoute({ children, adminOnly = false }: Protecte
     return null;
   }
 
-  return <>{children}</>;
+  return <Component {...rest} />;
 }
