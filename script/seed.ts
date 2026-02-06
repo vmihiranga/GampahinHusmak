@@ -20,19 +20,31 @@ async function seed() {
 
     console.log('🗑️  Cleared existing data');
 
-    // Create admin user
-    const adminPassword = await bcrypt.hash('GampahinAdmin@2026', 10);
-    const admin = await User.create({
-      username: 'gampahin_admin',
+    // Create superadmin user
+    const superAdminPassword = await bcrypt.hash('GampahinAdmin@2026', 10);
+    const superAdmin = await User.create({
+      username: 'super_admin',
       email: 'gampahinhusmak@gmail.com',
-      password: adminPassword,
-      fullName: 'Gampahin Husmak Administrator',
+      password: superAdminPassword,
+      fullName: 'Gampahin Husmak Super Administrator',
       role: 'superadmin',
       phoneNumber: '+94771234567',
       isVerified: true,
     });
 
-    console.log('👤 Created admin user');
+    // Create normal admin user
+    const adminPassword = await bcrypt.hash('GampahinStaff@2026', 10);
+    const admin = await User.create({
+      username: 'gampahin_admin',
+      email: 'admin@gampahinhusmak.lk',
+      password: adminPassword,
+      fullName: 'Gampahin Husmak Administrator',
+      role: 'admin',
+      phoneNumber: '+94771234560',
+      isVerified: true,
+    });
+
+    console.log('👤 Created Super Admin and Admin users');
 
     // Create sample users
     const userPassword = await bcrypt.hash('user123', 10);

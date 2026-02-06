@@ -372,22 +372,18 @@ export async function registerRoutes(
   });
 
   // Update tree
-  app.put("/api/trees/:id", async (req, res) => {
+  app.put("/api/trees/:id", requireAuth, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
-      if (!userId) {
-        return res.status(401).json({ message: "Not authenticated" });
+      const tree = await Tree.findById(req.params.id);
+      if (!tree) return res.status(404).json({ message: "Tree not found" });
+
+      // Only owner or superadmin can edit
+      if (tree.plantedBy.toString() !== req.user._id.toString() && req.user.role !== 'superadmin' && req.user.role !== 'admin') {
+        return res.status(403).json({ message: "Unauthorized to edit this tree" });
       }
 
-      const tree = await Tree.findByIdAndUpdate(
-        req.params.id,
-        req.body,
-        { new: true }
-      );
-
-      if (!tree) {
-        return res.status(404).json({ message: "Tree not found" });
-      }
+      Object.assign(tree, req.body);
+      await tree.save();
 
       res.json({ message: "Tree updated successfully", tree });
     } catch (error: any) {
@@ -1024,6 +1020,65 @@ export async function registerRoutes(
       }
 
       res.json({ message: `User ${isVerified ? 'verified' : 'unverified'} successfully`, user });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Delete user (Super Admin only)
+  app.delete("/api/admin/users/:id", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const user = await User.findByIdAndDelete(req.params.id);
+      if (!user) return res.status(404).json({ message: "User not found" });
+      
+      // Also cleanup trees and other things if necessary, but keep it simple for now
+      await Tree.deleteMany({ plantedBy: req.params.id });
+      await Contact.deleteMany({ userId: req.params.id });
+      await Achievement.deleteMany({ userId: req.params.id });
+
+      res.json({ message: "User and their data deleted successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Update user details (Super Admin only)
+  app.put("/api/admin/users/:id", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true }).select("-password");
+      if (!user) return res.status(404).json({ message: "User not found" });
+      res.json({ message: "User updated successfully", user });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Change user role (Super Admin only)
+  app.put("/api/admin/users/:id/role", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const { role } = req.body;
+      if (!['user', 'volunteer', 'admin', 'superadmin'].includes(role)) {
+        return res.status(400).json({ message: "Invalid role" });
+      }
+
+      const user = await User.findByIdAndUpdate(req.params.id, { role }, { new: true }).select("-password");
+      if (!user) return res.status(404).json({ message: "User not found" });
+      res.json({ message: `User role updated to ${role}`, user });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Delete Tree (Super Admin only)
+  app.delete("/api/admin/trees/:id", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const tree = await Tree.findByIdAndDelete(req.params.id);
+      if (!tree) return res.status(404).json({ message: "Tree not found" });
+      
+      // Cleanup updates
+      await TreeUpdate.deleteMany({ treeId: req.params.id });
+      
+      res.json({ message: "Tree deleted successfully" });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }

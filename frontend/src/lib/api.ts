@@ -176,4 +176,22 @@ export const adminAPI = {
     method: 'POST',
     body: JSON.stringify(data),
   }),
+
+  deleteUser: (userId: string) => fetchAPI<MessageResponse>(`/admin/users/${userId}`, {
+    method: 'DELETE',
+  }),
+
+  updateUser: (userId: string, data: any) => fetchAPI<MessageResponse>(`/admin/users/${userId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+
+  updateUserRole: (userId: string, role: string) => fetchAPI<MessageResponse>(`/admin/users/${userId}/role`, {
+    method: 'PUT',
+    body: JSON.stringify({ role }),
+  }),
+
+  deleteTree: (treeId: string) => fetchAPI<MessageResponse>(`/admin/trees/${treeId}`, {
+    method: 'DELETE',
+  }),
 };

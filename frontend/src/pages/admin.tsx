@@ -35,22 +35,26 @@ import {
   ExternalLink,
   Calendar,
   Info,
-  Clock,
-  History,
   Loader2,
   Bell,
+  Trash2,
+  Edit,
+  UserPlus,
+  ShieldAlert,
+  Save,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { treesAPI, statsAPI, contactAPI, adminAPI } from "@/lib/api";
+import { treesAPI, statsAPI, contactAPI, adminAPI, authAPI } from "@/lib/api";
 import { 
   TreesResponse, 
   StatsResponse, 
   ContactsResponse, 
   UsersResponse, 
   DbStatsResponse,
-  Contact
+  Contact,
+  AuthResponse
 } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import TreeMap from "@/components/TreeMap";
@@ -70,7 +74,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -90,6 +102,14 @@ export default function Admin() {
   const [userPage, setUserPage] = useState(1);
   const [contactPage, setContactPage] = useState(1);
   const limit = 20;
+
+  // Fetch current user
+  const { data: authData } = useQuery<AuthResponse>({
+    queryKey: ["auth-check"],
+    queryFn: () => authAPI.me(),
+  });
+  const currentUser = authData?.user;
+  const isSuperAdmin = currentUser?.role === "superadmin";
 
   // Fetch trees data
   const { data: treesData } = useQuery<TreesResponse>({
@@ -137,6 +157,12 @@ export default function Admin() {
   const [msgSubject, setMsgSubject] = useState("");
   const [msgBody, setMsgBody] = useState("");
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+
+  // Superadmin States
+  const [deleteUser, setDeleteUser] = useState<string | null>(null);
+  const [editUser, setEditUser] = useState<any | null>(null);
+  const [deleteTree, setDeleteTree] = useState<string | null>(null);
+  const [editTree, setEditTree] = useState<any | null>(null);
 
   const verifyMutation = useMutation({
     mutationFn: ({
@@ -228,6 +254,55 @@ export default function Admin() {
         variant: "destructive",
       });
     }
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: (id: string) => adminAPI.deleteUser(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+      setDeleteUser(null);
+      toast({ title: "User Deleted", description: "All user data has been removed." });
+    },
+    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" })
+  });
+
+  const updateUserMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string, data: any }) => adminAPI.updateUser(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+      setEditUser(null);
+      toast({ title: "Profile Updated", description: "User information saved." });
+    },
+    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" })
+  });
+
+  const updateRoleMutation = useMutation({
+    mutationFn: ({ id, role }: { id: string, role: string }) => adminAPI.updateUserRole(id, role),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+      toast({ title: "Role Updated", description: "Permissions have been changed." });
+    },
+    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" })
+  });
+
+  const deleteTreeMutation = useMutation({
+    mutationFn: (id: string) => adminAPI.deleteTree(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-trees"] });
+      setDeleteTree(null);
+      toast({ title: "Tree Deleted", description: "All registry data removed." });
+    },
+    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" })
+  });
+
+  const updateTreeMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string, data: any }) => treesAPI.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-trees"] });
+      setEditTree(null);
+      toast({ title: "Tree Updated", description: "Registry data saved." });
+    },
+    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" })
   });
 
   const trees = treesData?.trees || [];
@@ -358,35 +433,57 @@ export default function Admin() {
                               {tree.currentHealth}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-right space-x-2 whitespace-nowrap">
-                            {(() => {
-                              const oneMonthAgo = new Date();
-                              oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-                              const lastUpdate = new Date(tree.updatedAt || tree.plantedDate);
-                              return lastUpdate < oneMonthAgo && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="bg-primary/5 hover:bg-primary/10 text-primary border-primary/20 gap-1.5"
-                                  onClick={() => sendReminderMutation.mutate(tree._id)}
-                                  disabled={sendReminderMutation.isPending}
-                                >
-                                  {sendReminderMutation.isPending ? (
-                                    <Loader2 className="w-3 h-3 animate-spin" />
-                                  ) : (
-                                    <Bell className="w-3 h-3" />
-                                  )}
-                                  Send Reminder
-                                </Button>
-                              );
-                            })()}
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setLocation(`/trees/${tree._id}?from=admin`)}
-                            >
-                              View Details
-                            </Button>
+                          <TableCell className="text-right whitespace-nowrap">
+                            <div className="flex items-center justify-end gap-2">
+                              {isSuperAdmin && (
+                                <>
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-8 w-8 hover:bg-primary/5 border-primary/10"
+                                    onClick={() => setEditTree(tree)}
+                                  >
+                                    <Edit className="w-3.5 h-3.5" />
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-8 w-8 text-destructive hover:bg-destructive/5 border-destructive/10"
+                                    onClick={() => setDeleteTree(tree._id)}
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </Button>
+                                </>
+                              )}
+                              {(() => {
+                                const oneMonthAgo = new Date();
+                                oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+                                const lastUpdate = new Date(tree.updatedAt || tree.plantedDate);
+                                return lastUpdate < oneMonthAgo && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="bg-primary/5 hover:bg-primary/10 text-primary border-primary/20 gap-1.5"
+                                    onClick={() => sendReminderMutation.mutate(tree._id)}
+                                    disabled={sendReminderMutation.isPending}
+                                  >
+                                    {sendReminderMutation.isPending ? (
+                                      <Loader2 className="w-3 h-3 animate-spin" />
+                                    ) : (
+                                      <Bell className="w-3 h-3" />
+                                    )}
+                                    Send Reminder
+                                  </Button>
+                                );
+                              })()}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setLocation(`/trees/${tree._id}?from=admin`)}
+                              >
+                                View Details
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -482,9 +579,26 @@ export default function Admin() {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline" className="capitalize whitespace-nowrap font-bold text-[10px]">
-                              {user.role}
-                            </Badge>
+                            {isSuperAdmin ? (
+                              <Select 
+                                defaultValue={user.role} 
+                                onValueChange={(role) => updateRoleMutation.mutate({ id: user._id, role })}
+                              >
+                                <SelectTrigger className="h-7 w-28 text-[10px] font-bold py-0">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="user">User</SelectItem>
+                                  <SelectItem value="volunteer">Volunteer</SelectItem>
+                                  <SelectItem value="admin">Admin</SelectItem>
+                                  <SelectItem value="superadmin">Superadmin</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <Badge variant="outline" className="capitalize whitespace-nowrap font-bold text-[10px]">
+                                {user.role}
+                              </Badge>
+                            )}
                           </TableCell>
                           <TableCell>
                             <Badge
@@ -501,6 +615,26 @@ export default function Admin() {
                             {format(new Date(user.createdAt), "MMM d, yyyy")}
                           </TableCell>
                           <TableCell className="text-right flex items-center justify-end gap-2">
+                            {isSuperAdmin && (
+                               <>
+                                 <Button
+                                   size="icon"
+                                   variant="outline"
+                                   className="h-8 w-8 hover:bg-primary/5 border-primary/10"
+                                   onClick={() => setEditUser(user)}
+                                 >
+                                   <Edit className="w-4 h-4" />
+                                 </Button>
+                                 <Button
+                                   size="icon"
+                                   variant="outline"
+                                   className="h-8 w-8 text-destructive hover:bg-destructive/5 border-destructive/10"
+                                   onClick={() => setDeleteUser(user._id)}
+                                 >
+                                   <Trash2 className="w-4 h-4" />
+                                 </Button>
+                               </>
+                            )}
                             <Button
                               size="icon"
                               variant="outline"
@@ -1078,6 +1212,147 @@ export default function Admin() {
               </Button>
             </DialogFooter>
           </div>
+        </DialogContent>
+      </Dialog>
+      {/* Superadmin Alerts & Dialogs */}
+      <AlertDialog open={!!deleteUser} onOpenChange={(open) => !open && setDeleteUser(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-destructive flex items-center gap-2">
+              <ShieldAlert className="w-5 h-5" />
+              Delete User Account?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This action is irreversible. It will permanently delete the user account and all their 
+              associated data (trees, messages, achievements).
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => deleteUser && deleteUserMutation.mutate(deleteUser)}
+              className="bg-destructive text-white hover:bg-destructive/90"
+              disabled={deleteUserMutation.isPending}
+            >
+              {deleteUserMutation.isPending ? "Deleting..." : "Delete Permanently"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Dialog open={!!editUser} onOpenChange={(open) => !open && setEditUser(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit User Profile</DialogTitle>
+            <DialogDescription>Update administrative details for this user.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Full Name</Label>
+              <Input 
+                value={editUser?.fullName || ""} 
+                onChange={(e) => setEditUser({ ...editUser, fullName: e.target.value })} 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Phone Number</Label>
+              <Input 
+                value={editUser?.phoneNumber || ""} 
+                onChange={(e) => setEditUser({ ...editUser, phoneNumber: e.target.value })} 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Home Address</Label>
+              <Textarea 
+                value={editUser?.address || ""} 
+                onChange={(e) => setEditUser({ ...editUser, address: e.target.value })} 
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditUser(null)}>Cancel</Button>
+            <Button 
+              onClick={() => updateUserMutation.mutate({ id: editUser._id, data: editUser })}
+              disabled={updateUserMutation.isPending}
+            >
+              <Save className="w-4 h-4 mr-2" />
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={!!deleteTree} onOpenChange={(open) => !open && setDeleteTree(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-destructive" />
+              Remove Tree Registry?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove this tree from the system registry. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => deleteTree && deleteTreeMutation.mutate(deleteTree)}
+              className="bg-destructive text-white hover:bg-destructive/90"
+            >
+              Confirm Removal
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Dialog open={!!editTree} onOpenChange={(open) => !open && setEditTree(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Tree Record</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Common Name</Label>
+              <Input 
+                value={editTree?.commonName || ""} 
+                onChange={(e) => setEditTree({ ...editTree, commonName: e.target.value })} 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Scientific Name</Label>
+              <Input 
+                value={editTree?.scientificName || ""} 
+                onChange={(e) => setEditTree({ ...editTree, scientificName: e.target.value })} 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Current Health</Label>
+              <Select 
+                defaultValue={editTree?.currentHealth} 
+                onValueChange={(val) => setEditTree({ ...editTree, currentHealth: val })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="excellent">Excellent</SelectItem>
+                  <SelectItem value="good">Good</SelectItem>
+                  <SelectItem value="fair">Fair</SelectItem>
+                  <SelectItem value="poor">Poor</SelectItem>
+                  <SelectItem value="dead">Dead</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditTree(null)}>Cancel</Button>
+            <Button 
+              onClick={() => updateTreeMutation.mutate({ id: editTree._id, data: editTree })}
+              disabled={updateTreeMutation.isPending}
+            >
+              Save Record
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </Layout>
