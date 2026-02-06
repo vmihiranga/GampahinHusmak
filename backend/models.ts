@@ -75,6 +75,8 @@ const TreeSchema = new Schema<ITree>({
 }, { timestamps: true });
 
 TreeSchema.index({ location: '2dsphere' });
+TreeSchema.index({ plantedBy: 1 });
+TreeSchema.index({ status: 1 });
 
 // Tree Update/Progress Schema
 export interface ITreeUpdate extends Document {
@@ -103,6 +105,9 @@ const TreeUpdateSchema = new Schema<ITreeUpdate>({
   notes: { type: String },
   issues: [{ type: String }],
 }, { timestamps: true });
+
+TreeUpdateSchema.index({ treeId: 1 });
+TreeUpdateSchema.index({ updatedBy: 1 });
 
 // Event Schema
 export interface IEvent extends Document {
@@ -212,6 +217,10 @@ const ContactSchema = new Schema<IContact>({
   }],
 }, { timestamps: true });
 
+ContactSchema.index({ userId: 1 });
+ContactSchema.index({ status: 1 });
+ContactSchema.index({ email: 1 });
+
 // Achievement/Badge Schema
 export interface IAchievement extends Document {
   userId: mongoose.Types.ObjectId;
@@ -234,6 +243,9 @@ const AchievementSchema = new Schema<IAchievement>({
   icon: { type: String, required: true },
   earnedAt: { type: Date, default: Date.now },
 });
+
+AchievementSchema.index({ userId: 1 });
+AchievementSchema.index({ badgeType: 1 });
 
 // Export Models
 export const User = mongoose.models.User || mongoose.model<IUser>('User', UserSchema);

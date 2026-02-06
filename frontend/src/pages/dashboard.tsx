@@ -6,11 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Filter, AlertCircle, MapPin as MapPinIcon, LocateFixed, Loader2, Clock, MessageSquare, CheckCircle2, History, TreePine, Camera, Trophy } from "lucide-react";
+import { Plus, Search, Filter, AlertCircle, MapPin as MapPinIcon, LocateFixed, Loader2, Clock, MessageSquare, CheckCircle2, History, TreePine, Camera, Trophy, Sprout, CloudRain, Droplets } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { treesAPI, authAPI, contactAPI, statsAPI } from "@/lib/api";
+import { AuthResponse, TreesResponse, ContactsResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -605,23 +606,47 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Weather Alerts */}
+        {userStats?.weatherAlert && (
+          <div className={cn(
+            "p-4 rounded-3xl flex items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-500 shadow-sm",
+            userStats.weatherAlert.urgency === 'high' ? "bg-orange-500/10 border border-orange-500/20 text-orange-700" : "bg-blue-500/10 border border-blue-500/20 text-blue-700"
+          )}>
+            <div className={cn(
+              "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-lg",
+              userStats.weatherAlert.urgency === 'high' ? "bg-orange-500 text-white shadow-orange-500/20" : "bg-blue-500 text-white shadow-blue-500/20"
+            )}>
+              {userStats.weatherAlert.type === 'watering' ? <Droplets className="w-6 h-6" /> : <CloudRain className="w-6 h-6" />}
+            </div>
+            <div className="flex-1">
+              <p className="text-sm md:text-base font-bold leading-tight">{userStats.weatherAlert.message}</p>
+              <p className="text-[10px] opacity-70 font-bold uppercase tracking-widest mt-0.5 flex items-center gap-1">
+                <MapPinIcon className="w-3 h-3" /> District Advice • Gampaha
+              </p>
+            </div>
+            {userStats.weatherAlert.urgency === 'high' && (
+              <Badge variant="outline" className="bg-orange-500/20 border-orange-500/30 text-orange-700 text-[10px] font-black hidden sm:flex">URGENT</Badge>
+            )}
+          </div>
+        )}
+
         {/* Main Content Tabs */}
         <Tabs defaultValue="trees" className="w-full">
-          <TabsList className="mb-6">
-            <TabsTrigger value="trees" className="gap-2">
+          <TabsList className="mb-6 w-full justify-start md:justify-center overflow-x-auto overflow-y-hidden h-auto p-1 bg-muted/50 rounded-xl no-scrollbar">
+            <TabsTrigger value="trees" className="gap-2 rounded-lg py-2.5 px-4 underline-offset-4">
               <TreePine className="w-4 h-4" />
               My Trees
             </TabsTrigger>
-            <TabsTrigger value="requests" className="gap-2">
+            <TabsTrigger value="requests" className="gap-2 rounded-lg py-2.5 px-4 underline-offset-4">
               <MessageSquare className="w-4 h-4" />
               My Requests
               {myContacts.filter(c => c.status === 'replied').length > 0 && (
-                <Badge className="ml-2 bg-primary text-primary-foreground h-5 w-5 p-0 flex items-center justify-center rounded-full text-[10px]">
+                <Badge className="ml-2 bg-primary text-primary-foreground h-5 w-5 p-0 flex items-center justify-center rounded-full text-[10px] font-bold">
                   {myContacts.filter(c => c.status === 'replied').length}
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="achievements" className="gap-2">
+            <TabsTrigger value="achievements" className="gap-2 rounded-lg py-2.5 px-4 underline-offset-4">
               <Trophy className="w-4 h-4" />
               Achievements
             </TabsTrigger>
@@ -752,34 +777,44 @@ export default function Dashboard() {
           </TabsContent>
 
           <TabsContent value="achievements" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
               <Card className="p-6 text-center space-y-2 bg-primary/5 border-primary/10">
                 <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mx-auto text-primary">
                   <TreePine className="w-6 h-6" />
                 </div>
-                <div className="text-3xl font-bold">{userStats?.treesPlanted || 0}</div>
-                <p className="text-sm text-muted-foreground uppercase font-bold tracking-tighter">Trees Planted</p>
+                <div className="text-2xl md:text-3xl font-bold">{userStats?.treesPlanted || 0}</div>
+                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Trees Planted</p>
               </Card>
               <Card className="p-6 text-center space-y-2 bg-primary/5 border-primary/10">
                 <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mx-auto text-primary">
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
-                <div className="text-3xl font-bold">{userStats?.updatesSubmitted || 0}</div>
-                <p className="text-sm text-muted-foreground uppercase font-bold tracking-tighter">Growth Updates</p>
+                <div className="text-2xl md:text-3xl font-bold">{userStats?.updatesSubmitted || 0}</div>
+                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Growth Updates</p>
               </Card>
               <Card className="p-6 text-center space-y-2 bg-primary/5 border-primary/10">
                 <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mx-auto text-primary">
                   <Plus className="w-6 h-6" />
                 </div>
-                <div className="text-3xl font-bold">{userStats?.eventsAttended || 0}</div>
-                <p className="text-sm text-muted-foreground uppercase font-bold tracking-tighter">Events Joined</p>
+                <div className="text-2xl md:text-3xl font-bold">{userStats?.eventsAttended || 0}</div>
+                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Events Joined</p>
               </Card>
+              
+              {/* CO2 Offset Card */}
+              <Card className="p-6 text-center space-y-2 bg-green-500/5 border-green-500/10">
+                <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mx-auto text-green-600">
+                  <Sprout className="w-6 h-6" />
+                </div>
+                <div className="text-2xl md:text-3xl font-bold text-green-700">{userStats?.co2Offset || "0.00"}</div>
+                <p className="text-[10px] text-green-600/80 uppercase font-black tracking-widest">CO₂ kg Offset</p>
+              </Card>
+
               <Card className="p-6 text-center space-y-2 bg-primary/5 border-primary/10">
                 <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mx-auto text-primary">
                   <Trophy className="w-6 h-6" />
                 </div>
-                <div className="text-3xl font-bold">{userStats?.achievements?.length || 0}</div>
-                <p className="text-sm text-muted-foreground uppercase font-bold tracking-tighter">Badges Earned</p>
+                <div className="text-2xl md:text-3xl font-bold">{userStats?.achievements?.length || 0}</div>
+                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Badges Earned</p>
               </Card>
             </div>
 

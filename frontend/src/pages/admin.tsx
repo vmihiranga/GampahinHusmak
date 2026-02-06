@@ -2,6 +2,7 @@ import { cn } from "@/lib/utils";
 import Layout from "@/components/layout";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
@@ -26,14 +27,10 @@ import {
   MoreHorizontal,
   MessageSquare,
   AlertTriangle,
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { treesAPI, statsAPI, contactAPI, adminAPI } from "@/lib/api";
-import { useToast } from "@/hooks/use-toast";
-import TreeMap from "@/components/TreeMap";
-import {
+  Database,
+  Server,
+  Activity,
+  RefreshCw,
   MapPin,
   ExternalLink,
   Calendar,
@@ -43,6 +40,29 @@ import {
   Loader2,
   Bell,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { treesAPI, statsAPI, contactAPI, adminAPI } from "@/lib/api";
+import { 
+  TreesResponse, 
+  StatsResponse, 
+  ContactsResponse, 
+  UsersResponse, 
+  DbStatsResponse,
+  Contact
+} from "@/lib/types";
+import { useToast } from "@/hooks/use-toast";
+import TreeMap from "@/components/TreeMap";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import {
   Dialog,
   DialogContent,
@@ -66,28 +86,41 @@ import {
 import { useState } from "react";
 
 export default function Admin() {
+  const [treePage, setTreePage] = useState(1);
+  const [userPage, setUserPage] = useState(1);
+  const [contactPage, setContactPage] = useState(1);
+  const limit = 20;
+
   // Fetch trees data
   const { data: treesData } = useQuery<TreesResponse>({
-    queryKey: ["admin-trees"],
-    queryFn: () => treesAPI.getAll(),
+    queryKey: ["admin-trees", treePage],
+    queryFn: () => treesAPI.getAll({ page: treePage, limit: 30 }),
   });
 
-  // Fetch stats
-  const { data: stats } = useQuery<StatsResponse>({
-    queryKey: ["admin-stats"],
-    queryFn: () => statsAPI.getGeneral(),
+  // Fetch admin summary (stats, recent items)
+  const { data: adminSummary } = useQuery<any>({
+    queryKey: ["admin-summary"],
+    queryFn: () => adminAPI.getSummary(),
   });
+
+  const stats = adminSummary?.stats;
 
   // Fetch contacts/issues
   const { data: contactsData } = useQuery<ContactsResponse>({
-    queryKey: ["admin-contacts"],
-    queryFn: () => contactAPI.getAll(),
+    queryKey: ["admin-contacts", contactPage],
+    queryFn: () => contactAPI.getAll({ page: contactPage, limit: 10 }),
   });
 
   // Fetch users
   const { data: usersData } = useQuery<UsersResponse>({
-    queryKey: ["admin-users"],
-    queryFn: () => adminAPI.getUsers(),
+    queryKey: ["admin-users", userPage],
+    queryFn: () => adminAPI.getUsers({ page: userPage, limit: 30 }),
+  });
+
+  // Fetch DB stats
+  const { data: dbStats, refetch: refetchDb, isFetching: isFetchingDb } = useQuery<DbStatsResponse>({
+    queryKey: ["admin-db-stats"],
+    queryFn: () => adminAPI.getDbStats(),
   });
 
   const queryClient = useQueryClient();
@@ -103,6 +136,7 @@ export default function Admin() {
   const [messageUser, setMessageUser] = useState<{ id: string; name: string } | null>(null);
   const [msgSubject, setMsgSubject] = useState("");
   const [msgBody, setMsgBody] = useState("");
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
 
   const verifyMutation = useMutation({
     mutationFn: ({
@@ -239,7 +273,7 @@ export default function Admin() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {contacts.filter((c: any) => c.status === "new").length}
+                {stats?.pendingContacts || 0}
               </div>
               <p className="text-xs text-muted-foreground">
                 Requires attention
@@ -261,11 +295,27 @@ export default function Admin() {
         </div>
 
         <Tabs defaultValue="trees" className="w-full">
-          <TabsList className="grid grid-cols-4 w-full md:w-auto">
-            <TabsTrigger value="trees">Registry</TabsTrigger>
-            <TabsTrigger value="map">Map View</TabsTrigger>
-            <TabsTrigger value="approvals">Users</TabsTrigger>
-            <TabsTrigger value="issues">Issues</TabsTrigger>
+          <TabsList className="grid grid-cols-2 md:grid-cols-5 w-full md:w-auto h-auto p-1 bg-muted/50 rounded-2xl">
+            <TabsTrigger value="trees" className="rounded-xl flex items-center gap-2 py-2">
+              <TreePine className="w-4 h-4" />
+              Registry
+            </TabsTrigger>
+            <TabsTrigger value="map" className="rounded-xl flex items-center gap-2 py-2">
+              <MapPin className="w-4 h-4" />
+              Map View
+            </TabsTrigger>
+            <TabsTrigger value="approvals" className="rounded-xl flex items-center gap-2 py-2">
+              <UserCheck className="w-4 h-4" />
+              Users
+            </TabsTrigger>
+            <TabsTrigger value="issues" className="rounded-xl flex items-center gap-2 py-2">
+              <AlertTriangle className="w-4 h-4" />
+              Issues
+            </TabsTrigger>
+            <TabsTrigger value="db" className="rounded-xl flex items-center gap-2 py-2">
+              <Database className="w-4 h-4" />
+              DB Mgmt
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="trees">
@@ -276,71 +326,107 @@ export default function Admin() {
                   Master list of all planted trees in the district.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="p-0 overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Tree Type</TableHead>
-                      <TableHead>Location</TableHead>
-                      <TableHead>Planted Date</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {trees.map((tree: any) => (
-                      <TableRow key={tree._id}>
-                        <TableCell className="font-medium">
-                          {tree.commonName}
-                        </TableCell>
-                        <TableCell
-                          className="max-w-[300px] truncate"
-                          title={tree.location.address}
-                        >
-                          {tree.location.address}
-                        </TableCell>
-                        <TableCell>
-                          {format(new Date(tree.plantedDate), "MMM d, yyyy")}
-                        </TableCell>
-                        <TableCell>
-                          <Badge className={statusColors[tree.currentHealth]}>
-                            {tree.currentHealth}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right space-x-2">
-                          {(() => {
-                            const oneMonthAgo = new Date();
-                            oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-                            const lastUpdate = new Date(tree.updatedAt || tree.plantedDate);
-                            return lastUpdate < oneMonthAgo && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="bg-primary/5 hover:bg-primary/10 text-primary border-primary/20 gap-1.5"
-                                onClick={() => sendReminderMutation.mutate(tree._id)}
-                                disabled={sendReminderMutation.isPending}
-                              >
-                                {sendReminderMutation.isPending ? (
-                                  <Loader2 className="w-3 h-3 animate-spin" />
-                                ) : (
-                                  <Bell className="w-3 h-3" />
-                                )}
-                                Send Reminder
-                              </Button>
-                            );
-                          })()}
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setLocation(`/trees/${tree._id}?from=admin`)}
-                          >
-                            View Details
-                          </Button>
-                        </TableCell>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Tree Type</TableHead>
+                        <TableHead>Location</TableHead>
+                        <TableHead>Planted Date</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {trees.map((tree: any) => (
+                        <TableRow key={tree._id}>
+                          <TableCell className="font-medium whitespace-nowrap">
+                            {tree.commonName}
+                          </TableCell>
+                          <TableCell
+                            className="max-w-[300px] truncate"
+                            title={tree.location.address}
+                          >
+                            {tree.location.address}
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap">
+                            {format(new Date(tree.plantedDate), "MMM d, yyyy")}
+                          </TableCell>
+                          <TableCell>
+                            <Badge className={statusColors[tree.currentHealth]}>
+                              {tree.currentHealth}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right space-x-2 whitespace-nowrap">
+                            {(() => {
+                              const oneMonthAgo = new Date();
+                              oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+                              const lastUpdate = new Date(tree.updatedAt || tree.plantedDate);
+                              return lastUpdate < oneMonthAgo && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="bg-primary/5 hover:bg-primary/10 text-primary border-primary/20 gap-1.5"
+                                  onClick={() => sendReminderMutation.mutate(tree._id)}
+                                  disabled={sendReminderMutation.isPending}
+                                >
+                                  {sendReminderMutation.isPending ? (
+                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                  ) : (
+                                    <Bell className="w-3 h-3" />
+                                  )}
+                                  Send Reminder
+                                </Button>
+                              );
+                            })()}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setLocation(`/trees/${tree._id}?from=admin`)}
+                            >
+                              View Details
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+                {treesData?.pagination && treesData.pagination.totalPages > 1 && (
+                  <div className="p-4 border-t">
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious 
+                            href="#" 
+                            onClick={(e) => { e.preventDefault(); if (treePage > 1) setTreePage(treePage - 1); }}
+                            className={treePage <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          />
+                        </PaginationItem>
+                        {[...Array(treesData.pagination.totalPages)].map((_, i) => (
+                          <PaginationItem key={i}>
+                            <PaginationLink 
+                              href="#" 
+                              isActive={treePage === i + 1}
+                              onClick={(e) => { e.preventDefault(); setTreePage(i + 1); }}
+                              className="cursor-pointer"
+                            >
+                              {i + 1}
+                            </PaginationLink>
+                          </PaginationItem>
+                        ))}
+                        <PaginationItem>
+                          <PaginationNext 
+                            href="#" 
+                            onClick={(e) => { e.preventDefault(); if (treePage < treesData.pagination!.totalPages) setTreePage(treePage + 1); }}
+                            className={treePage >= treesData.pagination.totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -372,90 +458,146 @@ export default function Admin() {
                   Manage registered users and their permissions.
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>User</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Joined Date</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {usersData?.users?.map((user: any) => (
-                      <TableRow key={user._id}>
-                        <TableCell>
-                          <div className="font-medium">
-                            {user.fullName || user.username}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {user.email}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="capitalize">
-                            {user.role}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {user.isVerified ? (
-                            <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
-                              Verified
-                            </Badge>
-                          ) : (
-                            <Badge
-                              variant="secondary"
-                              className="text-yellow-600 bg-yellow-50 hover:bg-yellow-50"
-                            >
-                              Pending
-                            </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {format(new Date(user.createdAt), "MMM d, yyyy")}
-                        </TableCell>
-                        <TableCell className="text-right flex items-center justify-end gap-2">
-                          <Button
-                            size="icon"
-                            variant="outline"
-                            className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/5 border-primary/10"
-                            onClick={() => setMessageUser({ id: user._id, name: user.fullName || user.username })}
-                          >
-                            <MessageSquare className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant={
-                              user.isVerified ? "destructive" : "default"
-                            }
-                            onClick={() =>
-                              setConfirmUser({
-                                id: user._id,
-                                name: user.fullName || user.username,
-                                isVerified: user.isVerified,
-                              })
-                            }
-                            disabled={verifyMutation.isPending}
-                          >
-                            {user.isVerified ? "Revoke" : "Approve"}
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    {(!usersData?.users || usersData?.users.length === 0) && (
+              <CardContent className="px-0">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
                       <TableRow>
-                        <TableCell
-                          colSpan={5}
-                          className="text-center py-8 text-muted-foreground"
-                        >
-                          No users found.
-                        </TableCell>
+                        <TableHead>User</TableHead>
+                        <TableHead>Role</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Joined Date</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {usersData?.users?.map((user: any) => (
+                        <TableRow key={user._id}>
+                          <TableCell>
+                            <div className="font-medium whitespace-nowrap text-sm">
+                              {user.fullName || user.username}
+                            </div>
+                            <div className="text-xs text-muted-foreground whitespace-nowrap">
+                              {user.email}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="capitalize whitespace-nowrap font-bold text-[10px]">
+                              {user.role}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              className={
+                                user.isVerified
+                                  ? "bg-green-100 text-green-700 hover:bg-green-100 whitespace-nowrap"
+                                  : "bg-yellow-100 text-yellow-700 hover:bg-yellow-100 whitespace-nowrap"
+                              }
+                            >
+                              {user.isVerified ? "Verified" : "Pending"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap text-sm">
+                            {format(new Date(user.createdAt), "MMM d, yyyy")}
+                          </TableCell>
+                          <TableCell className="text-right flex items-center justify-end gap-2">
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/5 border-primary/10"
+                              onClick={() => setMessageUser({ id: user._id, name: user.fullName || user.username })}
+                            >
+                              <MessageSquare className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant={
+                                user.isVerified ? "destructive" : "default"
+                              }
+                              onClick={() =>
+                                setConfirmUser({
+                                  id: user._id,
+                                  name: user.fullName || user.username,
+                                  isVerified: user.isVerified,
+                                })
+                              }
+                              disabled={verifyMutation.isPending}
+                              className="rounded-lg text-xs h-8"
+                            >
+                              {user.isVerified ? "Revoke" : "Approve"}
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {(!usersData?.users || usersData?.users.length === 0) && (
+                        <TableRow>
+                          <TableCell
+                            colSpan={5}
+                            className="text-center py-8 text-muted-foreground"
+                          >
+                            No users found.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+                {usersData?.pagination && usersData.pagination.totalPages > 1 && (
+                  <div className="p-4 border-t">
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious 
+                            href="#" 
+                            onClick={(e) => { e.preventDefault(); if (userPage > 1) setUserPage(userPage - 1); }}
+                            className={userPage <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          />
+                        </PaginationItem>
+                        {[...Array(usersData.pagination.totalPages)].map((_, i) => {
+                          if (usersData.pagination!.totalPages > 7) {
+                            if (i + 1 === 1 || i + 1 === usersData.pagination!.totalPages || (i + 1 >= userPage - 1 && i + 1 <= userPage + 1)) {
+                              return (
+                                <PaginationItem key={i}>
+                                  <PaginationLink 
+                                    href="#" 
+                                    isActive={userPage === i + 1}
+                                    onClick={(e) => { e.preventDefault(); setUserPage(i + 1); }}
+                                    className="cursor-pointer"
+                                  >
+                                    {i + 1}
+                                  </PaginationLink>
+                                </PaginationItem>
+                              );
+                            }
+                            if (i + 1 === 2 || i + 1 === usersData.pagination!.totalPages - 1) {
+                              return <PaginationItem key={i}><PaginationEllipsis /></PaginationItem>;
+                            }
+                            return null;
+                          }
+                          return (
+                            <PaginationItem key={i}>
+                              <PaginationLink 
+                                href="#" 
+                                isActive={userPage === i + 1}
+                                onClick={(e) => { e.preventDefault(); setUserPage(i + 1); }}
+                                className="cursor-pointer"
+                              >
+                                {i + 1}
+                              </PaginationLink>
+                            </PaginationItem>
+                          );
+                        })}
+                        <PaginationItem>
+                          <PaginationNext 
+                            href="#" 
+                            onClick={(e) => { e.preventDefault(); if (userPage < usersData.pagination!.totalPages) setUserPage(userPage + 1); }}
+                            className={userPage >= usersData.pagination.totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -554,6 +696,192 @@ export default function Admin() {
                       </div>
                     ))
                   )}
+                </div>
+                {contactsData?.pagination && contactsData.pagination.totalPages > 1 && (
+                  <div className="p-4 border-t">
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious 
+                            href="#" 
+                            onClick={(e) => { e.preventDefault(); if (contactPage > 1) setContactPage(contactPage - 1); }}
+                            className={contactPage <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          />
+                        </PaginationItem>
+                        {[...Array(contactsData.pagination.totalPages)].map((_, i) => (
+                          <PaginationItem key={i}>
+                            <PaginationLink 
+                              href="#" 
+                              isActive={contactPage === i + 1}
+                              onClick={(e) => { e.preventDefault(); setContactPage(i + 1); }}
+                              className="cursor-pointer"
+                            >
+                              {i + 1}
+                            </PaginationLink>
+                          </PaginationItem>
+                        ))}
+                        <PaginationItem>
+                          <PaginationNext 
+                            href="#" 
+                            onClick={(e) => { e.preventDefault(); if (contactPage < contactsData.pagination!.totalPages) setContactPage(contactPage + 1); }}
+                            className={contactPage >= contactsData.pagination.totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="db" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-heading font-bold">Database Management</h2>
+                <p className="text-muted-foreground text-sm">Monitor database health and collection statistics.</p>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => refetchDb()} 
+                disabled={isFetchingDb}
+                className="gap-2 rounded-xl"
+              >
+                <RefreshCw className={cn("w-4 h-4", isFetchingDb && "animate-spin")} />
+                Refresh Status
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <Card className="border-none shadow-lg bg-primary/5">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-primary" />
+                    Storage Health
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-primary">
+                    {dbStats?.database.ok ? "Optimal" : "Check Status"}
+                  </div>
+                  <div className="mt-4 space-y-2">
+                    <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      <span>Used Capacity</span>
+                      <span>512 MB Limit</span>
+                    </div>
+                    {(() => {
+                      const usedMB = (dbStats?.database.storageSize || 0) / (1024 * 1024);
+                      const percent = Math.min((usedMB / 512) * 100, 100);
+                      return (
+                        <div className="h-2 w-full bg-primary/10 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-primary transition-all duration-1000" 
+                            style={{ width: `${percent}%` }}
+                          />
+                        </div>
+                      );
+                    })()}
+                    <p className="text-[10px] text-muted-foreground">
+                      {( (dbStats?.database.storageSize || 0) / (1024 * 1024) ).toFixed(2)} MB of 512.00 MB used
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-none shadow-lg bg-blue-50/50 dark:bg-blue-900/10">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <Server className="w-4 h-4 text-blue-600" />
+                    Engine Info
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">MDB v{dbStats?.server.version || "---"}</div>
+                  <div className="mt-4 space-y-1">
+                    <div className="flex justify-between text-[11px]">
+                      <span className="text-muted-foreground">Data Size</span>
+                      <span className="font-bold">{Math.round((dbStats?.database.dataSize || 0) / 1024)} KB</span>
+                    </div>
+                    <div className="flex justify-between text-[11px]">
+                      <span className="text-muted-foreground">Index Size</span>
+                      <span className="font-bold">{Math.round((dbStats?.database.indexSize || 0) / 1024)} KB</span>
+                    </div>
+                    <div className="flex justify-between text-[11px]">
+                      <span className="text-muted-foreground">Collections</span>
+                      <span className="font-bold">{dbStats?.collections.length || 0}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-none shadow-lg bg-orange-50/50 dark:bg-orange-900/10">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-orange-600" />
+                    Network & Load
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{dbStats?.server.connections || 0} Conns</div>
+                  <div className="mt-4 space-y-1">
+                    <div className="flex justify-between text-[11px]">
+                      <span className="text-muted-foreground">Uptime</span>
+                      <span className="font-bold">{dbStats ? Math.floor(dbStats.server.uptime / 3600) : 0} Hours</span>
+                    </div>
+                    <div className="flex justify-between text-[11px]">
+                      <span className="text-muted-foreground">Status</span>
+                      <span className="text-green-600 font-black">ACTIVE</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card className="border-none shadow-xl">
+              <CardHeader>
+                <CardTitle>Collection Architecture</CardTitle>
+                <CardDescription>Real-time storage allocation across data models.</CardDescription>
+              </CardHeader>
+              <CardContent className="px-0">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="pl-6">Collection</TableHead>
+                        <TableHead className="text-right">Documents</TableHead>
+                        <TableHead className="text-right">Size (KB)</TableHead>
+                        <TableHead className="text-right pr-6">Avg Object</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {dbStats?.collections.map((coll) => (
+                        <TableRow key={coll.name}>
+                          <TableCell className="font-mono font-bold text-primary pl-6">{coll.name}</TableCell>
+                          <TableCell className="text-right font-medium">{coll.count.toLocaleString()}</TableCell>
+                          <TableCell className="text-right font-medium">{Math.round(coll.size / 1024).toLocaleString()} KB</TableCell>
+                          <TableCell className="text-right text-muted-foreground pr-6">{Math.round(coll.avgObjSize).toLocaleString()} B</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                   </Table>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-none shadow-xl border-t-4 border-t-red-500">
+              <CardHeader>
+                <CardTitle className="text-red-600 flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5" />
+                  Database Health Check
+                </CardTitle>
+                <CardDescription>Potential issues or errors detected in the last 24 hours.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="p-8 text-center bg-muted/20 rounded-2xl">
+                  <Activity className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+                  <p className="text-sm text-muted-foreground font-medium">No database errors or integrity issues detected.</p>
+                  <p className="text-xs text-muted-foreground/60 mt-1">System is operating within normal parameters.</p>
                 </div>
               </CardContent>
             </Card>

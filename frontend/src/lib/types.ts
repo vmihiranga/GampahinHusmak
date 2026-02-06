@@ -66,6 +66,15 @@ export interface Contact {
   reply?: string;
   repliedAt?: string;
   image?: string;
+  relatedTreeId?: {
+    _id: string;
+    treeId: string;
+    commonName: string;
+    location?: {
+      address: string;
+      coordinates: [number, number];
+    };
+  };
   responses?: {
     message: string;
     respondedBy: string | any;
@@ -91,6 +100,19 @@ export interface Achievement {
   earnedAt: string;
 }
 
+export interface UserStats {
+  treesPlanted: number;
+  eventsAttended: number;
+  updatesSubmitted: number;
+  achievements: Achievement[];
+  co2Offset: string;
+  weatherAlert?: {
+    type: string;
+    message: string;
+    urgency: string;
+  };
+}
+
 export interface GalleryItem {
   _id: string;
   title: string;
@@ -110,6 +132,12 @@ export interface AuthResponse {
 
 export interface TreesResponse {
   trees: Tree[];
+  pagination?: {
+    totalItems: number;
+    totalPages: number;
+    currentPage: number;
+    limit: number;
+  };
 }
 
 export interface TreeDetailsResponse {
@@ -119,10 +147,22 @@ export interface TreeDetailsResponse {
 
 export interface EventsResponse {
   events: Event[];
+  pagination?: {
+    totalItems: number;
+    totalPages: number;
+    currentPage: number;
+    limit: number;
+  };
 }
 
 export interface ContactsResponse {
   contacts: Contact[];
+  pagination?: {
+    totalItems: number;
+    totalPages: number;
+    currentPage: number;
+    limit: number;
+  };
 }
 
 export interface GalleryResponse {
@@ -137,6 +177,12 @@ export interface GalleryResponse {
 
 export interface UsersResponse {
   users: User[];
+  pagination?: {
+    totalItems: number;
+    totalPages: number;
+    currentPage: number;
+    limit: number;
+  };
 }
 
 export interface StatsResponse extends Stats {}
@@ -165,5 +211,26 @@ export interface LeaderboardResponse {
     totalPages: number;
     currentPage: number;
     limit: number;
+  };
+}
+export interface DbStatsResponse {
+  collections: {
+    name: string;
+    count: number;
+    size: number;
+    avgObjSize: number;
+  }[];
+  database: {
+    name: string;
+    ok: number;
+    storageSize: number;
+    dataSize: number;
+    indexSize: number;
+    stats?: any;
+  };
+  server: {
+    version: string;
+    uptime: number;
+    connections: number;
   };
 }

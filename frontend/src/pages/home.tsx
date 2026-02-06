@@ -5,6 +5,7 @@ import { Link } from "wouter";
 import { ArrowRight, TreePine, Users, Activity, Sprout } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { statsAPI } from "@/lib/api";
+import { StatsResponse } from "@/lib/types";
 import { useLanguage } from "@/hooks/use-language";
 import heroImage from "@assets/generated_images/community_tree_planting_hero_image.png";
 import forestImage from "@assets/generated_images/lush_green_forest_landscape.png";
@@ -36,7 +37,7 @@ export default function Home() {
             Launch Initiative for Independence Day
           </div>
           
-          <h1 className="text-5xl md:text-7xl font-heading font-bold leading-tight animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl font-heading font-bold leading-[1.1] animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100 px-4">
             {language === 'en' ? (
               <>
                 Planting Hope for <br />
@@ -72,7 +73,7 @@ export default function Home() {
       {/* Stats Section */}
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 -mt-36 relative z-20">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 -mt-36 relative z-20">
             <StatCard icon={TreePine} value={stats?.totalTrees || 0} label={t.home.stats.trees_planted} />
             <StatCard icon={Users} value={stats?.totalUsers || 0} label={t.home.stats.active_volunteers} />
             <StatCard icon={Activity} value="94%" label={t.home.stats.survival_rate} />
@@ -102,12 +103,12 @@ export default function Home() {
                 ))}
               </ul>
             </div>
-            <div className="relative group">
-              <div className="absolute inset-0 bg-primary/10 rounded-2xl transform rotate-3 transition-transform group-hover:rotate-6" />
+            <div className="relative group px-4 md:px-0">
+              <div className="absolute inset-x-4 md:inset-0 bg-primary/10 rounded-2xl transform rotate-3 transition-transform group-hover:rotate-6" />
               <img 
                 src={forestImage} 
                 alt="Green Gampaha" 
-                className="relative rounded-2xl shadow-xl w-full h-[500px] object-cover"
+                className="relative rounded-2xl shadow-xl w-full h-[350px] md:h-[500px] object-cover"
               />
             </div>
           </div>
@@ -135,14 +136,14 @@ export default function Home() {
 
 function StatCard({ icon: Icon, value, label }: { icon: any, value: string | number, label: string }) {
   return (
-    <Card className="group relative overflow-hidden bg-white/40 backdrop-blur-xl border border-white/40 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] hover:shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] transition-all duration-500 rounded-[2rem]">
-      <CardContent className="p-8 flex flex-col items-center text-center space-y-5 relative z-10">
-        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary transform transition-all group-hover:scale-110 duration-500">
-          <Icon className="w-7 h-7" />
+    <Card className="group relative overflow-hidden bg-white/40 backdrop-blur-xl border border-white/40 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] hover:shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] transition-all duration-500 rounded-3xl">
+      <CardContent className="p-4 sm:p-8 flex flex-col items-center text-center space-y-3 sm:space-y-5 relative z-10">
+        <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary transform transition-all group-hover:scale-110 duration-500">
+          <Icon className="w-5 h-5 md:w-7 md:h-7" />
         </div>
         <div className="space-y-1">
-          <div className="text-4xl font-bold font-heading text-slate-900 tracking-tight">{value}</div>
-          <div className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em]">{label}</div>
+          <div className="text-2xl md:text-4xl font-bold font-heading text-slate-900 tracking-tight">{value}</div>
+          <div className="text-[9px] md:text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em]">{label}</div>
         </div>
       </CardContent>
     </Card>

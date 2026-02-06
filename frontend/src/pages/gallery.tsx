@@ -14,6 +14,15 @@ import { Link } from "wouter";
 import { useLanguage } from "@/hooks/use-language";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 export default function Gallery() {
   const { t, language } = useLanguage();
@@ -242,36 +251,60 @@ export default function Gallery() {
 
         {/* Pagination */}
         {galleryData?.pagination && galleryData.pagination.totalPages > 1 && (
-          <div className="flex items-center justify-center gap-4 mt-12 pb-8">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setPage(p => Math.max(1, p - 1));
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              disabled={page === 1 || isLoading}
-              className="rounded-xl"
-            >
-              <ChevronLeft className="w-4 h-4 mr-1" />
-              {language === 'en' ? 'Previous' : 'කලින්'}
-            </Button>
-            <div className="text-sm font-medium">
-              {language === 'en' ? `Page ${page} of ${galleryData.pagination.totalPages}` : `${galleryData.pagination.totalPages} න් ${page} වන පිටුව`}
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setPage(p => Math.min(galleryData.pagination!.totalPages, p + 1));
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              disabled={page === galleryData.pagination.totalPages || isLoading}
-              className="rounded-xl"
-            >
-              {language === 'en' ? 'Next' : 'මීළඟ'}
-              <ChevronRight className="w-4 h-4 ml-1" />
-            </Button>
+          <div className="pt-8">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious 
+                    href="#" 
+                    onClick={(e) => { e.preventDefault(); if (page > 1) { setPage(page - 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}}
+                    className={page <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+                {[...Array(galleryData.pagination.totalPages)].map((_, i) => {
+                  const pageNum = i + 1;
+                  if (galleryData.pagination!.totalPages > 7) {
+                    if (pageNum === 1 || pageNum === galleryData.pagination!.totalPages || (pageNum >= page - 1 && pageNum <= page + 1)) {
+                      return (
+                        <PaginationItem key={i}>
+                          <PaginationLink 
+                            href="#" 
+                            isActive={page === pageNum}
+                            onClick={(e) => { e.preventDefault(); setPage(pageNum); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                            className="cursor-pointer"
+                          >
+                            {pageNum}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    }
+                    if (pageNum === 2 || pageNum === galleryData.pagination!.totalPages - 1) {
+                      return <PaginationItem key={i}><PaginationEllipsis /></PaginationItem>;
+                    }
+                    return null;
+                  }
+                  return (
+                    <PaginationItem key={i}>
+                      <PaginationLink 
+                        href="#" 
+                        isActive={page === pageNum}
+                        onClick={(e) => { e.preventDefault(); setPage(pageNum); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                        className="cursor-pointer"
+                      >
+                        {pageNum}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                })}
+                <PaginationItem>
+                  <PaginationNext 
+                    href="#" 
+                    onClick={(e) => { e.preventDefault(); if (page < galleryData.pagination!.totalPages) { setPage(page + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}}
+                    className={page >= galleryData.pagination.totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
           </div>
         )}
       </div>

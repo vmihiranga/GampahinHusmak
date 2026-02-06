@@ -8,6 +8,8 @@
     />
 
     <title>Gampahin Husmak Tree Plantation</title>
+    <meta name="theme-color" content="#16a34a" />
+    <link rel="apple-touch-icon" href="/logo.png" />
     <meta
       name="description"
       content="Gampahathuru.lk (Gampahin Husmak) is a community-driven platform for tree plantation, monitoring, and environmental conservation in the Gampaha District."
@@ -31,7 +33,7 @@
     <meta property="og:url" content="https://gampahathuru.lk" />
     <meta property="og:site_name" content="Gampahathuru.lk" />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://gampahathuru.lk/og-image.png" />
+    <meta property="og:image" content="https://gampahathuru.lk/opengraph.jpg" />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Gampahathuru.lk - Gampahin Husmak" />
@@ -39,7 +41,10 @@
       name="twitter:description"
       content="Plant trees and protect our environment with Gampahathuru.lk."
     />
-    <meta name="twitter:image" content="https://gampahathuru.lk/og-image.png" />
+    <meta
+      name="twitter:image"
+      content="https://gampahathuru.lk/opengraph.jpg"
+    />
 
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -51,73 +56,264 @@
 
     <!-- Security Restrictions -->
     <script>
-      // Disable Right-Click
-      document.addEventListener("contextmenu", (e) => e.preventDefault());
-
-      // Disable DevTools & View Source Shortcuts
-      document.addEventListener("keydown", (e) => {
-        // F12
-        if (e.keyCode === 123) {
-          e.preventDefault();
-          return false;
-        }
-        // Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C (Chrome/Firefox DevTools)
-        if (
-          e.ctrlKey &&
-          e.shiftKey &&
-          (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)
-        ) {
-          e.preventDefault();
-          return false;
-        }
-        // Ctrl+U (View Source)
-        if (e.ctrlKey && e.keyCode === 85) {
-          e.preventDefault();
-          return false;
-        }
-        // Ctrl+S (Save Page)
-        if (e.ctrlKey && e.keyCode === 83) {
-          e.preventDefault();
-          return false;
-        }
-      });
-
-      // Disable Zoom (Pinch and Wheel Zoom)
-      document.addEventListener(
-        "wheel",
-        (e) => {
-          if (e.ctrlKey) {
-            e.preventDefault();
-          }
-        },
-        { passive: false },
-      );
-
-      document.addEventListener(
-        "touchmove",
-        (e) => {
-          if (e.touches.length > 1) {
-            e.preventDefault();
-          }
-        },
-        { passive: false },
-      );
-
-      // Anti-Debugger Loop
+      /**
+       * Security Script for Gampahin Husmak
+       * Protects the codebase and content from unauthorized inspection and copying.
+       * Enhanced Security Features v2.0
+       */
       (function () {
-        setInterval(() => {
-          (function () {
-            return false;
-          })
-            ["constructor"]("debugger")
-            ["call"]();
-        }, 100);
-      })();
+        "use strict";
 
-      // Clear Console regularly
-      setInterval(() => {
-        console.clear();
-      }, 1000);
+        // 1. Disable Right Click (Context Menu)
+        document.addEventListener(
+          "contextmenu",
+          (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+          },
+          true,
+        );
+
+        // 2. Disable Text Selection (Multiple Methods)
+        document.addEventListener(
+          "selectstart",
+          (e) => {
+            e.preventDefault();
+            return false;
+          },
+          true,
+        );
+
+        document.addEventListener(
+          "mousedown",
+          (e) => {
+            if (e.detail > 1) {
+              e.preventDefault();
+            }
+          },
+          true,
+        );
+
+        // 3. Disable Keyboard Shortcuts for DevTools
+        document.addEventListener(
+          "keydown",
+          (e) => {
+            // Disable F12
+            if (e.keyCode === 123 || e.key === "F12") {
+              e.preventDefault();
+              e.stopPropagation();
+              return false;
+            }
+
+            // Disable Ctrl+Shift+I (Inspector)
+            if (
+              (e.ctrlKey || e.metaKey) &&
+              e.shiftKey &&
+              (e.keyCode === 73 || e.key === "I" || e.key === "i")
+            ) {
+              e.preventDefault();
+              e.stopPropagation();
+              return false;
+            }
+
+            // Disable Ctrl+Shift+J (Console)
+            if (
+              (e.ctrlKey || e.metaKey) &&
+              e.shiftKey &&
+              (e.keyCode === 74 || e.key === "J" || e.key === "j")
+            ) {
+              e.preventDefault();
+              e.stopPropagation();
+              return false;
+            }
+
+            // Disable Ctrl+Shift+C (Element Selector)
+            if (
+              (e.ctrlKey || e.metaKey) &&
+              e.shiftKey &&
+              (e.keyCode === 67 || e.key === "C" || e.key === "c")
+            ) {
+              e.preventDefault();
+              e.stopPropagation();
+              return false;
+            }
+
+            // Disable Ctrl+U (View Source)
+            if (
+              (e.ctrlKey || e.metaKey) &&
+              (e.keyCode === 85 || e.key === "U" || e.key === "u")
+            ) {
+              e.preventDefault();
+              e.stopPropagation();
+              return false;
+            }
+
+            // Disable Ctrl+S (Save Page)
+            if (
+              (e.ctrlKey || e.metaKey) &&
+              (e.keyCode === 83 || e.key === "S" || e.key === "s")
+            ) {
+              e.preventDefault();
+              e.stopPropagation();
+              return false;
+            }
+
+            // Disable Ctrl+Shift+K (Firefox Console)
+            if (
+              (e.ctrlKey || e.metaKey) &&
+              e.shiftKey &&
+              (e.keyCode === 75 || e.key === "K" || e.key === "k")
+            ) {
+              e.preventDefault();
+              e.stopPropagation();
+              return false;
+            }
+
+            // Disable Ctrl+P (Print)
+            if (
+              (e.ctrlKey || e.metaKey) &&
+              (e.keyCode === 80 || e.key === "P" || e.key === "p")
+            ) {
+              e.preventDefault();
+              e.stopPropagation();
+              return false;
+            }
+
+            // Disable Ctrl+A (Select All)
+            if (
+              (e.ctrlKey || e.metaKey) &&
+              (e.keyCode === 65 || e.key === "A" || e.key === "a")
+            ) {
+              e.preventDefault();
+              e.stopPropagation();
+              return false;
+            }
+
+            // Disable Ctrl+C (Copy) - except in input fields
+            if (
+              (e.ctrlKey || e.metaKey) &&
+              !e.shiftKey &&
+              (e.keyCode === 67 || e.key === "C" || e.key === "c")
+            ) {
+              if (
+                e.target.tagName !== "INPUT" &&
+                e.target.tagName !== "TEXTAREA"
+              ) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+              }
+            }
+          },
+          true,
+        );
+
+        // 4. Console Protection & DevTools Detection
+        const protect = () => {
+          const devtools = {
+            isOpen: false,
+            orientation: undefined,
+          };
+          const threshold = 160;
+
+          const emitEvent = (isOpen) => {
+            if (isOpen) {
+              console.clear();
+              console.log(
+                "%cSTOP!",
+                "color: red; font-family: sans-serif; font-size: 4rem; font-weight: bold; text-shadow: 2px 2px 0 #000;",
+              );
+            }
+          };
+
+          setInterval(() => {
+            const widthThreshold =
+              window.outerWidth - window.innerWidth > threshold;
+            const heightThreshold =
+              window.outerHeight - window.innerHeight > threshold;
+            const orientation = widthThreshold ? "vertical" : "horizontal";
+
+            if (
+              !(heightThreshold && widthThreshold) &&
+              (widthThreshold || heightThreshold)
+            ) {
+              if (!devtools.isOpen || devtools.orientation !== orientation) {
+                emitEvent(true);
+              }
+              devtools.isOpen = true;
+              devtools.orientation = orientation;
+            } else {
+              devtools.isOpen = false;
+              devtools.orientation = undefined;
+            }
+
+            if (devtools.isOpen) {
+              console.clear();
+            }
+          }, 1500);
+        };
+
+        // 5. Disable image dragging
+        document.addEventListener(
+          "dragstart",
+          (e) => {
+            e.preventDefault();
+            return false;
+          },
+          true,
+        );
+
+        // 6. Disable copy event
+        document.addEventListener(
+          "copy",
+          (e) => {
+            if (
+              e.target.tagName !== "INPUT" &&
+              e.target.tagName !== "TEXTAREA"
+            ) {
+              e.preventDefault();
+              return false;
+            }
+          },
+          true,
+        );
+
+        // 7. Prevent window.print()
+        window.print = function () {
+          console.log("Printing is disabled on this application.");
+          return false;
+        };
+
+        // 8. Disable Zoom (Pinch and Wheel Zoom)
+        document.addEventListener(
+          "wheel",
+          (e) => {
+            if (e.ctrlKey) {
+              e.preventDefault();
+            }
+          },
+          { passive: false },
+        );
+
+        document.addEventListener(
+          "touchmove",
+          (e) => {
+            if (e.touches.length > 1) {
+              e.preventDefault();
+            }
+          },
+          { passive: false },
+        );
+
+        // Initialize detections
+        protect();
+
+        console.log(
+          "%cSecurity Active v2.0",
+          "color: green; font-weight: bold;",
+        );
+      })();
     </script>
   </head>
   <body>

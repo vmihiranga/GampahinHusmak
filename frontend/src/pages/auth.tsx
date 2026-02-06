@@ -73,13 +73,20 @@ export default function Auth() {
 
       // 2. Register user
       const formData = new FormData(e.target as HTMLFormElement);
+      
+      // Combine address fields
+      const addressLine = formData.get('addressLine') || '';
+      const city = formData.get('city') || '';
+      const province = formData.get('province') || '';
+      const fullAddress = [addressLine, city, province].filter(Boolean).join(', ');
+      
       const data = {
         username: formData.get('username'),
         email: formData.get('email'),
         password: formData.get('password'),
         fullName: `${formData.get('firstName')} ${formData.get('lastName')}`,
         phoneNumber: formData.get('phoneNumber'),
-        address: formData.get('address'),
+        address: fullAddress || undefined,
         profileImage: profileImageUrl || undefined,
       };
 
@@ -224,13 +231,23 @@ export default function Auth() {
                         <Input id="phoneNumber" name="phoneNumber" placeholder="0712345678" required />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="nic">NIC Number</Label>
-                        <Input id="nic" name="nic" placeholder="National ID" required />
+                        <Label htmlFor="nic">NIC Number <span className="text-xs text-muted-foreground">(Optional)</span></Label>
+                        <Input id="nic" name="nic" placeholder="National ID" />
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="address">Address</Label>
-                      <Input id="address" name="address" placeholder="123, Main Street, Gampaha" required />
+                      <Label htmlFor="addressLine">Address Line <span className="text-xs text-muted-foreground">(Optional)</span></Label>
+                      <Input id="addressLine" name="addressLine" placeholder="123, Main Street" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="city">City <span className="text-xs text-muted-foreground">(Optional)</span></Label>
+                        <Input id="city" name="city" placeholder="Gampaha" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="province">Province <span className="text-xs text-muted-foreground">(Optional)</span></Label>
+                        <Input id="province" name="province" placeholder="Western Province" />
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="password-reg">Password</Label>

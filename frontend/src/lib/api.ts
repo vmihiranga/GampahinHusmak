@@ -10,7 +10,8 @@ import type {
   StatsResponse,
   MessageResponse,
   ContactActionResponse,
-  LeaderboardResponse
+  LeaderboardResponse,
+  DbStatsResponse
 } from './types';
 
 
@@ -123,7 +124,11 @@ export const contactAPI = {
     body: JSON.stringify(data),
   }),
   
-  getAll: () => fetchAPI<ContactsResponse>('/contact'),
+  getAll: (params?: any) => {
+    const query = new URLSearchParams(params).toString();
+    return fetchAPI<ContactsResponse>(`/contact${query ? `?${query}` : ''}`);
+  },
+  
   getMyContacts: () => fetchAPI<ContactsResponse>('/my-contacts'),
   markAsSeen: (id: string) => fetchAPI<MessageResponse>(`/my-contacts/${id}/seen`, { method: 'PUT' }),
 };
@@ -132,14 +137,21 @@ export const contactAPI = {
 export const statsAPI = {
   getGeneral: () => fetchAPI<StatsResponse>('/stats'),
   
-  getUser: (userId: string) => fetchAPI<any>(`/stats/user/${userId}`),
+  getUser: (userId: string) => fetchAPI<import('./types').UserStats>(`/stats/user/${userId}`),
   
   getLeaderboard: (page = 1, limit = 10) => fetchAPI<LeaderboardResponse>(`/leaderboard?page=${page}&limit=${limit}`),
 };
 
 // Admin API
 export const adminAPI = {
-  getUsers: () => fetchAPI<UsersResponse>('/admin/users'),
+  getUsers: (params?: any) => {
+    const query = new URLSearchParams(params).toString();
+    return fetchAPI<UsersResponse>(`/admin/users${query ? `?${query}` : ''}`);
+  },
+  
+  getDbStats: () => fetchAPI<DbStatsResponse>('/admin/db-stats'),
+  
+  getSummary: () => fetchAPI<any>('/admin/summary'),
   
   verifyUser: (userId: string, isVerified: boolean) => fetchAPI<MessageResponse>(`/admin/users/${userId}/verify`, {
     method: 'PUT',

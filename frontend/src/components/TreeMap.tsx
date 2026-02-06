@@ -1,6 +1,6 @@
 /// <reference types="@types/google.maps" />
 import { useEffect, useRef, useState } from 'react';
-import { Loader } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 interface MapProps {
   trees: Array<{
@@ -161,7 +161,7 @@ export default function TreeMap({ trees, center, zoom = 12, height = '500px' }: 
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-10">
           <div className="flex flex-col items-center gap-3">
-            <Loader className="w-8 h-8 animate-spin text-primary" />
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
             <p className="text-sm text-muted-foreground">Loading map...</p>
           </div>
         </div>

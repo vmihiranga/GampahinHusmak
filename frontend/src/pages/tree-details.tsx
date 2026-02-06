@@ -1,6 +1,7 @@
 import Layout from "@/components/layout";
 import { useQuery } from "@tanstack/react-query";
 import { treesAPI } from "@/lib/api";
+import { TreeDetailsResponse } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";

@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Leaf, User, LayoutDashboard, LogIn, LogOut, Menu, X } from "lucide-react";
+import { Leaf, User, LayoutDashboard, LogIn, LogOut, Menu, X, Globe, Languages, ChevronRight, Home, Image as ImageIcon, MessageSquare, Trophy, Settings, Activity, MapPin } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,6 @@ import { useQuery } from "@tanstack/react-query";
 import { authAPI, contactAPI } from "@/lib/api";
 import { AuthResponse, ContactsResponse } from "@/lib/types";
 import { useLanguage } from "@/hooks/use-language";
-import { Globe, Languages } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +16,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [location, navigate] = useLocation();
@@ -54,6 +60,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     try {
       await authAPI.logout();
       setUser(null);
+      setIsMobileMenuOpen(false);
       navigate("/");
     } catch (error) {
       console.error("Logout failed:", error);
@@ -62,9 +69,56 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
 
-  const NavLink = ({ href, children, icon: Icon, badge }: { href: string; children: React.ReactNode; icon?: any; badge?: number }) => {
+  const NavLink = ({ 
+    href, 
+    children, 
+    icon: Icon, 
+    badge,
+    mobile = false 
+  }: { 
+    href: string; 
+    children: React.ReactNode; 
+    icon?: any; 
+    badge?: number;
+    mobile?: boolean;
+  }) => {
     const isActive = location === href;
     const isHome = location === "/";
+
+    if (mobile) {
+      return (
+        <Link href={href}>
+          <a 
+            className={cn(
+              "flex items-center justify-between px-4 py-4 text-base font-semibold transition-all rounded-2xl group",
+              isActive 
+                ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" 
+                : "text-foreground hover:bg-primary/5 active:scale-[0.98]"
+            )}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <div className="flex items-center gap-4">
+              <div className={cn(
+                "p-2 rounded-xl transition-colors",
+                isActive ? "bg-white/20 text-white" : "bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white"
+              )}>
+                {Icon && <Icon className="w-5 h-5" />}
+              </div>
+              <span className="flex items-center gap-2">
+                {children}
+                {badge !== undefined && badge > 0 && (
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-white shadow-sm">
+                    {badge}
+                  </span>
+                )}
+              </span>
+            </div>
+            <ChevronRight className={cn("w-4 h-4 opacity-50 transition-transform group-hover:translate-x-1", isActive && "opacity-100")} />
+          </a>
+        </Link>
+      );
+    }
+
     return (
       <Link href={href}>
         <a 
@@ -74,7 +128,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               ? (isHome ? "bg-white/20 text-white" : "bg-primary/10 text-primary")
               : (isHome ? "text-white/80 hover:text-white hover:bg-white/10" : "text-muted-foreground hover:text-primary hover:bg-primary/5")
           )}
-          onClick={() => setIsMobileMenuOpen(false)}
         >
           {Icon && <Icon className="w-4 h-4" />}
           <span className="flex items-center gap-1.5">
@@ -95,21 +148,19 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col bg-background font-sans">
       <header className={cn(
-        "absolute top-0 z-50 w-full bg-transparent transition-all duration-300",
-        !isHome && "relative bg-background border-b"
+        "absolute top-0 z-50 w-full transition-all duration-300",
+        !isHome ? "relative bg-background/80 backdrop-blur-md border-b" : "bg-transparent"
       )}>
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+        <div className="container mx-auto px-4 h-20 flex items-center justify-between">
           <Link href="/">
-            <a className="flex items-center gap-2 group">
-              <div className="bg-primary text-primary-foreground p-2 rounded-lg group-hover:scale-105 transition-transform">
-                <Leaf className="w-5 h-5" />
+            <a className="flex items-center gap-3 group">
+              <div className="bg-transparent group-hover:scale-110 transition-all">
+                <img 
+                  src={isHome ? "/logo.png" : "/logo-alt.png"} 
+                  alt="Gampahin Husmak" 
+                  className="h-20 md:h-24 w-auto object-contain" 
+                />
               </div>
-              <span className={cn(
-                "font-heading font-bold text-xl tracking-tight",
-                isHome ? "text-white" : "text-foreground"
-              )}>
-                Gampahin <span className={isHome ? "text-green-400" : "text-primary"}>Husmak</span>
-              </span>
             </a>
           </Link>
 
@@ -132,7 +183,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               variant="ghost" 
               size="sm" 
               className={cn(
-                "gap-2 px-3 border border-transparent hover:border-primary/20 transition-all",
+                "gap-2 px-3 border border-transparent hover:border-primary/20 transition-all rounded-full",
                 isHome ? "text-white hover:bg-white/10" : "text-foreground hover:bg-primary/5"
               )}
               onClick={() => setLanguage(language === 'en' ? 'si' : 'en')}
@@ -160,8 +211,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   variant="default" 
                   size="sm" 
                   className={cn(
-                    "gap-2",
-                    isHome ? "bg-green-600 hover:bg-green-500 text-white border-none shadow-lg shadow-green-900/20" : ""
+                    "gap-2 rounded-full px-5 h-10 font-bold",
+                    isHome ? "bg-green-600 hover:bg-green-500 text-white border-none shadow-lg shadow-green-900/20" : "shadow-lg shadow-primary/20"
                   )}
                 >
                   <LogIn className="w-4 h-4" />
@@ -178,221 +229,253 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     variant="ghost" 
                     size="sm" 
                     className={cn(
-                      "gap-2",
-                      isHome ? "text-white hover:bg-white/10" : ""
+                      "gap-2 h-10 pl-1 pr-3 rounded-full",
+                      isHome ? "text-white hover:bg-white/10" : "hover:bg-primary/5 border border-primary/10"
                     )}
                   >
-                    <Avatar className="w-6 h-6">
+                    <Avatar className="w-8 h-8 border-2 border-primary/20">
                       <AvatarImage src={user.profileImage} alt={user.fullName} />
-                      <AvatarFallback className="text-xs">
+                      <AvatarFallback className="text-xs bg-primary/10 text-primary">
                         {user.fullName?.charAt(0) || user.username?.charAt(0) || 'U'}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="hidden lg:inline">{user.fullName || user.username}</span>
+                    <span className="hidden lg:inline font-bold text-xs">{user.fullName || user.username}</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>
+                <DropdownMenuContent align="end" className="w-64 p-2 rounded-2xl shadow-2xl border-primary/10 backdrop-blur-xl">
+                  <DropdownMenuLabel className="p-4">
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium">{user.fullName}</p>
-                      <p className="text-xs text-muted-foreground">{user.email}</p>
-                      <p className="text-xs text-primary capitalize">{user.role}</p>
+                      <p className="text-sm font-black text-foreground">{user.fullName}</p>
+                      <p className="text-xs text-muted-foreground font-medium">{user.email}</p>
+                      <div className="pt-2">
+                        <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold uppercase tracking-widest">{user.role}</span>
+                      </div>
                     </div>
                   </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/dashboard">
-                      <a className="flex items-center w-full cursor-pointer">
-                        <LayoutDashboard className="w-4 h-4 mr-2" />
-                        {t.nav.dashboard}
-                      </a>
-                    </Link>
-                  </DropdownMenuItem>
-                  {isAdmin && (
-                    <DropdownMenuItem asChild>
-                      <Link href="/admin">
-                        <a className="flex items-center w-full cursor-pointer">
-                          <User className="w-4 h-4 mr-2" />
-                          {t.nav.admin_panel}
+                  <DropdownMenuSeparator className="bg-primary/10 mx-2" />
+                  <div className="p-1 space-y-1">
+                    <DropdownMenuItem asChild className="rounded-xl cursor-not-allowed opacity-50 pointer-events-none">
+                      <div className="flex items-center w-full px-3 py-2">
+                        <Settings className="w-4 h-4 mr-2" />
+                        <span className="text-sm font-medium">Profile Settings</span>
+                      </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="rounded-xl">
+                      <Link href="/dashboard">
+                        <a className="flex items-center w-full px-3 py-2 cursor-pointer">
+                          <LayoutDashboard className="w-4 h-4 mr-2" />
+                          <span className="text-sm font-medium">{t.nav.dashboard}</span>
                         </a>
                       </Link>
                     </DropdownMenuItem>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600">
-                    <LogOut className="w-4 h-4 mr-2" />
-                    {t.nav.logout}
-                  </DropdownMenuItem>
+                    {isAdmin && (
+                      <DropdownMenuItem asChild className="rounded-xl">
+                        <Link href="/admin">
+                          <a className="flex items-center w-full px-3 py-2 cursor-pointer">
+                            <User className="w-4 h-4 mr-2" />
+                            <span className="text-sm font-medium">{t.nav.admin_panel}</span>
+                          </a>
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                  </div>
+                  <DropdownMenuSeparator className="bg-primary/10 mx-2" />
+                  <div className="p-1">
+                    <DropdownMenuItem onClick={handleLogout} className="rounded-xl cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive">
+                      <LogOut className="w-4 h-4 mr-2" />
+                      <span className="text-sm font-bold">{t.nav.logout}</span>
+                    </DropdownMenuItem>
+                  </div>
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
           </nav>
 
-          {/* Mobile Menu Toggle */}
-          <button 
-            className={cn("md:hidden p-2", isHome ? "text-white" : "text-foreground")}
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            {isMobileMenuOpen ? <X /> : <Menu />}
-          </button>
-        </div>
-
-        {/* Mobile Nav */}
-        {isMobileMenuOpen && (
-          <div className={cn(
-            "md:hidden border-t p-4 flex flex-col gap-2 shadow-lg",
-            isHome ? "bg-black/60 backdrop-blur-lg border-white/10" : "bg-background border-border"
-          )}>
-            <NavLink href="/">{t.nav.home}</NavLink>
-            <NavLink href="/gallery">{t.nav.gallery}</NavLink>
-            <NavLink href="/contact">{t.nav.contact}</NavLink>
-            <NavLink href="/leaderboard">{t.nav.leaderboard}</NavLink>
-            
-            {/* Show Dashboard only when logged in */}
-            {user && <NavLink href="/dashboard" badge={unreadCount}>{t.nav.dashboard}</NavLink>}
-            
-            {/* Show Admin only for admin/superadmin */}
-            {isAdmin && <NavLink href="/admin">{t.nav.admin}</NavLink>}
-            
-            <div className={cn("h-px w-full my-2", isHome ? "bg-white/10" : "bg-border")} />
-            
-            {/* Language Selection in Mobile */}
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className={cn(
-                "w-full justify-between gap-4 h-12 px-6 rounded-2xl transition-all",
-                isHome ? "bg-white/10 border-white/20 text-white" : "bg-primary/5 border-primary/20"
-              )}
-              onClick={() => setLanguage(language === 'en' ? 'si' : 'en')}
-            >
-              <div className="flex items-center gap-3">
-                <Languages className="w-5 h-5 text-primary" />
-                <span className="font-bold">{language === 'en' ? "සිංහලට මාරු වන්න" : "Switch to English"}</span>
-              </div>
-              <div className="flex items-center gap-1 bg-background/50 p-1 rounded-xl">
-                <span className={cn("text-[10px] font-bold px-2 py-1 rounded-lg", language === 'en' ? "bg-primary text-white" : "opacity-40")}>EN</span>
-                <span className={cn("text-[10px] font-bold px-2 py-1 rounded-lg", language === 'si' ? "bg-primary text-white" : "opacity-40")}>SI</span>
-              </div>
-            </Button>
-
-            <div className={cn("h-px w-full my-2", isHome ? "bg-white/10" : "bg-border")} />
-
-            {/* Show Login button when not authenticated */}
-            {!user && !isLoading && (
-              <Link href="/auth">
-                <Button className={cn(
-                  "w-full mt-2 gap-2",
-                  isHome ? "bg-green-600 hover:bg-green-500 text-white border-none" : ""
-                )}>
-                  <LogIn className="w-4 h-4" />
-                  {t.nav.login}
+          {/* Mobile Menu Wrapper */}
+          <div className="md:hidden flex items-center gap-2">
+            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className={cn(
+                    "w-11 h-11 rounded-2xl",
+                    isHome ? "text-white hover:bg-white/10" : "text-foreground hover:bg-primary/5 border border-primary/10"
+                  )}
+                >
+                  <Menu className="w-6 h-6" />
                 </Button>
-              </Link>
-            )}
-            
-            {/* Show User Info and Logout when authenticated */}
-            {user && (
-              <div className="mt-4 space-y-2">
-                <div className={cn(
-                  "p-3 rounded-lg border",
-                  isHome ? "bg-white/10 border-white/20" : "bg-muted"
-                )}>
-                  <div className="flex items-center gap-3">
-                    <Avatar className="w-10 h-10">
-                      <AvatarImage src={user.profileImage} alt={user.fullName} />
-                      <AvatarFallback>
-                        {user.fullName?.charAt(0) || user.username?.charAt(0) || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <p className={cn(
-                        "text-sm font-medium truncate",
-                        isHome ? "text-white" : "text-foreground"
-                      )}>
-                        {user.fullName || user.username}
-                      </p>
-                      <p className={cn(
-                        "text-xs truncate",
-                        isHome ? "text-white/60" : "text-muted-foreground"
-                      )}>
-                        {user.email}
-                      </p>
-                      <p className="text-xs text-primary capitalize mt-0.5">{user.role}</p>
-                    </div>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[300px] sm:w-[400px] p-0 border-none bg-background/95 backdrop-blur-xl flex flex-col h-full shadow-2xl">
+                <div className="flex-1 overflow-y-auto custom-scrollbar pt-6 px-6">
+                  <SheetHeader className="text-left mb-8">
+                    <SheetTitle className="flex items-center justify-center">
+                      <div className="bg-transparent">
+                        <img src="/logo-alt.png" alt="Gampahin Husmak" className="h-24 w-auto object-contain" />
+                      </div>
+                    </SheetTitle>
+                  </SheetHeader>
+
+                  <div className="space-y-2 pb-8">
+                    <NavLink mobile href="/" icon={Home}>{t.nav.home}</NavLink>
+                    <NavLink mobile href="/gallery" icon={ImageIcon}>{t.nav.gallery}</NavLink>
+                    <NavLink mobile href="/contact" icon={MessageSquare}>{t.nav.contact}</NavLink>
+                    <NavLink mobile href="/leaderboard" icon={Trophy}>{t.nav.leaderboard}</NavLink>
+                    
+                    {user && (
+                      <>
+                        <div className="h-px w-full bg-border/50 my-4" />
+                        <NavLink mobile href="/dashboard" icon={LayoutDashboard} badge={unreadCount}>{t.nav.dashboard}</NavLink>
+                        {isAdmin && <NavLink mobile href="/admin" icon={User}>{t.nav.admin}</NavLink>}
+                      </>
+                    )}
+                  </div>
+
+                  <div className="h-px w-full bg-border/50 my-4" />
+
+                  {/* Language Selection in Mobile */}
+                  <div className="pb-8">
+                    <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-3 px-2">{language === 'en' ? 'Select Language' : 'භාෂාව තෝරන්න'}</div>
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-between gap-4 h-14 px-5 rounded-2xl transition-all border-primary/10 bg-primary/5 hover:bg-primary/10"
+                      onClick={() => setLanguage(language === 'en' ? 'si' : 'en')}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Languages className="w-5 h-5 text-primary" />
+                        <span className="font-bold text-sm">{language === 'en' ? "සිංහල" : "English"}</span>
+                      </div>
+                      <div className="flex items-center gap-1 bg-background p-1 rounded-xl shadow-inner">
+                        <span className={cn("text-[10px] font-bold px-3 py-1.5 rounded-lg transition-colors", language === 'en' ? "bg-primary text-white" : "text-muted-foreground")}>EN</span>
+                        <span className={cn("text-[10px] font-bold px-3 py-1.5 rounded-lg transition-colors", language === 'si' ? "bg-primary text-white" : "text-muted-foreground")}>SI</span>
+                      </div>
+                    </Button>
                   </div>
                 </div>
-                <Button 
-                  onClick={handleLogout}
-                  variant="destructive"
-                  className="w-full gap-2"
-                >
-                  <LogOut className="w-4 h-4" />
-                  {t.nav.logout}
-                </Button>
-              </div>
-            )}
+
+                {/* Mobile Bottom Section: User / Login */}
+                <div className="p-6 bg-muted/30 border-t border-border/50 mt-auto">
+                  {!user && !isLoading ? (
+                    <Link href="/auth">
+                      <Button className="w-full h-14 rounded-2xl gap-3 font-black text-base shadow-xl shadow-primary/20" onClick={() => setIsMobileMenuOpen(false)}>
+                        <LogIn className="w-5 h-5" />
+                        {language === 'en' ? 'Login Now' : 'දැන් ඇතුළු වන්න'}
+                      </Button>
+                    </Link>
+                  ) : user ? (
+                    <div className="space-y-4">
+                      <div className="p-4 rounded-2xl bg-white border border-primary/5 shadow-sm">
+                        <div className="flex items-center gap-4">
+                          <Avatar className="w-12 h-12 border-2 border-primary/10">
+                            <AvatarImage src={user.profileImage} alt={user.fullName} />
+                            <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                              {user.fullName?.charAt(0) || user.username?.charAt(0) || 'U'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-black text-foreground truncate">{user.fullName || user.username}</p>
+                            <p className="text-xs text-muted-foreground truncate font-medium">{user.email}</p>
+                            <div className="flex mt-1">
+                               <span className="text-[9px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">{user.role}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <Button 
+                        onClick={handleLogout}
+                        variant="destructive"
+                        className="w-full h-12 rounded-2xl gap-2 font-bold shadow-lg shadow-destructive/10"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        {t.nav.logout}
+                      </Button>
+                    </div>
+                  ) : null}
+                  
+                  <div className="mt-6 flex justify-center gap-4 opacity-30 text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
+                    <span>v1.2.0</span>
+                    <span>•</span>
+                    <span>© 2026 GH</span>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
-        )}
+        </div>
       </header>
 
-      <main className="flex-1">
+      <main className="flex-1 pt-0">
         {children}
       </main>
 
-      <footer className="bg-muted py-12 border-t">
-        <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Leaf className="w-5 h-5 text-primary" />
-              <span className="font-heading font-bold text-lg">Gampahin Husmak</span>
+      <footer className="bg-black text-white py-16 border-t border-white/5">
+        <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-12">
+          <div className="space-y-6">
+            <div className="flex items-center">
+              <div className="bg-transparent">
+                <img src="/logo.png" alt="Gampahin Husmak" className="h-20 md:h-24 w-auto object-contain" />
+              </div>
             </div>
-            <p className="text-sm text-muted-foreground leading-relaxed">
+            <p className="text-sm text-white/60 leading-relaxed font-medium">
               {t.footer.description}
             </p>
           </div>
           
           <div>
-            <h3 className="font-heading font-semibold mb-4">{t.footer.quick_links}</h3>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link href="/gallery" className="hover:text-primary">{t.nav.gallery}</Link></li>
-              <li><Link href="/contact" className="hover:text-primary">{t.nav.contact}</Link></li>
-              <li><Link href="/dashboard" className="hover:text-primary">{t.nav.dashboard}</Link></li>
-              <li><Link href="/admin" className="hover:text-primary">{t.nav.admin}</Link></li>
+            <h3 className="font-heading font-bold text-sm uppercase tracking-[0.2em] mb-6 text-primary">{t.footer.quick_links}</h3>
+            <ul className="space-y-4 text-sm text-white/50 font-medium">
+              <li><Link href="/gallery" className="hover:text-primary transition-colors flex items-center gap-2 capitalize"> <ImageIcon className="w-3.5 h-3.5" /> {t.nav.gallery}</Link></li>
+              <li><Link href="/contact" className="hover:text-primary transition-colors flex items-center gap-2 capitalize"> <MessageSquare className="w-3.5 h-3.5" /> {t.nav.contact}</Link></li>
+              <li><Link href="/dashboard" className="hover:text-primary transition-colors flex items-center gap-2 capitalize"> <LayoutDashboard className="w-3.5 h-3.5" /> {t.nav.dashboard}</Link></li>
+              <li><Link href="/admin" className="hover:text-primary transition-colors flex items-center gap-2 capitalize"> <User className="w-3.5 h-3.5" /> {t.nav.admin}</Link></li>
             </ul>
           </div>
  
           <div>
-            <h3 className="font-heading font-semibold mb-4">{t.footer.contact}</h3>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li>{t.footer.address}</li>
-              <li>info@gampahinhusmak.lk</li>
-              <li>+94 33 222 2222</li>
-              <li className="pt-2 text-xs opacity-70">{t.footer.developed_by} <span className="font-semibold">{t.footer.team}</span></li>
+            <h3 className="font-heading font-bold text-sm uppercase tracking-[0.2em] mb-6 text-primary">{t.footer.contact}</h3>
+            <ul className="space-y-4 text-sm text-white/50 font-medium">
+              <li className="flex items-start gap-3">
+                 <div className="w-5 h-5 rounded-full bg-white/5 flex items-center justify-center shrink-0 mt-0.5"><MapPin className="w-3 h-3 text-primary" /></div>
+                 <span>{t.footer.address}</span>
+              </li>
+              <li className="flex items-center gap-3">
+                 <div className="w-5 h-5 rounded-full bg-white/5 flex items-center justify-center shrink-0"><Globe className="w-3 h-3 text-primary" /></div>
+                 <span>info@gampahinhusmak.lk</span>
+              </li>
+              <li className="flex items-center gap-3">
+                 <div className="w-5 h-5 rounded-full bg-white/5 flex items-center justify-center shrink-0"><Activity className="w-3 h-3 text-primary" /></div>
+                 <span>+94 33 222 2222</span>
+              </li>
+              <li className="pt-4 text-[10px] font-bold uppercase tracking-widest text-white/30">{t.footer.developed_by} <span className="text-white/60">{t.footer.team}</span></li>
             </ul>
           </div>
 
           <div>
-            <h3 className="font-heading font-semibold mb-4">Newsletter</h3>
-            <div className="flex gap-2">
-              <input 
-                type="email" 
-                placeholder="Enter email" 
-                className="flex-1 bg-background border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-              />
-              <Button size="sm">Subscribe</Button>
+            <h3 className="font-heading font-bold text-sm uppercase tracking-[0.2em] mb-6 text-primary">Newsletter</h3>
+            <div className="space-y-4">
+              <p className="text-xs text-white/40 font-bold uppercase tracking-widest">Get weekly green updates</p>
+              <div className="flex gap-2">
+                <input 
+                  type="email" 
+                  placeholder="name@email.com" 
+                  className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                />
+                <Button className="rounded-xl px-5 font-bold shadow-lg shadow-primary/20">Join</Button>
+              </div>
             </div>
           </div>
         </div>
-        <div className="container mx-auto px-4 mt-12 pt-8 border-t border-border/50 text-center space-y-2">
-          <div className="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-4 text-[10px] md:text-xs font-medium text-muted-foreground/60 uppercase tracking-[0.2em]">
-            <span>Sponsored by Lions Club Of Gampaha Metro</span>
-            <span className="hidden md:block w-1 h-1 rounded-full bg-muted-foreground/30" />
-            <span>Powered By Leo Club Of Gampaha Metro Juniors</span>
+        <div className="container mx-auto px-4 mt-20 pt-10 border-t border-white/5">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex flex-col md:flex-row items-center gap-2 md:gap-6 text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">
+              <span className="flex items-center gap-2 hover:text-white/60 transition-colors cursor-default select-none"><div className="w-1.5 h-1.5 rounded-full bg-primary" /> Sponsored by Lions Club Of Gampaha Metro</span>
+              <span className="hidden md:block w-1.5 h-1.5 rounded-full bg-white/10" />
+              <span className="flex items-center gap-2 hover:text-white/60 transition-colors cursor-default select-none"><div className="w-1.5 h-1.5 rounded-full bg-primary" /> Powered By Leo Club Of Gampaha Metro Juniors</span>
+            </div>
+            <p className="text-[10px] text-white/20 font-bold tracking-widest uppercase">
+              © 2026 Gampahin Husmak. All rights reserved.
+            </p>
           </div>
-          <p className="text-[10px] text-muted-foreground/40 tracking-wider">
-            © 2026 Gampahin Husmak. All rights reserved.
-          </p>
         </div>
       </footer>
     </div>

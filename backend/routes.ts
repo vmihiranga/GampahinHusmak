@@ -5,6 +5,7 @@ import { User, Tree, TreeUpdate, Event, Gallery, Contact, Achievement } from "./
 import bcrypt from "bcryptjs";
 import session from "express-session";
 import MongoStore from "connect-mongo";
+import mongoose from "mongoose";
 import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
 
@@ -235,18 +236,31 @@ export async function registerRoutes(
   // Get all trees
   app.get("/api/trees", async (req, res) => {
     try {
-      const { status, plantedBy, limit = 50 } = req.query;
-      const filter: any = {};
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 50;
+      const skip = (page - 1) * limit;
+      const { status, plantedBy } = req.query;
       
+      const filter: any = {};
       if (status) filter.status = status;
       if (plantedBy) filter.plantedBy = plantedBy;
 
+      const totalItems = await Tree.countDocuments(filter);
       const trees = await Tree.find(filter)
         .populate("plantedBy", "username fullName")
-        .limit(Number(limit))
-        .sort({ createdAt: -1 });
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
 
-      res.json({ trees });
+      res.json({ 
+        trees,
+        pagination: {
+          totalItems,
+          totalPages: Math.ceil(totalItems / limit),
+          currentPage: page,
+          limit
+        }
+      });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
@@ -390,17 +404,31 @@ export async function registerRoutes(
   // Get all events
   app.get("/api/events", async (req, res) => {
     try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 20;
+      const skip = (page - 1) * limit;
       const { status } = req.query;
-      const filter: any = {};
       
+      const filter: any = {};
       if (status) filter.status = status;
 
+      const totalItems = await Event.countDocuments(filter);
       const events = await Event.find(filter)
         .populate("organizer", "username fullName")
         .populate("participants", "username fullName")
-        .sort({ eventDate: -1 });
+        .sort({ eventDate: -1 })
+        .skip(skip)
+        .limit(limit);
 
-      res.json({ events });
+      res.json({ 
+        events,
+        pagination: {
+          totalItems,
+          totalPages: Math.ceil(totalItems / limit),
+          currentPage: page,
+          limit
+        }
+      });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
@@ -625,11 +653,27 @@ export async function registerRoutes(
   // Get user's own contacts
   app.get("/api/my-contacts", requireAuth, async (req, res) => {
     try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 20;
+      const skip = (page - 1) * limit;
       const userId = (req.session as any).userId;
+
+      const totalItems = await Contact.countDocuments({ userId });
       const contacts = await Contact.find({ userId })
         .populate("relatedTreeId", "commonName treeId")
-        .sort({ createdAt: -1 });
-      res.json({ contacts });
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
+        
+      res.json({ 
+        contacts,
+        pagination: {
+          totalItems,
+          totalPages: Math.ceil(totalItems / limit),
+          currentPage: page,
+          limit
+        }
+      });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
@@ -651,22 +695,28 @@ export async function registerRoutes(
   });
 
   // Get all contacts (admin only)
-  app.get("/api/contact", async (req, res) => {
+  app.get("/api/contact", requireAuth, requireAdmin, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
-      if (!userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 30;
+      const skip = (page - 1) * limit;
 
-      const user = await User.findById(userId);
-      if (user?.role !== "admin") {
-        return res.status(403).json({ message: "Unauthorized" });
-      }
-
+      const totalItems = await Contact.countDocuments();
       const contacts = await Contact.find()
         .populate("relatedTreeId", "treeId commonName location")
-        .sort({ createdAt: -1 });
-      res.json({ contacts });
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
+        
+      res.json({ 
+        contacts,
+        pagination: {
+          totalItems,
+          totalPages: Math.ceil(totalItems / limit),
+          currentPage: page,
+          limit
+        }
+      });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
@@ -760,16 +810,60 @@ export async function registerRoutes(
     try {
       const userId = req.params.userId;
 
-      const treesPlanted = await Tree.countDocuments({ plantedBy: userId, status: "active" });
+      const userTrees = await Tree.find({ plantedBy: userId, status: "active" });
+      const treesPlanted = userTrees.length;
       const eventsAttended = await Event.countDocuments({ participants: userId });
       const updatesSubmitted = await TreeUpdate.countDocuments({ updatedBy: userId });
       const achievements = await Achievement.find({ userId });
+
+      // CO2 Offset Calculation
+      // Formula: Young trees (0-2y) = 5kg/y, Mature (2y+) = 22kg/y
+      // Using daily rates for precision
+      let totalCO2Offset = 0;
+      const now = new Date();
+      
+      userTrees.forEach(tree => {
+        const ageInDays = Math.floor((now.getTime() - new Date(tree.plantedDate).getTime()) / (1000 * 60 * 60 * 24));
+        const ageInYears = ageInDays / 365.25;
+        
+        if (ageInYears <= 2) {
+          // 5kg per year = 0.0137kg per day
+          totalCO2Offset += ageInDays * 0.0137;
+        } else {
+          // Mature rate: ~22kg per year = 0.0602kg per day
+          // First 2 years at 5kg, the rest at 22kg
+          totalCO2Offset += (2 * 365.25 * 0.0137) + ((ageInDays - (2 * 365.25)) * 0.0602);
+        }
+      });
+
+      // Weather & Alert Logic (Simulated for Gampaha)
+      const currentHour = new Date().getHours();
+      const isDrySeason = [1, 2, 3, 7, 8].includes(now.getMonth() + 1); // Jan-Mar, Jul-Aug are drier
+      let weatherAlert = null;
+      
+      if (treesPlanted > 0) {
+        if (isDrySeason) {
+          weatherAlert = {
+            type: "watering",
+            message: "Dry weather detected in Gampaha. Please water your trees today!",
+            urgency: "high"
+          };
+        } else if (currentHour > 6 && currentHour < 10) {
+          weatherAlert = {
+            type: "maintenance",
+            message: "Good morning! Perfect time for basic tree maintenance.",
+            urgency: "low"
+          };
+        }
+      }
 
       res.json({
         treesPlanted,
         eventsAttended,
         updatesSubmitted,
         achievements,
+        co2Offset: totalCO2Offset.toFixed(2),
+        weatherAlert
       });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -781,11 +875,26 @@ export async function registerRoutes(
   // Get all users (admin only)
   app.get("/api/admin/users", requireAuth, requireAdmin, async (req, res) => {
     try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 50;
+      const skip = (page - 1) * limit;
+
+      const totalItems = await User.countDocuments();
       const users = await User.find()
         .select("-password")
-        .sort({ createdAt: -1 });
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
       
-      res.json({ users });
+      res.json({ 
+        users,
+        pagination: {
+          totalItems,
+          totalPages: Math.ceil(totalItems / limit),
+          currentPage: page,
+          limit
+        }
+      });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
@@ -998,6 +1107,71 @@ export async function registerRoutes(
       });
 
       res.json({ message: "Reminder sent successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Database Management & Errors (admin only)
+  app.get("/api/admin/db-stats", requireAuth, requireAdmin, async (req, res) => {
+    try {
+      const db = mongoose.connection.db;
+      if (!db) throw new Error("Database connection not established");
+
+      let stats: any = { ok: 1 };
+      try {
+        stats = await db.stats();
+      } catch (e) {
+        console.error("Error fetching db stats:", e);
+      }
+
+      const collections = await db.listCollections().toArray();
+      
+      const collStats = await Promise.all(
+        collections.map(async (c) => {
+          try {
+            const s = await db.collection(c.name).stats();
+            return {
+              name: c.name,
+              count: s.count || 0,
+              size: s.size || 0,
+              avgObjSize: s.avgObjSize || 0
+            };
+          } catch (e) {
+            return {
+              name: c.name,
+              count: 0,
+              size: 0,
+              avgObjSize: 0
+            };
+          }
+        })
+      );
+
+      // Basic server info
+      let adminInfo: any = { version: "unknown", uptime: 0, connections: { current: 0 } };
+      try {
+        adminInfo = await db.admin().serverStatus();
+      } catch (e) {
+        console.error("Error fetching server status:", e);
+      }
+
+      res.json({
+        database: {
+          name: db.databaseName,
+          ok: stats.ok,
+          storageSize: stats.storageSize || 0,
+          dataSize: stats.dataSize || 0,
+          indexSize: stats.indexSize || 0,
+          stats: stats
+        },
+        collections: collStats,
+        server: {
+          version: adminInfo.version,
+          uptime: adminInfo.uptime,
+          connections: adminInfo.connections.current
+        }
+      });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }

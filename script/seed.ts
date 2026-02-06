@@ -1,8 +1,8 @@
 import 'dotenv/config';
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
-import { User, Tree, Event, Gallery } from '../server/models';
-import connectDB from '../server/db';
+import { User, Tree, TreeUpdate, Event, Gallery, Contact, Achievement } from '../backend/models';
+import connectDB from '../backend/db';
 
 async function seed() {
   try {
@@ -12,8 +12,11 @@ async function seed() {
     // Clear existing data
     await User.deleteMany({});
     await Tree.deleteMany({});
+    await TreeUpdate.deleteMany({});
     await Event.deleteMany({});
     await Gallery.deleteMany({});
+    await Contact.deleteMany({});
+    await Achievement.deleteMany({});
 
     console.log('🗑️  Cleared existing data');
 
@@ -123,24 +126,6 @@ async function seed() {
       },
       {
         treeId: 'TREE-2026-004',
-        plantedBy: admin._id,
-        species: 'Cocos nucifera',
-        commonName: 'Coconut Palm',
-        location: {
-          type: 'Point',
-          coordinates: [80.0250, 7.0950],
-          address: 'Negombo Road Junction',
-          district: 'Gampaha',
-        },
-        plantedDate: new Date('2024-05-10'),
-        currentHeight: 65,
-        currentHealth: 'good',
-        images: ['https://images.unsplash.com/photo-1566990734309-408f5c3d0b5e?w=800'],
-        notes: 'Roadside beautification project',
-        status: 'active',
-      },
-      {
-        treeId: 'TREE-2026-005',
         plantedBy: users[0]._id,
         species: 'Tamarindus indica',
         commonName: 'Tamarind Tree',
@@ -160,6 +145,20 @@ async function seed() {
     ]);
 
     console.log('🌳 Created sample trees');
+
+    // Create sample tree updates
+    await TreeUpdate.create([
+      {
+        treeId: trees[0]._id,
+        updatedBy: users[0]._id,
+        updateDate: new Date(),
+        height: 50,
+        health: 'excellent',
+        notes: 'Tree is growing fast!',
+      }
+    ]);
+
+    console.log('📈 Created sample tree updates');
 
     // Create sample events
     const events = await Event.create([
@@ -248,6 +247,19 @@ async function seed() {
     ]);
 
     console.log('🖼️  Created sample gallery items');
+
+    // Create sample achievements
+    await Achievement.create([
+      {
+        userId: users[0]._id,
+        badgeName: 'First Tree',
+        badgeType: 'trees_planted',
+        description: 'Planted your first tree!',
+        icon: '🌱',
+      }
+    ]);
+
+    console.log('🏆 Created sample achievements');
 
     console.log('\n✅ Database seeding completed successfully!');
     console.log('\n📝 Login credentials:');
