@@ -54,10 +54,10 @@ export async function registerRoutes(
 
   // stricter rate limiter for sensitive routes
   const authLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000, // 1 hour
+    windowMs: 5 * 1000, // 5 seconds
     limit: 10, // Limit each IP to 10 failed attempts
     skipSuccessfulRequests: true,
-    message: { message: "Too many failed login attempts. Please try again in an hour." }
+    message: { message: "Too many failed login attempts. Please try again in 5 seconds." }
   });
 
   app.use("/api/", apiLimiter);
