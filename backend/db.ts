@@ -27,9 +27,14 @@ async function connectDB() {
       authSource: 'admin',
     };
 
+    console.log('📡 Connecting to MongoDB Atlas...');
+
     cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
       console.log('✅ MongoDB connected successfully');
       return mongoose;
+    }).catch((err) => {
+      console.error('❌ MongoDB connection error:', err.message);
+      throw err;
     });
   }
 

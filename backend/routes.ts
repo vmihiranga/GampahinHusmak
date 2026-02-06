@@ -14,9 +14,12 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  console.log('🚀 Initializing server routes...');
+
   // Connect to MongoDB
   await connectDB();
 
+  console.log('🔐 Configuring security and sessions...');
   // Generate a random session secret if not provided in env
   const sessionSecret = process.env.SESSION_SECRET || crypto.randomBytes(64).toString("hex");
 
@@ -40,6 +43,7 @@ export async function registerRoutes(
   );
 
   // ============ SECURITY MIDDLEWARE ============
+  console.log('🛡️  Applying security headers and rate limiters...');
   
   // Apply Helmet for security headers
   app.use(helmet({
@@ -49,7 +53,7 @@ export async function registerRoutes(
 
   // Generic rate limiter for API calls
   const apiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
+    windowMs: 5 * 1000, // 5 seconds
     limit: 100, // Limit each IP to 100 requests per window
     standardHeaders: 'draft-7',
     legacyHeaders: false,
@@ -67,16 +71,11 @@ export async function registerRoutes(
   app.use("/api/", apiLimiter);
   app.use("/api/auth", authLimiter);
 
-  // Prevents NoSQL Injection by checking for $ in top-level request body keys
+  // Prevents NoSQL Injection
   app.use((req, res, next) => {
     if (req.body) {
       for (const key in req.body) {
-        if (typeof req.body[key] === 'object' && req.body[key] !== null) {
-          const stringified = JSON.stringify(req.body[key]);
-          if (stringified.includes('$') || stringified.includes('.')) {
-             // Deep check for mongo operators
-          }
-        } else if (key.startsWith('$')) {
+        if (key.startsWith('$')) {
           return res.status(403).json({ message: "Invalid request payload detected" });
         }
       }
@@ -88,7 +87,7 @@ export async function registerRoutes(
   
   // Authentication middleware
   const requireAuth = async (req: any, res: any, next: any) => {
-    const userId = req.session.userId;
+    const userId = (req.session as any).userId;
     if (!userId) {
       return res.status(401).json({ message: "Not authenticated" });
     }
@@ -128,12 +127,17 @@ export async function registerRoutes(
     next();
   };
 
+  // register actual routes
+  console.log('🚥 Registering API endpoints...');
+  
   // ============ AUTH ROUTES ============
+  console.log('🔑 Setting up Auth routes...');
   
   // Register
   app.post("/api/auth/register", async (req, res) => {
     try {
       const { username, email, password, fullName, phoneNumber, address, profileImage } = req.body;
+      console.log(`📝 New registration request: ${username} (${email})`);
 
       // Check if user exists
       const existingUser = await User.findOne({ $or: [{ email }, { username }] });
@@ -993,21 +997,6 @@ export async function registerRoutes(
     }
   });
 
-  // Delete user (superadmin only)
-  app.delete("/api/admin/users/:id", requireAuth, requireSuperAdmin, async (req, res) => {
-    try {
-      const user = await User.findByIdAndDelete(req.params.id);
-      
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-
-      res.json({ message: "User deleted successfully" });
-    } catch (error: any) {
-      res.status(500).json({ message: error.message });
-    }
-  });
-
   // Verify user (admin only)
   app.put("/api/admin/users/:id/verify", requireAuth, requireAdmin, async (req, res) => {
     try {
@@ -1029,13 +1018,13 @@ export async function registerRoutes(
     }
   });
 
-  // Delete user (Super Admin only)
+  // Delete User (Super Admin only)
   app.delete("/api/admin/users/:id", requireAuth, requireSuperAdmin, async (req, res) => {
     try {
       const user = await User.findByIdAndDelete(req.params.id);
       if (!user) return res.status(404).json({ message: "User not found" });
       
-      // Also cleanup trees and other things if necessary, but keep it simple for now
+      // Also cleanup trees and other things if necessary
       await Tree.deleteMany({ plantedBy: req.params.id });
       await Contact.deleteMany({ userId: req.params.id });
       await Achievement.deleteMany({ userId: req.params.id });
