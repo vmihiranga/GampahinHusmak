@@ -21,13 +21,13 @@ async function seed() {
     console.log('🗑️  Cleared existing data');
 
     // Create admin user
-    const adminPassword = await bcrypt.hash('admin123', 10);
+    const adminPassword = await bcrypt.hash('GampahinAdmin@2026', 10);
     const admin = await User.create({
-      username: 'admin',
-      email: 'admin@gampahinhusmak.lk',
+      username: 'gampahin_admin',
+      email: 'gampahinhusmak@gmail.com',
       password: adminPassword,
-      fullName: 'System Administrator',
-      role: 'admin',
+      fullName: 'Gampahin Husmak Administrator',
+      role: 'superadmin',
       phoneNumber: '+94771234567',
       isVerified: true,
     });
@@ -263,7 +263,7 @@ async function seed() {
 
     console.log('\n✅ Database seeding completed successfully!');
     console.log('\n📝 Login credentials:');
-    console.log('   Admin: admin@gampahinhusmak.lk / admin123');
+    console.log('   Admin: gampahinhusmak@gmail.com / GampahinAdmin@2026');
     console.log('   User: john@example.com / user123');
     console.log('   User: jane@example.com / user123');
     console.log('   User: mike@example.com / user123\n');

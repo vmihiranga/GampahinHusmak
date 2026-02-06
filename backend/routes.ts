@@ -780,6 +780,8 @@ export async function registerRoutes(
           }
         },
         { $unwind: "$user" },
+        // Exclude admin and superadmin from leaderboard
+        { $match: { "user.role": { $nin: ["admin", "superadmin"] } } },
         {
           $project: {
             _id: 1,
