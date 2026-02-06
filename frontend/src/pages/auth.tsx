@@ -30,13 +30,18 @@ export default function Auth() {
     };
 
     try {
-      await authAPI.login(data);
+      const response = await authAPI.login(data);
       toast({
         title: "Login successful!",
         description: "Welcome back!",
       });
-      // Reload to update auth state
-      window.location.href = "/dashboard";
+      
+      // Check if user is verified
+      if (response.user && !response.user.isVerified) {
+        window.location.href = "/pending-approval";
+      } else {
+        window.location.href = "/dashboard";
+      }
     } catch (error: any) {
       toast({
         title: "Login failed",

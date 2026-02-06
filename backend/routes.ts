@@ -202,6 +202,7 @@ export async function registerRoutes(
           email: user.email,
           fullName: user.fullName,
           role: user.role,
+          isVerified: user.isVerified,
         },
       });
     } catch (error: any) {

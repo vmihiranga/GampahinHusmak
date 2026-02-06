@@ -12,6 +12,7 @@ import Gallery from "@/pages/gallery";
 import Contact from "@/pages/contact";
 import TreeDetails from "@/pages/tree-details";
 import Leaderboard from "@/pages/leaderboard";
+import PendingApproval from "@/pages/pending-approval";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import NotAuthorized from "@/pages/not-authorized";
 
@@ -32,6 +33,7 @@ function Router() {
         {(params) => <ProtectedRoute component={TreeDetails} params={params} />}
       </Route>
       <Route path="/leaderboard" component={Leaderboard} />
+      <Route path="/pending-approval" component={PendingApproval} />
       <Route path="/not-authorized" component={NotAuthorized} />
       <Route component={NotFound} />
     </Switch>
