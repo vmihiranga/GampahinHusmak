@@ -3,15 +3,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Clock, Mail, CheckCircle } from "lucide-react";
 import { useLocation } from "wouter";
-import { useUser } from "@/hooks/use-user";
+import { authAPI } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 export default function PendingApproval() {
   const [_, setLocation] = useLocation();
-  const { user, logout } = useUser();
+  const { toast } = useToast();
 
   const handleLogout = async () => {
-    await logout();
-    setLocation("/");
+    try {
+      await authAPI.logout();
+      window.location.href = "/";
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to logout",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -36,7 +45,7 @@ export default function PendingApproval() {
                 <div className="flex-1">
                   <p className="text-sm font-medium">Email Verification</p>
                   <p className="text-xs text-muted-foreground">
-                    We've sent a verification email to <span className="font-medium">{user?.email}</span>
+                    We'll send you an email once your account is approved.
                   </p>
                 </div>
               </div>

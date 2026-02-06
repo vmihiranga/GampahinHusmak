@@ -251,7 +251,25 @@ export async function registerRoutes(
       
       const filter: any = {};
       if (status) filter.status = status;
-      if (plantedBy) filter.plantedBy = plantedBy;
+
+      // Privacy Filter: Regular users only see their own trees
+      // Admins and Superadmins can see everything
+      const userId = (req.session as any).userId;
+      const user = userId ? await User.findById(userId) : null;
+
+      if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
+        // If not logged in or not admin, only show their own trees
+        if (!userId) {
+          return res.json({ 
+            trees: [], 
+            pagination: { totalItems: 0, totalPages: 0, currentPage: page, limit } 
+          });
+        }
+        filter.plantedBy = userId;
+      } else if (plantedBy) {
+        // Admins can filter by a specific user if requested
+        filter.plantedBy = plantedBy;
+      }
 
       const totalItems = await Tree.countDocuments(filter);
       const trees = await Tree.find(filter)

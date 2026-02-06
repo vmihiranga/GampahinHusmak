@@ -36,9 +36,15 @@ export default function Auth() {
         description: "Welcome back!",
       });
       
-      // Check if user is verified
-      if (response.user && !response.user.isVerified) {
-        window.location.href = "/pending-approval";
+      // Redirect based on role and verification status
+      if (response.user) {
+        if (response.user.role === 'admin' || response.user.role === 'superadmin') {
+          window.location.href = "/admin";
+        } else if (!response.user.isVerified) {
+          window.location.href = "/pending-approval";
+        } else {
+          window.location.href = "/dashboard";
+        }
       } else {
         window.location.href = "/dashboard";
       }
