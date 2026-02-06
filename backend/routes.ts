@@ -149,7 +149,7 @@ export async function registerRoutes(
         phoneNumber,
         address,
         profileImage,
-        role: "user",
+        role: "volunteer",
       });
 
       // Set session
@@ -1057,7 +1057,7 @@ export async function registerRoutes(
   app.put("/api/admin/users/:id/role", requireAuth, requireSuperAdmin, async (req, res) => {
     try {
       const { role } = req.body;
-      if (!['user', 'volunteer', 'admin', 'superadmin'].includes(role)) {
+      if (!['volunteer', 'admin', 'superadmin'].includes(role)) {
         return res.status(400).json({ message: "Invalid role" });
       }
 

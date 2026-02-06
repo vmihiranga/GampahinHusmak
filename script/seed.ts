@@ -63,7 +63,7 @@ async function seed() {
         email: 'jane@example.com',
         password: userPassword,
         fullName: 'Jane Smith',
-        role: 'user',
+        role: 'volunteer',
         phoneNumber: '+94771234569',
         isVerified: true,
       },
@@ -275,10 +275,11 @@ async function seed() {
 
     console.log('\n✅ Database seeding completed successfully!');
     console.log('\n📝 Login credentials:');
-    console.log('   Admin: gampahinhusmak@gmail.com / GampahinAdmin@2026');
-    console.log('   User: john@example.com / user123');
-    console.log('   User: jane@example.com / user123');
-    console.log('   User: mike@example.com / user123\n');
+    console.log('   Super Admin: gampahinhusmak@gmail.com / GampahinAdmin@2026');
+    console.log('   Admin: admin@gampahinhusmak.lk / GampahinStaff@2026');
+    console.log('   Volunteer: john@example.com / user123');
+    console.log('   Volunteer: jane@example.com / user123');
+    console.log('   Volunteer: mike@example.com / user123\n');
 
     await mongoose.connection.close();
     process.exit(0);
