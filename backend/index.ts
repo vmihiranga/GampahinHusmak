@@ -8,6 +8,10 @@ import { createServer } from "http";
 const app = express();
 const httpServer = createServer(app);
 
+// Trust proxy for production deployment (Render, Heroku, etc.)
+// This is required for rate limiting and proper IP detection
+app.set('trust proxy', 1);
+
 app.use(compression());
 
 declare module "http" {

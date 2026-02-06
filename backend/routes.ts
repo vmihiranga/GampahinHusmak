@@ -27,10 +27,10 @@ export async function registerRoutes(
         touchAfter: 24 * 3600, // lazy session update
       }),
       cookie: {
-        maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
+        maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days (Remember Me)
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       },
     })
   );
