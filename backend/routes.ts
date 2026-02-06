@@ -175,7 +175,14 @@ export async function registerRoutes(
     try {
       const { email, password } = req.body;
 
-      const user = await User.findOne({ email });
+      // Find user by email OR username
+      const user = await User.findOne({ 
+        $or: [
+          { email: email },
+          { username: email } // Allow login with username in the email field
+        ]
+      });
+      
       if (!user) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
