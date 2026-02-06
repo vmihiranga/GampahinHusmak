@@ -409,7 +409,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </main>
 
       <footer className="bg-black text-white py-16 border-t border-white/5">
-        <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-12">
+        <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-12">
           <div className="space-y-6">
             <div className="flex items-center">
               <div className="bg-transparent">
@@ -448,21 +448,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </li>
               <li className="pt-4 text-[10px] font-bold uppercase tracking-widest text-white/30">{t.footer.developed_by} <span className="text-white/60">{t.footer.team}</span></li>
             </ul>
-          </div>
-
-          <div>
-            <h3 className="font-heading font-bold text-sm uppercase tracking-[0.2em] mb-6 text-primary">Newsletter</h3>
-            <div className="space-y-4">
-              <p className="text-xs text-white/40 font-bold uppercase tracking-widest">Get weekly green updates</p>
-              <div className="flex gap-2">
-                <input 
-                  type="email" 
-                  placeholder="name@email.com" 
-                  className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                />
-                <Button className="rounded-xl px-5 font-bold shadow-lg shadow-primary/20">Join</Button>
-              </div>
-            </div>
           </div>
         </div>
         <div className="container mx-auto px-4 mt-20 pt-10 border-t border-white/5">
