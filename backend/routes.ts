@@ -8,6 +8,7 @@ import MongoStore from "connect-mongo";
 import mongoose from "mongoose";
 import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
+import crypto from "crypto";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -16,10 +17,13 @@ export async function registerRoutes(
   // Connect to MongoDB
   await connectDB();
 
+  // Generate a random session secret if not provided in env
+  const sessionSecret = process.env.SESSION_SECRET || crypto.randomBytes(64).toString("hex");
+
   // Session configuration
   app.use(
     session({
-      secret: process.env.SESSION_SECRET || "gampahin-secret",
+      secret: sessionSecret,
       resave: false,
       saveUninitialized: false,
       store: MongoStore.create({
