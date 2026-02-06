@@ -316,14 +316,37 @@ export default function Admin() {
     dead: "bg-red-100 text-red-700",
   };
 
+  const handleRefresh = async () => {
+    await queryClient.refetchQueries({ queryKey: ["admin-summary"] });
+    await queryClient.refetchQueries({ queryKey: ["admin-trees"] });
+    await queryClient.refetchQueries({ queryKey: ["admin-users"] });
+    await queryClient.refetchQueries({ queryKey: ["admin-contacts"] });
+    await queryClient.refetchQueries({ queryKey: ["admin-db-stats"] });
+    
+    toast({
+      title: "Dashboard Refreshed",
+      description: "Data has been updated to the latest version.",
+    });
+  };
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8 space-y-8">
-        <div>
-          <h1 className="text-3xl font-heading font-bold">Admin Portal</h1>
-          <p className="text-muted-foreground">
-            Manage users, approvals, and system overview.
-          </p>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-heading font-bold">Admin Portal</h1>
+            <p className="text-muted-foreground">
+              Manage users, approvals, and system overview.
+            </p>
+          </div>
+          <Button 
+            onClick={handleRefresh}
+            variant="outline"
+            className="w-fit gap-2 rounded-xl bg-primary/5 border-primary/10 hover:bg-primary/10 transition-all font-bold"
+          >
+            <RefreshCw className={cn("w-4 h-4", adminSummary === undefined && "animate-spin")} />
+            Refresh Data
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
