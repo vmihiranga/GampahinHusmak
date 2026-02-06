@@ -158,7 +158,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 <img 
                   src={isHome ? "/logo.png" : "/logo-alt.png"} 
                   alt="Gampahin Husmak" 
-                  className="h-20 md:h-24 w-auto object-contain" 
+                  className="h-24 md:h-32 w-auto object-contain" 
                 />
               </div>
             </a>
@@ -311,7 +311,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   <SheetHeader className="text-left mb-8">
                     <SheetTitle className="flex items-center justify-center">
                       <div className="bg-transparent">
-                        <img src="/logo-alt.png" alt="Gampahin Husmak" className="h-24 w-auto object-contain" />
+                        <img src="/logo-alt.png" alt="Gampahin Husmak" className="h-28 w-auto object-contain" />
                       </div>
                     </SheetTitle>
                   </SheetHeader>
@@ -413,7 +413,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div className="space-y-6">
             <div className="flex items-center">
               <div className="bg-transparent">
-                <img src="/logo.png" alt="Gampahin Husmak" className="h-20 md:h-24 w-auto object-contain" />
+                <img src="/logo.png" alt="Gampahin Husmak" className="h-24 md:h-32 w-auto object-contain" />
               </div>
             </div>
             <p className="text-sm text-white/60 leading-relaxed font-medium">

@@ -14,13 +14,13 @@ export function serveStatic(app: Express) {
     );
   }
 
-  // Serve static files with caching
+  // Serve static files without caching
   app.use(express.static(distPath, {
-    maxAge: '1d', // Cache static assets for 1 day
-    setHeaders: (res, path) => {
-      if (path.match(/\.(jpg|jpeg|png|gif|svg|webp|ico)$/)) {
-        res.setHeader('Cache-Control', 'public, max-age=604800, immutable'); // 7 days for images
-      }
+    maxAge: 0,
+    setHeaders: (res) => {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
     }
   }));
 
