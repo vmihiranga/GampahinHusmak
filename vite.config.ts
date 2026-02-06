@@ -4,7 +4,6 @@ import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 import { metaImagesPlugin } from "./vite-plugin-meta-images";
-import obfuscator from 'vite-plugin-javascript-obfuscator';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
@@ -13,23 +12,6 @@ export default defineConfig({
     runtimeErrorOverlay(),
     tailwindcss(),
     metaImagesPlugin(),
-    obfuscator({
-      include: [/\.ts$/, /\.tsx$/],
-      exclude: [/node_modules/],
-      apply: 'build',
-      debugger: true,
-      options: {
-        compact: true,
-        controlFlowFlattening: true,
-        controlFlowFlatteningThreshold: 0.75,
-        numbersToExpressions: true,
-        simplify: true,
-        stringArrayThreshold: 0.75,
-        splitStrings: true,
-        splitStringsChunkLength: 10,
-        unicodeEscapeSequence: false
-      }
-    }),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
