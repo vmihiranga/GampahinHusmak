@@ -11,8 +11,17 @@ export function NativePWAInstallPrompt() {
   const { language } = useLanguage();
 
   useEffect(() => {
-    // Automatic prompt disabled as per user request.
-    // The user can still use the manual install button in the PWAInstallSection.
+    // Show prompt after a delay if installable and not already installed
+    if (isInstallable && !isInstalled) {
+      const timer = setTimeout(() => {
+        // Check local storage to see if user dismissed it recently
+        const dismissed = localStorage.getItem("native-pwa-prompt-dismissed");
+        if (!dismissed) {
+          setShowPrompt(true);
+        }
+      }, 5000); // Show after 5 seconds
+      return () => clearTimeout(timer);
+    }
   }, [isInstallable, isInstalled]);
 
   const handleDismiss = () => {

@@ -7,11 +7,9 @@ import { useQuery } from "@tanstack/react-query";
 import { statsAPI } from "@/lib/api";
 import { StatsResponse } from "@/lib/types";
 import { useLanguage } from "@/hooks/use-language";
+import heroImage from "@assets/generated_images/community_tree_planting_hero_image.png";
+import forestImage from "@assets/generated_images/lush_green_forest_landscape.png";
 import { PWAInstallSection } from "@/components/PWAInstallSection";
-
-// Real high-quality photos from Unsplash for better performance and authenticity
-const HERO_IMAGE_URL = "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?q=80&w=2070&auto=format&fit=crop";
-const MISSION_IMAGE_URL = "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2070&auto=format&fit=crop";
 
 export default function Home() {
   const { t, language, getPathWithLang } = useLanguage();
@@ -27,7 +25,7 @@ export default function Home() {
       <section className="relative min-h-[750px] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img 
-            src={HERO_IMAGE_URL} 
+            src={heroImage} 
             alt="Tree Planting" 
             className="w-full h-full object-cover"
             loading="eager"
@@ -102,7 +100,7 @@ export default function Home() {
             <div className="relative group px-4 md:px-0">
               <div className="absolute inset-x-4 md:inset-0 bg-primary/10 rounded-2xl transform rotate-3 transition-transform group-hover:rotate-6" />
               <img 
-                src={MISSION_IMAGE_URL} 
+                src={forestImage} 
                 alt="Green Gampaha" 
                 className="relative rounded-2xl shadow-xl w-full h-[350px] md:h-[500px] object-cover"
                 loading="lazy"
