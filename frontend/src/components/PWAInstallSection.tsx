@@ -39,7 +39,7 @@ export function PWAInstallSection() {
             <div className="w-full md:w-2/5 bg-primary/5 p-12 flex items-center justify-center">
               <div className="relative">
                 <div className="w-48 h-48 rounded-[2.5rem] bg-white shadow-2xl flex items-center justify-center p-8 transform -rotate-3 hover:rotate-0 transition-transform duration-500">
-                  <img src="/favicon.png" alt="App Icon" className="w-full h-full object-contain" />
+                  <img src="/favicon.jpg" alt="App Icon" className="w-full h-full object-contain" />
                 </div>
                 <div className="absolute -bottom-4 -right-4 w-16 h-16 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg animate-bounce">
                   <Smartphone className="w-8 h-8" />
