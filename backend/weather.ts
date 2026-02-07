@@ -1,6 +1,6 @@
 import "dotenv/config";
 
-const API_KEY = process.env.OPENWEATHER_API_KEY;
+const API_KEY = "2d61a72574c11c4f36173b627f8cb177";
 const CITY = "Gampaha";
 
 interface WeatherAlert {
