@@ -1334,7 +1334,7 @@ export default function Admin() {
                   <Label className="text-xs uppercase tracking-wider text-muted-foreground">Notification Subject</Label>
                   <Input 
                     value={selectedContact?.subject || ""} 
-                    onChange={(e) => setSelectedContact({ ...selectedContact, subject: e.target.value })}
+                    onChange={(e) => selectedContact && setSelectedContact({ ...selectedContact, subject: e.target.value })}
                     className="font-bold text-lg"
                   />
                 </div>
@@ -1351,7 +1351,7 @@ export default function Admin() {
                   <Label className="text-xs uppercase tracking-wider text-muted-foreground">Notification Message</Label>
                   <Textarea 
                     value={selectedContact?.message || ""} 
-                    onChange={(e) => setSelectedContact({ ...selectedContact, message: e.target.value })}
+                    onChange={(e) => selectedContact && setSelectedContact({ ...selectedContact, message: e.target.value })}
                     className="min-h-[150px] leading-relaxed"
                   />
                 </div>
@@ -1387,8 +1387,10 @@ export default function Admin() {
                           size="sm" 
                           className="w-fit h-7 px-2 text-[10px] gap-1"
                           onClick={() => {
-                            const [lng, lat] = selectedContact.relatedTreeId.location.coordinates;
-                            window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
+                            if (selectedContact?.relatedTreeId?.location?.coordinates) {
+                              const [lng, lat] = selectedContact.relatedTreeId.location.coordinates;
+                              window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
+                            }
                           }}
                         >
                           <MapPin className="w-3 h-3" />
@@ -1446,7 +1448,7 @@ export default function Admin() {
               <Button
                 className="rounded-xl shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90"
                 onClick={() =>
-                  updateContactContentMutation.mutate({
+                  selectedContact && updateContactContentMutation.mutate({
                     id: selectedContact._id,
                     data: { subject: selectedContact.subject, message: selectedContact.message },
                   })
@@ -1460,7 +1462,7 @@ export default function Admin() {
               <Button
                 className="rounded-xl shadow-lg shadow-primary/20"
                 onClick={() =>
-                  respondMutation.mutate({
+                  selectedContact && respondMutation.mutate({
                     id: selectedContact._id,
                     reply: replyText,
                   })

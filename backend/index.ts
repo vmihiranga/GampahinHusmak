@@ -35,7 +35,16 @@ app.use(helmet({
 
 declare module "http" {
   interface IncomingMessage {
-    rawBody: unknown;
+    rawBody?: Buffer;
+  }
+}
+
+declare global {
+  namespace Express {
+    interface Request {
+      user?: any;
+      rawBody?: Buffer;
+    }
   }
 }
 

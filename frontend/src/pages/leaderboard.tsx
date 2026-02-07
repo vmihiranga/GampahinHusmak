@@ -56,44 +56,59 @@ export default function Leaderboard() {
             </Card>
           ) : (
             <div className="space-y-4">
-              {topPlanters.map((item, index) => (
-                <Card key={item._id} className={`overflow-hidden transition-all duration-300 hover:shadow-md ${index < 3 ? 'border-primary/20 bg-primary/5' : ''}`}>
-                  <CardContent className="p-4 sm:p-6 flex items-center gap-4 sm:gap-6">
-                    <div className="flex-shrink-0 w-8 sm:w-12 text-center font-heading font-bold text-2xl">
-                      {((page - 1) * limit) + index === 0 ? <Medal className="w-8 h-8 text-yellow-500 mx-auto" /> :
-                       ((page - 1) * limit) + index === 1 ? <Medal className="w-8 h-8 text-slate-400 mx-auto" /> :
-                       ((page - 1) * limit) + index === 2 ? <Medal className="w-8 h-8 text-amber-600 mx-auto" /> :
-                       ((page - 1) * limit) + index + 1}
-                    </div>
+              {topPlanters.map((item, index) => {
+                // Calculate display rank with tie handling
+                let rank = index + 1;
+                if (index > 0 && item.count === topPlanters[index - 1].count) {
+                  // Find the first index with this count to determine the rank
+                  let tieIndex = index;
+                  while (tieIndex > 0 && topPlanters[tieIndex].count === topPlanters[tieIndex - 1].count) {
+                    tieIndex--;
+                  }
+                  rank = tieIndex + 1;
+                }
+                
+                const displayRank = ((page - 1) * limit) + rank;
 
-                    <Avatar className="w-12 h-12 sm:w-16 sm:h-16 border-2 border-background shadow-sm">
-                      <AvatarImage src={item.user.profileImage} />
-                      <AvatarFallback className="text-lg bg-primary/10 text-primary">
-                        {(item.user.fullName || item.user.username).charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-bold truncate">
-                        {item.user.fullName || item.user.username}
-                      </h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="outline" className="text-[10px] uppercase tracking-wider">
-                          {language === 'en' ? 'Volunteer' : language === 'si' ? 'ස්වේච්ඡා සාමාජික' : 'தன்னார்வலர்'}
-                        </Badge>
+                return (
+                  <Card key={item._id} className={`overflow-hidden transition-all duration-300 hover:shadow-md ${index < 3 ? 'border-primary/20 bg-primary/5' : ''}`}>
+                    <CardContent className="p-4 sm:p-6 flex items-center gap-4 sm:gap-6">
+                      <div className="flex-shrink-0 w-8 sm:w-12 text-center font-heading font-bold text-2xl">
+                        {displayRank === 1 ? <Medal className="w-8 h-8 text-yellow-500 mx-auto" /> :
+                         displayRank === 2 ? <Medal className="w-8 h-8 text-slate-400 mx-auto" /> :
+                         displayRank === 3 ? <Medal className="w-8 h-8 text-amber-600 mx-auto" /> :
+                         displayRank}
                       </div>
-                    </div>
 
-                    <div className="text-right">
-                      <div className="flex items-center gap-1.5 justify-end text-primary">
-                        <TreePine className="w-5 h-5" />
-                        <span className="text-2xl font-bold">{item.count}</span>
+                      <Avatar className="w-12 h-12 sm:w-16 sm:h-16 border-2 border-background shadow-sm">
+                        <AvatarImage src={item.user.profileImage} />
+                        <AvatarFallback className="text-lg bg-primary/10 text-primary">
+                          {(item.user.fullName || item.user.username).charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-lg font-bold truncate">
+                          {item.user.fullName || item.user.username}
+                        </h3>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge variant="outline" className="text-[10px] uppercase tracking-wider">
+                            {language === 'en' ? 'Volunteer' : language === 'si' ? 'ස්වේච්ඡා සාමාජික' : 'தன்னார்வலர்'}
+                          </Badge>
+                        </div>
                       </div>
-                      <p className="text-xs text-muted-foreground uppercase font-bold tracking-tighter">{t.leaderboard.trees_planted}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+
+                      <div className="text-right">
+                        <div className="flex items-center gap-1.5 justify-end text-primary">
+                          <TreePine className="w-5 h-5" />
+                          <span className="text-2xl font-bold">{item.count}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground uppercase font-bold tracking-tighter">{t.leaderboard.trees_planted}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
 

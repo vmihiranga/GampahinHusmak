@@ -13,7 +13,6 @@ import { PWAInstallSection } from "@/components/PWAInstallSection";
 
 export default function Home() {
   const { t, language, getPathWithLang } = useLanguage();
-  // Fetch real stats from API
   const { data: stats } = useQuery<StatsResponse>({
     queryKey: ['stats'],
     queryFn: () => statsAPI.getGeneral(),
@@ -30,7 +29,7 @@ export default function Home() {
             className="w-full h-full object-cover"
             loading="eager"
             decoding="async"
-            fetchpriority="high"
+            fetchPriority="high"
           />
           <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
         </div>
@@ -42,7 +41,7 @@ export default function Home() {
           </div>
           
           <div className="flex justify-center animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100 px-4">
-            <img src="/logo.png" alt="Gampahin Husmak" className="h-32 sm:h-48 md:h-64 w-auto object-contain" loading="eager" decoding="async" fetchpriority="high" />
+            <img src="/logo.png" alt="Gampahin Husmak" className="h-32 sm:h-48 md:h-64 w-auto object-contain" loading="eager" decoding="async" fetchPriority="high" />
           </div>
           
           <p className="text-lg md:text-xl text-white/90 max-w-2xl mx-auto leading-relaxed animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
