@@ -16,25 +16,37 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.jpg', 'logo.png', '2logo.png'],
       manifest: {
-        name: 'Gampahathuru',
-        short_name: 'Gampahathuru',
-        description: 'Planting Hope for Gampaha\'s Future - Track and manage your planted trees',
+        name: 'Gampahin Husmak',
+        short_name: 'Gampahin',
+        description: 'Planting Hope for Gampahas Future - Track and manage your planted trees',
         theme_color: '#16a34a',
         background_color: '#ffffff',
         display: 'standalone',
         start_url: '/',
         icons: [
           {
+            src: '/favicon.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/favicon.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
             src: '/favicon.jpg',
             sizes: '192x192',
             type: 'image/jpeg',
-            purpose: 'any maskable'
+            purpose: 'any'
           },
           {
             src: '/favicon.jpg',
             sizes: '512x512',
             type: 'image/jpeg',
-            purpose: 'any maskable'
+            purpose: 'any'
           }
         ]
       },
