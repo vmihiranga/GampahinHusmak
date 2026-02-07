@@ -77,12 +77,14 @@ export default function TreeDetails({ params }: { params: { id: string } }) {
   const currentStatus = tree.currentHealth || tree.status || "active";
 
   // Aggregate all images for the slider
-  const allImages = [
-    ...(tree.images && tree.images.length > 0 
-      ? tree.images 
-      : ["https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=1200"]),
-    ...(updates?.flatMap((u: any) => u.images || []) || [])
-  ].filter(img => !!img);
+  const treeImages = tree.images || [];
+  const updateImages = updates?.flatMap((u: any) => u.images || []) || [];
+  let allImages = [...treeImages, ...updateImages].filter(img => !!img);
+
+  // Only show mockup if there are absolutely no images at all
+  if (allImages.length === 0) {
+    allImages = ["https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=1200"];
+  }
 
   const nextImage = (e: React.MouseEvent) => {
     e.stopPropagation();

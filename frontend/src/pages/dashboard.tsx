@@ -50,7 +50,8 @@ export default function Dashboard() {
   const { data: treesData, isLoading: isTreesLoading } = useQuery<TreesResponse>({
     queryKey: ['user-trees'],
     queryFn: () => treesAPI.getAll(),
-    enabled: !!user?.isVerified, // Only fetch trees if verified
+    enabled: !!user?.isVerified,
+    refetchInterval: 30000, // Real-time updates every 30s
   });
 
   // Fetch user's requests/contacts
@@ -58,6 +59,7 @@ export default function Dashboard() {
     queryKey: ['my-contacts'],
     queryFn: () => contactAPI.getMyContacts(),
     enabled: !!user,
+    refetchInterval: 30000, // Check for new messages every 30s
   });
   const myContacts = contactsData?.contacts || [];
 
@@ -66,6 +68,7 @@ export default function Dashboard() {
     queryKey: ['user-stats', user?._id],
     queryFn: () => statsAPI.getUser(user!._id),
     enabled: !!user?._id,
+    refetchInterval: 30000, // Update CO2 and Weather alerts every 30s
   });
 
   const createTreeMutation = useMutation({
