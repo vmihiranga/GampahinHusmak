@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Search, Filter, AlertCircle, MapPin as MapPinIcon, LocateFixed, Loader2, Clock, MessageSquare, CheckCircle2, History, TreePine, Camera, Trophy, Sprout, CloudRain, Droplets } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/use-language";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -120,6 +120,13 @@ export default function Dashboard() {
     return matchesSearch && matchesFilter;
   });
 
+  // Automatically trigger location detection when Add Tree dialog opens
+  useEffect(() => {
+    if (isAddDialogOpen && !coordinates) {
+      handleGetLocation();
+    }
+  }, [isAddDialogOpen]);
+
   const handleGetLocation = () => {
     setIsLocating(true);
     if (!navigator.geolocation) {
@@ -138,7 +145,6 @@ export default function Dashboard() {
         setCoordinates([longitude, latitude]);
         
         try {
-          // Simplified reverse geocoding via OpenStreetMap (Free, no API key needed for basic usage)
           const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
           const data = await response.json();
           const address = data.display_name || `Lat: ${latitude}, Lon: ${longitude}`;
@@ -148,7 +154,7 @@ export default function Dashboard() {
           
           toast({
             title: "Location detected",
-            description: "Coordinates and address have been updated.",
+            description: "Coordinates and address have been updated successfully.",
           });
         } catch (error) {
           console.error("Geocoding error:", error);
@@ -157,13 +163,23 @@ export default function Dashboard() {
         }
       },
       (error) => {
+        let msg = error.message;
+        if (error.code === error.PERMISSION_DENIED) {
+          msg = "Location permission denied. Please enable location access in your browser settings to use this feature.";
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          msg = "Location information is unavailable.";
+        } else if (error.code === error.TIMEOUT) {
+          msg = "Location request timed out.";
+        }
+        
         toast({
           title: "Location error",
-          description: error.message,
+          description: msg,
           variant: "destructive",
         });
         setIsLocating(false);
-      }
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   };
 
@@ -473,12 +489,12 @@ export default function Dashboard() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="sci-name">{t.dashboard.dialogs.add_tree.scientific_name}</Label>
-                      <Input id="sci-name" name="sci-name" placeholder={t.dashboard.dialogs.add_tree.scientific_name_placeholder} />
+                      <Input id="sci-name" name="sci-name" defaultValue="Mangifera" placeholder={t.dashboard.dialogs.add_tree.scientific_name_placeholder} />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="date">{t.dashboard.dialogs.add_tree.date_planted}</Label>
-                    <Input id="date" name="date" type="date" required />
+                    <Input id="date" name="date" type="date" defaultValue={new Date().toISOString().split('T')[0]} required />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="location">{t.dashboard.dialogs.add_tree.location}</Label>

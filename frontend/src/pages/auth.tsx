@@ -263,11 +263,11 @@ export default function Auth() {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="city">{t.auth.register.city}</Label>
-                        <Input id="city" name="city" placeholder="Gampaha" />
+                        <Input id="city" name="city" defaultValue="Gampaha" placeholder="Gampaha" />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="province">{t.auth.register.province}</Label>
-                        <Input id="province" name="province" placeholder="Western Province" />
+                        <Input id="province" name="province" defaultValue="Western" placeholder="Western Province" />
                       </div>
                     </div>
                     <div className="space-y-2">
