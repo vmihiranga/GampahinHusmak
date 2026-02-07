@@ -46,9 +46,46 @@ export async function registerRoutes(
   // ============ SECURITY MIDDLEWARE ============
   console.log('🛡️  Applying security headers and rate limiters...');
   
-  // Apply Helmet for security headers
+  // Apply Helmet with Content Security Policy
   app.use(helmet({
-    contentSecurityPolicy: false, // Disabled for local development compatibility with Vite
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: [
+          "'self'",
+          "'unsafe-inline'", // Required for Vite in development
+          "'unsafe-eval'", // Required for Vite HMR in development
+          "https://cdn.jsdelivr.net", // For external libraries
+        ],
+        styleSrc: [
+          "'self'",
+          "'unsafe-inline'", // Required for inline styles
+          "https://fonts.googleapis.com",
+        ],
+        fontSrc: [
+          "'self'",
+          "data:",
+          "https://fonts.gstatic.com",
+        ],
+        imgSrc: [
+          "'self'",
+          "data:",
+          "blob:",
+          "https:", // Allow images from any HTTPS source
+          "http://localhost:*", // Development
+        ],
+        connectSrc: [
+          "'self'",
+          "https://api.cloudinary.com",
+          "https://res.cloudinary.com",
+          "http://localhost:*", // Development
+          "ws://localhost:*", // WebSocket for Vite HMR
+        ],
+        frameSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        upgradeInsecureRequests: process.env.NODE_ENV === "production" ? [] : null,
+      },
+    },
     crossOriginEmbedderPolicy: false,
   }));
 
