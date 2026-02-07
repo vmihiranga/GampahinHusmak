@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/hooks/use-language";
 import {
   Pagination,
   PaginationContent,
@@ -20,6 +21,7 @@ import {
 } from "@/components/ui/pagination";
 
 export default function Leaderboard() {
+  const { t, language } = useLanguage();
   const [page, setPage] = useState(1);
   const limit = 10;
 
@@ -37,9 +39,9 @@ export default function Leaderboard() {
           <div className="inline-flex items-center justify-center p-3 bg-yellow-500/10 rounded-full text-yellow-500 mb-2">
             <Trophy className="w-10 h-10" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-heading font-bold">Community Leaderboard</h1>
+          <h1 className="text-4xl md:text-5xl font-heading font-bold">{t.leaderboard.title}</h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Celebrating our top environmental champions who are leading the way in regreening Gampaha.
+            {t.leaderboard.subtitle}
           </p>
         </div>
 
@@ -50,7 +52,7 @@ export default function Leaderboard() {
             </div>
           ) : topPlanters.length === 0 ? (
             <Card className="p-12 text-center">
-              <p className="text-muted-foreground">The leaderboard is currently empty. Start planting to see your name here!</p>
+              <p className="text-muted-foreground">{t.leaderboard.no_items}</p>
             </Card>
           ) : (
             <div className="space-y-4">
@@ -77,7 +79,7 @@ export default function Leaderboard() {
                       </h3>
                       <div className="flex items-center gap-2 mt-1">
                         <Badge variant="outline" className="text-[10px] uppercase tracking-wider">
-                          Volunteer
+                          {language === 'en' ? 'Volunteer' : language === 'si' ? 'ස්වේච්ඡා සාමාජික' : 'தன்னார்வலர்'}
                         </Badge>
                       </div>
                     </div>
@@ -87,7 +89,7 @@ export default function Leaderboard() {
                         <TreePine className="w-5 h-5" />
                         <span className="text-2xl font-bold">{item.count}</span>
                       </div>
-                      <p className="text-xs text-muted-foreground uppercase font-bold tracking-tighter">Trees Planted</p>
+                      <p className="text-xs text-muted-foreground uppercase font-bold tracking-tighter">{t.leaderboard.trees_planted}</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -159,18 +161,18 @@ export default function Leaderboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto pt-12">
             <div className="text-center space-y-2 p-6 rounded-2xl bg-muted/50 border">
               <Award className="w-8 h-8 text-primary mx-auto mb-2" />
-              <h4 className="font-bold">Total Effort</h4>
-              <p className="text-sm text-muted-foreground">Collective contribution from all volunteers</p>
+              <h4 className="font-bold">{t.leaderboard.effort_title}</h4>
+              <p className="text-sm text-muted-foreground">{t.leaderboard.effort_desc}</p>
             </div>
             <div className="text-center space-y-2 p-6 rounded-2xl bg-muted/50 border">
               <TreePine className="w-8 h-8 text-green-600 mx-auto mb-2" />
-              <h4 className="font-bold">District Impact</h4>
-              <p className="text-sm text-muted-foreground">Covers all 13 divisions of Gampaha</p>
+              <h4 className="font-bold">{t.leaderboard.impact_title}</h4>
+              <p className="text-sm text-muted-foreground">{t.leaderboard.impact_desc}</p>
             </div>
             <div className="text-center space-y-2 p-6 rounded-2xl bg-muted/50 border">
               <Users className="w-8 h-8 text-blue-500 mx-auto mb-2" />
-              <h4 className="font-bold">Growing Community</h4>
-              <p className="text-sm text-muted-foreground">New members joining every day</p>
+              <h4 className="font-bold">{t.leaderboard.growing_title}</h4>
+              <p className="text-sm text-muted-foreground">{t.leaderboard.growing_desc}</p>
             </div>
         </div>
       </div>

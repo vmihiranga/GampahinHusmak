@@ -46,6 +46,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLanguage } from "@/hooks/use-language";
 import { treesAPI, statsAPI, contactAPI, adminAPI, authAPI } from "@/lib/api";
 import { 
   TreesResponse, 
@@ -98,6 +99,7 @@ import {
 import { useState } from "react";
 
 export default function Admin() {
+  const { t, language, getPathWithLang } = useLanguage();
   const [treePage, setTreePage] = useState(1);
   const [userPage, setUserPage] = useState(1);
   const [contactPage, setContactPage] = useState(1);
@@ -334,9 +336,9 @@ export default function Admin() {
       <div className="container mx-auto px-4 py-8 space-y-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-heading font-bold">Admin Portal</h1>
+            <h1 className="text-3xl font-heading font-bold">{t.admin.title}</h1>
             <p className="text-muted-foreground">
-              Manage users, approvals, and system overview.
+              {t.admin.subtitle}
             </p>
           </div>
           <Button 
@@ -345,27 +347,27 @@ export default function Admin() {
             className="w-fit gap-2 rounded-xl bg-primary/5 border-primary/10 hover:bg-primary/10 transition-all font-bold"
           >
             <RefreshCw className={cn("w-4 h-4", adminSummary === undefined && "animate-spin")} />
-            Refresh Data
+            {t.admin.refresh}
           </Button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Trees</CardTitle>
+              <CardTitle className="text-sm font-medium">{t.admin.stats.total_trees}</CardTitle>
               <TreePine className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats?.totalTrees || 0}</div>
               <p className="text-xs text-muted-foreground">
-                Active plantations
+                {t.admin.stats.active_plantations}
               </p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Contact Messages
+                {t.admin.stats.contact_messages}
               </CardTitle>
               <AlertTriangle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -374,19 +376,19 @@ export default function Admin() {
                 {stats?.pendingContacts || 0}
               </div>
               <p className="text-xs text-muted-foreground">
-                Requires attention
+                {t.admin.stats.requires_attention}
               </p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+              <CardTitle className="text-sm font-medium">{t.admin.stats.total_users}</CardTitle>
               <UserCheck className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats?.totalUsers || 0}</div>
               <p className="text-xs text-muted-foreground">
-                Registered volunteers
+                {t.admin.stats.registered_volunteers}
               </p>
             </CardContent>
           </Card>
@@ -396,32 +398,32 @@ export default function Admin() {
           <TabsList className="grid grid-cols-2 md:grid-cols-5 w-full md:w-auto h-auto p-1 bg-muted/50 rounded-2xl">
             <TabsTrigger value="trees" className="rounded-xl flex items-center gap-2 py-2">
               <TreePine className="w-4 h-4" />
-              Registry
+              {t.admin.tabs.registry}
             </TabsTrigger>
             <TabsTrigger value="map" className="rounded-xl flex items-center gap-2 py-2">
               <MapPin className="w-4 h-4" />
-              Map View
+              {t.admin.tabs.map_view}
             </TabsTrigger>
             <TabsTrigger value="approvals" className="rounded-xl flex items-center gap-2 py-2">
               <UserCheck className="w-4 h-4" />
-              Users
+              {t.admin.tabs.users}
             </TabsTrigger>
             <TabsTrigger value="issues" className="rounded-xl flex items-center gap-2 py-2">
               <AlertTriangle className="w-4 h-4" />
-              Issues
+              {t.admin.tabs.issues}
             </TabsTrigger>
             <TabsTrigger value="db" className="rounded-xl flex items-center gap-2 py-2">
               <Database className="w-4 h-4" />
-              DB Mgmt
+              {t.admin.tabs.db_mgmt}
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="trees">
             <Card>
               <CardHeader>
-                <CardTitle>Tree Registry</CardTitle>
+                <CardTitle>{t.admin.tabs.registry}</CardTitle>
                 <CardDescription>
-                  Master list of all planted trees in the district.
+                  {t.admin.tabs.descriptions.registry}
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-0">
@@ -429,11 +431,11 @@ export default function Admin() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Tree Type</TableHead>
-                        <TableHead>Location</TableHead>
-                        <TableHead>Planted Date</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableHead>{t.admin.registry.table.tree_type}</TableHead>
+                        <TableHead>{t.admin.registry.table.location}</TableHead>
+                        <TableHead>{t.admin.registry.table.planted_date}</TableHead>
+                        <TableHead>{t.admin.registry.table.status}</TableHead>
+                        <TableHead className="text-right">{t.admin.registry.table.actions}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -483,28 +485,28 @@ export default function Admin() {
                                 oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
                                 const lastUpdate = new Date(tree.updatedAt || tree.plantedDate);
                                 return lastUpdate < oneMonthAgo && (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="bg-primary/5 hover:bg-primary/10 text-primary border-primary/20 gap-1.5"
-                                    onClick={() => sendReminderMutation.mutate(tree._id)}
-                                    disabled={sendReminderMutation.isPending}
-                                  >
-                                    {sendReminderMutation.isPending ? (
-                                      <Loader2 className="w-3 h-3 animate-spin" />
-                                    ) : (
-                                      <Bell className="w-3 h-3" />
-                                    )}
-                                    Send Reminder
-                                  </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="bg-primary/5 hover:bg-primary/10 text-primary border-primary/20 gap-1.5"
+                                      onClick={() => sendReminderMutation.mutate(tree._id)}
+                                      disabled={sendReminderMutation.isPending}
+                                    >
+                                      {sendReminderMutation.isPending ? (
+                                        <Loader2 className="w-3 h-3 animate-spin" />
+                                      ) : (
+                                        <Bell className="w-3 h-3" />
+                                      )}
+                                      {t.admin.registry.buttons.send_reminder}
+                                    </Button>
                                 );
                               })()}
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => setLocation(`/trees/${tree._id}?from=admin`)}
+                                onClick={() => setLocation(getPathWithLang(`/trees/${tree._id}?from=admin`))}
                               >
-                                View Details
+                                {t.admin.registry.buttons.view_details}
                               </Button>
                             </div>
                           </TableCell>
@@ -554,9 +556,9 @@ export default function Admin() {
           <TabsContent value="map">
             <Card className="overflow-hidden">
               <CardHeader>
-                <CardTitle>District Monitoring Map</CardTitle>
+                <CardTitle>{t.admin.tabs.map_view}</CardTitle>
                 <CardDescription>
-                  Visual health tracking of all plantation sites across Gampaha.
+                  {t.admin.tabs.descriptions.map}
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-6">
@@ -573,9 +575,9 @@ export default function Admin() {
           <TabsContent value="approvals" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>User Management</CardTitle>
+                <CardTitle>{t.admin.tabs.users}</CardTitle>
                 <CardDescription>
-                  Manage registered users and their permissions.
+                  {t.admin.tabs.descriptions.users}
                 </CardDescription>
               </CardHeader>
               <CardContent className="px-0">
@@ -583,11 +585,11 @@ export default function Admin() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>User</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Joined Date</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableHead>{t.admin.users.table.user}</TableHead>
+                        <TableHead>{t.admin.users.table.role}</TableHead>
+                        <TableHead>{t.admin.users.table.status}</TableHead>
+                        <TableHead>{t.admin.users.table.joined_date}</TableHead>
+                        <TableHead className="text-right">{t.admin.users.table.actions}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -611,14 +613,14 @@ export default function Admin() {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="volunteer">Volunteer</SelectItem>
-                                  <SelectItem value="admin">Admin</SelectItem>
-                                  <SelectItem value="superadmin">Superadmin</SelectItem>
+                                  <SelectItem value="volunteer">{t.admin.users.roles.volunteer}</SelectItem>
+                                  <SelectItem value="admin">{t.admin.users.roles.admin}</SelectItem>
+                                  <SelectItem value="superadmin">{t.admin.users.roles.superadmin}</SelectItem>
                                 </SelectContent>
                               </Select>
                             ) : (
                               <Badge variant="outline" className="capitalize whitespace-nowrap font-bold text-[10px]">
-                                {user.role}
+                                {user.role === "volunteer" ? t.admin.users.roles.volunteer : user.role === "admin" ? t.admin.users.roles.admin : t.admin.users.roles.superadmin}
                               </Badge>
                             )}
                           </TableCell>
@@ -630,7 +632,7 @@ export default function Admin() {
                                   : "bg-yellow-100 text-yellow-700 hover:bg-yellow-100 whitespace-nowrap"
                               }
                             >
-                              {user.isVerified ? "Verified" : "Pending"}
+                              {user.isVerified ? t.admin.users.status.verified : t.admin.users.status.pending}
                             </Badge>
                           </TableCell>
                           <TableCell className="whitespace-nowrap text-sm">
@@ -680,7 +682,7 @@ export default function Admin() {
                               disabled={verifyMutation.isPending}
                               className="rounded-lg text-xs h-8"
                             >
-                              {user.isVerified ? "Revoke" : "Approve"}
+                              {user.isVerified ? t.admin.users.buttons.revoke : t.admin.users.buttons.approve}
                             </Button>
                           </TableCell>
                         </TableRow>
@@ -691,7 +693,7 @@ export default function Admin() {
                             colSpan={5}
                             className="text-center py-8 text-muted-foreground"
                           >
-                            No users found.
+                            {t.admin.users.no_items}
                           </TableCell>
                         </TableRow>
                       )}
@@ -761,16 +763,16 @@ export default function Admin() {
           <TabsContent value="issues">
             <Card>
               <CardHeader>
-                <CardTitle>Contact Messages</CardTitle>
+                <CardTitle>{t.admin.tabs.issues}</CardTitle>
                 <CardDescription>
-                  Review messages and inquiries from users.
+                  {t.admin.tabs.descriptions.issues}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {contacts.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
-                      <p>No messages yet</p>
+                      <p>{t.admin.issues.no_items}</p>
                     </div>
                   ) : (
                     contacts.slice(0, 10).map((contact: any) => (
@@ -788,7 +790,7 @@ export default function Admin() {
                               }
                               className="mb-2"
                             >
-                              {contact.status}
+                              {t.admin.issues.status[contact.status as keyof typeof t.admin.issues.status] || contact.status}
                             </Badge>
                             <h4 className="font-semibold">{contact.subject}</h4>
                             <p className="text-sm text-muted-foreground">
@@ -894,8 +896,8 @@ export default function Admin() {
           <TabsContent value="db" className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-heading font-bold">Database Management</h2>
-                <p className="text-muted-foreground text-sm">Monitor database health and collection statistics.</p>
+                <h2 className="text-2xl font-heading font-bold">{t.admin.db.title}</h2>
+                <p className="text-muted-foreground text-sm">{t.admin.db.subtitle}</p>
               </div>
               <Button 
                 variant="outline" 
@@ -905,7 +907,7 @@ export default function Admin() {
                 className="gap-2 rounded-xl"
               >
                 <RefreshCw className={cn("w-4 h-4", isFetchingDb && "animate-spin")} />
-                Refresh Status
+                {t.admin.refresh}
               </Button>
             </div>
 
@@ -914,7 +916,7 @@ export default function Admin() {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium flex items-center gap-2">
                     <Activity className="w-4 h-4 text-primary" />
-                    Storage Health
+                    {t.admin.db.storage_health}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -949,7 +951,7 @@ export default function Admin() {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium flex items-center gap-2">
                     <Server className="w-4 h-4 text-blue-600" />
-                    Engine Info
+                    {t.admin.db.engine_info}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -975,7 +977,7 @@ export default function Admin() {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium flex items-center gap-2">
                     <Activity className="w-4 h-4 text-orange-600" />
-                    Network & Load
+                    {t.admin.db.network_load}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -996,7 +998,7 @@ export default function Admin() {
 
             <Card className="border-none shadow-xl">
               <CardHeader>
-                <CardTitle>Collection Architecture</CardTitle>
+                <CardTitle>{t.admin.db.architecture}</CardTitle>
                 <CardDescription>Real-time storage allocation across data models.</CardDescription>
               </CardHeader>
               <CardContent className="px-0">
@@ -1029,15 +1031,15 @@ export default function Admin() {
               <CardHeader>
                 <CardTitle className="text-red-600 flex items-center gap-2">
                   <AlertTriangle className="w-5 h-5" />
-                  Database Health Check
+                  {t.admin.db.health_check}
                 </CardTitle>
                 <CardDescription>Potential issues or errors detected in the last 24 hours.</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="p-8 text-center bg-muted/20 rounded-2xl">
                   <Activity className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-                  <p className="text-sm text-muted-foreground font-medium">No database errors or integrity issues detected.</p>
-                  <p className="text-xs text-muted-foreground/60 mt-1">System is operating within normal parameters.</p>
+                  <p className="text-sm text-muted-foreground font-medium">{t.admin.db.no_errors}</p>
+                  <p className="text-xs text-muted-foreground/60 mt-1">{t.admin.db.operating_normal}</p>
                 </div>
               </CardContent>
             </Card>
@@ -1050,17 +1052,16 @@ export default function Admin() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>{t.admin.dialogs.confirm.title}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will {confirmUser?.isVerified ? "revoke" : "approve"} access
-              for <b>{confirmUser?.name}</b>.
-              {confirmUser?.isVerified
-                ? " The user will no longer be able to access verified features."
-                : " The user will gain access to volunteer features."}
+              {confirmUser?.isVerified 
+                ? t.admin.dialogs.confirm.revoke_desc.replace("{name}", confirmUser?.name || "")
+                : t.admin.dialogs.confirm.approve_desc.replace("{name}", confirmUser?.name || "")
+              }
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t.common.cancel}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() =>
                 confirmUser &&
@@ -1075,7 +1076,7 @@ export default function Admin() {
                   : "bg-primary text-primary-foreground hover:bg-primary/90",
               )}
             >
-              Confirm
+              {t.admin.dialogs.confirm.confirm_btn}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1143,7 +1144,7 @@ export default function Admin() {
                 <div className="space-y-3 pt-2">
                   <div className="flex items-center gap-2">
                     <div className="h-px flex-1 bg-border" />
-                    <Label className="text-[10px] uppercase tracking-wider text-muted-foreground shrink-0">Conversation History</Label>
+                    <Label className="text-[10px] uppercase tracking-wider text-muted-foreground shrink-0">{t.admin.dialogs.respond.history}</Label>
                     <div className="h-px flex-1 bg-border" />
                   </div>
                   <div className="space-y-3 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
@@ -1163,10 +1164,10 @@ export default function Admin() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="reply">Response</Label>
+              <Label htmlFor="reply">{t.admin.dialogs.respond.reply_label}</Label>
               <Textarea
                 id="reply"
-                placeholder="Type your reply here..."
+                placeholder={t.admin.dialogs.respond.reply_placeholder}
                 className="min-h-[150px]"
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
@@ -1175,7 +1176,7 @@ export default function Admin() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setSelectedContact(null)}>
-              Close
+              {t.common.close}
             </Button>
             <Button
               onClick={() =>
@@ -1186,7 +1187,7 @@ export default function Admin() {
               }
               disabled={respondMutation.isPending || !replyText.trim()}
             >
-              {respondMutation.isPending ? "Saving..." : "Save Response"}
+              {respondMutation.isPending ? t.admin.dialogs.respond.saving : t.admin.dialogs.respond.save_btn}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1196,41 +1197,41 @@ export default function Admin() {
         <DialogContent className="rounded-3xl border-none shadow-2xl overflow-hidden p-0 max-w-md">
           <div className="bg-primary p-6 text-white">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-heading font-bold">Message {messageUser?.name}</DialogTitle>
+              <DialogTitle className="text-2xl font-heading font-bold">{t.admin.dialogs.message.title.replace("{name}", messageUser?.name || "")}</DialogTitle>
               <DialogDescription className="text-white/80">
-                Send a system notification to this user. They will see it in their dashboard.
+                {t.admin.dialogs.message.desc}
               </DialogDescription>
             </DialogHeader>
           </div>
           <div className="p-6 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="subject">Subject</Label>
+              <Label htmlFor="subject">{t.admin.dialogs.message.subject}</Label>
               <Input 
                 id="subject" 
                 value={msgSubject} 
                 onChange={(e) => setMsgSubject(e.target.value)} 
-                placeholder="e.g. Profile Verification" 
+                placeholder={t.admin.dialogs.message.subject_placeholder} 
                 className="rounded-xl"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="message">Message</Label>
+              <Label htmlFor="message">{t.admin.dialogs.message.message}</Label>
               <Textarea 
                 id="message" 
                 value={msgBody} 
                 onChange={(e) => setMsgBody(e.target.value)} 
-                placeholder="Write your message here..." 
+                placeholder={t.admin.dialogs.message.message_placeholder} 
                 className="rounded-xl min-h-[120px]"
               />
             </div>
             <DialogFooter className="p-6 pt-0">
-              <Button variant="outline" onClick={() => setMessageUser(null)} className="rounded-xl">Cancel</Button>
+              <Button variant="outline" onClick={() => setMessageUser(null)} className="rounded-xl">{t.common.cancel}</Button>
               <Button 
                 onClick={() => sendMessageMutation.mutate({ userId: messageUser!.id, data: { subject: msgSubject, message: msgBody } })}
                 disabled={sendMessageMutation.isPending || !msgBody}
                 className="rounded-xl font-bold"
               >
-                {sendMessageMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Send Message"}
+                {sendMessageMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : t.admin.dialogs.message.send_btn}
               </Button>
             </DialogFooter>
           </div>
@@ -1242,21 +1243,20 @@ export default function Admin() {
           <AlertDialogHeader>
             <AlertDialogTitle className="text-destructive flex items-center gap-2">
               <ShieldAlert className="w-5 h-5" />
-              Delete User Account?
+              {t.admin.dialogs.delete_user.title}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              This action is irreversible. It will permanently delete the user account and all their 
-              associated data (trees, messages, achievements).
+              {t.admin.dialogs.delete_user.desc}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t.common.cancel}</AlertDialogCancel>
             <AlertDialogAction 
               onClick={() => deleteUser && deleteUserMutation.mutate(deleteUser)}
               className="bg-destructive text-white hover:bg-destructive/90"
               disabled={deleteUserMutation.isPending}
             >
-              {deleteUserMutation.isPending ? "Deleting..." : "Delete Permanently"}
+              {deleteUserMutation.isPending ? t.common.loading : t.admin.dialogs.delete_user.confirm_btn}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1265,26 +1265,26 @@ export default function Admin() {
       <Dialog open={!!editUser} onOpenChange={(open) => !open && setEditUser(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Edit User Profile</DialogTitle>
-            <DialogDescription>Update administrative details for this user.</DialogDescription>
+            <DialogTitle>{t.admin.dialogs.edit_user.title}</DialogTitle>
+            <DialogDescription>{t.admin.dialogs.edit_user.desc}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Full Name</Label>
+              <Label>{t.admin.dialogs.edit_user.full_name}</Label>
               <Input 
                 value={editUser?.fullName || ""} 
                 onChange={(e) => setEditUser({ ...editUser, fullName: e.target.value })} 
               />
             </div>
             <div className="space-y-2">
-              <Label>Phone Number</Label>
+              <Label>{t.admin.dialogs.edit_user.phone}</Label>
               <Input 
                 value={editUser?.phoneNumber || ""} 
                 onChange={(e) => setEditUser({ ...editUser, phoneNumber: e.target.value })} 
               />
             </div>
             <div className="space-y-2">
-              <Label>Home Address</Label>
+              <Label>{t.admin.dialogs.edit_user.address}</Label>
               <Textarea 
                 value={editUser?.address || ""} 
                 onChange={(e) => setEditUser({ ...editUser, address: e.target.value })} 
@@ -1292,13 +1292,13 @@ export default function Admin() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditUser(null)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setEditUser(null)}>{t.common.cancel}</Button>
             <Button 
               onClick={() => updateUserMutation.mutate({ id: editUser._id, data: editUser })}
               disabled={updateUserMutation.isPending}
             >
               <Save className="w-4 h-4 mr-2" />
-              Save Changes
+              {t.common.save}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1309,19 +1309,19 @@ export default function Admin() {
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-destructive" />
-              Remove Tree Registry?
+              {t.admin.dialogs.delete_tree.title}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              This will remove this tree from the system registry. This cannot be undone.
+              {t.admin.dialogs.delete_tree.desc}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t.common.cancel}</AlertDialogCancel>
             <AlertDialogAction 
               onClick={() => deleteTree && deleteTreeMutation.mutate(deleteTree)}
               className="bg-destructive text-white hover:bg-destructive/90"
             >
-              Confirm Removal
+              {t.admin.dialogs.delete_tree.confirm_btn}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1330,25 +1330,25 @@ export default function Admin() {
       <Dialog open={!!editTree} onOpenChange={(open) => !open && setEditTree(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Tree Record</DialogTitle>
+            <DialogTitle>{t.admin.dialogs.edit_tree.title}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Common Name</Label>
+              <Label>{t.admin.dialogs.edit_tree.common_name}</Label>
               <Input 
                 value={editTree?.commonName || ""} 
                 onChange={(e) => setEditTree({ ...editTree, commonName: e.target.value })} 
               />
             </div>
             <div className="space-y-2">
-              <Label>Scientific Name</Label>
+              <Label>{t.admin.dialogs.edit_tree.scientific_name}</Label>
               <Input 
                 value={editTree?.scientificName || ""} 
                 onChange={(e) => setEditTree({ ...editTree, scientificName: e.target.value })} 
               />
             </div>
             <div className="space-y-2">
-              <Label>Current Health</Label>
+              <Label>{t.admin.dialogs.edit_tree.health}</Label>
               <Select 
                 defaultValue={editTree?.currentHealth} 
                 onValueChange={(val) => setEditTree({ ...editTree, currentHealth: val })}
@@ -1357,22 +1357,22 @@ export default function Admin() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="excellent">Excellent</SelectItem>
-                  <SelectItem value="good">Good</SelectItem>
-                  <SelectItem value="fair">Fair</SelectItem>
-                  <SelectItem value="poor">Poor</SelectItem>
-                  <SelectItem value="dead">Dead</SelectItem>
+                  <SelectItem value="excellent">{t.admin.registry.health.excellent}</SelectItem>
+                  <SelectItem value="good">{t.admin.registry.health.good}</SelectItem>
+                  <SelectItem value="fair">{t.admin.registry.health.fair}</SelectItem>
+                  <SelectItem value="poor">{t.admin.registry.health.poor}</SelectItem>
+                  <SelectItem value="dead">{t.admin.registry.health.dead}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditTree(null)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setEditTree(null)}>{t.common.cancel}</Button>
             <Button 
               onClick={() => updateTreeMutation.mutate({ id: editTree._id, data: editTree })}
               disabled={updateTreeMutation.isPending}
             >
-              Save Record
+              {t.common.save}
             </Button>
           </DialogFooter>
         </DialogContent>

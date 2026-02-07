@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useLanguage } from "@/hooks/use-language";
 
 export default function NotAuthorized() {
-  const { language } = useLanguage();
+  const { language, getPathWithLang } = useLanguage();
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-muted/30 p-4">
@@ -31,13 +31,13 @@ export default function NotAuthorized() {
 
           <div className="flex flex-col gap-3">
             <Button className="w-full rounded-2xl h-12 font-bold gap-2" asChild>
-              <Link href="/">
+              <Link href={getPathWithLang("/")}>
                 <Home className="w-4 h-4" />
                 {language === 'si' ? "මුල් පිටුවට" : "Back to Home"}
               </Link>
             </Button>
             <Button variant="outline" className="w-full rounded-2xl h-12 font-bold" asChild>
-              <Link href="/auth">
+              <Link href={getPathWithLang("/auth")}>
                 {language === 'si' ? "ඇතුළු වන්න" : "Login"}
               </Link>
             </Button>

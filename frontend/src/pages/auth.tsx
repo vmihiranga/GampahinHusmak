@@ -10,8 +10,10 @@ import { useLocation } from "wouter";
 import { useState, useRef } from "react";
 import { authAPI } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/hooks/use-language";
 
 export default function Auth() {
+  const { t, language } = useLanguage();
   const [_, setLocation] = useLocation();
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
@@ -32,8 +34,8 @@ export default function Auth() {
     try {
       const response = await authAPI.login(data);
       toast({
-        title: "Login successful!",
-        description: "Welcome back!",
+        title: language === 'en' ? "Login successful!" : language === 'si' ? "ඇතුළුවීම සාර්ථකයි!" : "உள்நுழைவு வெற்றிகரமாக முடிந்தது!",
+        description: language === 'en' ? "Welcome back!" : language === 'si' ? "නැවතත් සාදරයෙන් පිළිගනිමු!" : "மீண்டும் வருக!",
       });
       
       // Redirect based on role and verification status
@@ -50,8 +52,8 @@ export default function Auth() {
       }
     } catch (error: any) {
       toast({
-        title: "Login failed",
-        description: error.message || "Invalid credentials",
+        title: language === 'en' ? "Login failed" : language === 'si' ? "ඇතුළුවීම අසාර්ථකයි" : "உள்நுழைவு தோல்வியடைந்தது",
+        description: error.message || (language === 'en' ? "Invalid credentials" : language === 'si' ? "වැරදි තොරතුරු" : "தவறான சான்றுகள்"),
         variant: "destructive",
       });
     } finally {
@@ -103,15 +105,15 @@ export default function Auth() {
 
       await authAPI.register(data);
       toast({
-        title: "Registration successful!",
-        description: "Welcome to Gampahin Husmak!",
+        title: language === 'en' ? "Registration successful!" : language === 'si' ? "ලියාපදිංචිය සාර්ථකයි!" : "பதிவு வெற்றிகரமாக முடிந்தது!",
+        description: language === 'en' ? "Welcome to Gampahin Husmak!" : language === 'si' ? "ගම්පහින් හුස්මක් වෙත ඔබව සාදරයෙන් පිළිගනිමු!" : "கம்பஹின் ஹுஸ்மக்கிற்கு வரவேற்கிறோம்!",
       });
       // Reload to update auth state
       window.location.href = "/dashboard";
     } catch (error: any) {
       toast({
-        title: "Registration failed",
-        description: error.message || "Please try again",
+        title: language === 'en' ? "Registration failed" : language === 'si' ? "ලියාපදිංචිය අසාර්ථකයි" : "பதிவு தோல்வியடைந்தது",
+        description: error.message || (language === 'en' ? "Please try again" : language === 'si' ? "කරුණාකර නැවත උත්සාහ කරන්න" : "மீண்டும் முயற்சிக்கவும்"),
         variant: "destructive",
       });
     } finally {
@@ -136,6 +138,8 @@ export default function Auth() {
   const triggerFileInput = () => {
     fileInputRef.current?.click();
   };
+  const searchParams = new URLSearchParams(window.location.search);
+  const defaultTab = searchParams.get('mode') === 'register' ? 'register' : 'login';
 
   return (
     <Layout>
@@ -145,35 +149,41 @@ export default function Auth() {
             <div className="inline-flex p-3 rounded-full bg-primary/10 text-primary mb-2">
               <Leaf className="w-8 h-8" />
             </div>
-            <h1 className="text-3xl font-heading font-bold text-foreground">Welcome Back</h1>
-            <p className="text-muted-foreground">Sign in to manage your trees and contributions.</p>
+            <h1 className="text-3xl font-heading font-bold text-foreground">
+              {defaultTab === 'login' ? t.auth.login.welcome : t.auth.register.welcome}
+            </h1>
+            <p className="text-muted-foreground">
+              {defaultTab === 'login' 
+                ? t.auth.login.subtitle
+                : t.auth.register.subtitle}
+            </p>
           </div>
 
-          <Tabs defaultValue="login" className="w-full">
+          <Tabs defaultValue={defaultTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-4">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="register">Register</TabsTrigger>
+              <TabsTrigger value="login">{t.auth.tabs.login}</TabsTrigger>
+              <TabsTrigger value="register">{t.auth.tabs.register}</TabsTrigger>
             </TabsList>
             
             <TabsContent value="login">
               <Card>
                 <CardHeader>
-                  <CardTitle>Login</CardTitle>
-                  <CardDescription>Enter your credentials to access your account.</CardDescription>
+                  <CardTitle>{t.auth.login.title}</CardTitle>
+                  <CardDescription>{t.auth.login.description}</CardDescription>
                 </CardHeader>
                 <form onSubmit={handleLogin}>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
+                      <Label htmlFor="email">{t.auth.login.email}</Label>
                       <Input id="email" name="email" type="email" placeholder="m@example.com" required />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="password">Password</Label>
+                      <Label htmlFor="password">{t.auth.login.password}</Label>
                       <Input id="password" name="password" type="password" required />
                     </div>
                   </CardContent>
                   <CardFooter>
-                    <Button type="submit" className="w-full">Sign In</Button>
+                    <Button type="submit" className="w-full">{t.auth.login.button}</Button>
                   </CardFooter>
                 </form>
               </Card>
@@ -182,8 +192,8 @@ export default function Auth() {
             <TabsContent value="register">
               <Card>
                 <CardHeader>
-                  <CardTitle>Create Account</CardTitle>
-                  <CardDescription>Join the initiative and start planting today.</CardDescription>
+                  <CardTitle>{t.auth.register.title}</CardTitle>
+                  <CardDescription>{t.auth.register.description}</CardDescription>
                 </CardHeader>
                 <form onSubmit={handleRegister}>
                   <CardContent className="space-y-4">
@@ -200,73 +210,73 @@ export default function Auth() {
                         </AvatarFallback>
                       </Avatar>
                       <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageChange}
-                        className="hidden"
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageChange}
+                          className="hidden"
                       />
                       <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={triggerFileInput}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={triggerFileInput}
                       >
                         <Upload className="w-4 h-4 mr-2" />
-                        Upload Photo
+                        {t.auth.register.upload_photo}
                       </Button>
-                      <p className="text-xs text-muted-foreground">Optional profile picture</p>
+                      <p className="text-xs text-muted-foreground">{t.auth.register.optional_photo}</p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="firstName">First Name</Label>
+                        <Label htmlFor="firstName">{t.auth.register.first_name}</Label>
                         <Input id="firstName" name="firstName" placeholder="Saman" required />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="lastName">Last Name</Label>
+                        <Label htmlFor="lastName">{t.auth.register.last_name}</Label>
                         <Input id="lastName" name="lastName" placeholder="Perera" required />
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="username">Username</Label>
+                      <Label htmlFor="username">{t.auth.register.username}</Label>
                       <Input id="username" name="username" placeholder="samanp" required />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="email-reg">Email</Label>
+                      <Label htmlFor="email-reg">{t.auth.register.email}</Label>
                       <Input id="email-reg" name="email" type="email" placeholder="saman@example.com" required />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="phoneNumber">Phone Number</Label>
+                        <Label htmlFor="phoneNumber">{t.auth.register.phone}</Label>
                         <Input id="phoneNumber" name="phoneNumber" placeholder="0712345678" required />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="nic">NIC Number <span className="text-xs text-muted-foreground">(Optional)</span></Label>
+                        <Label htmlFor="nic">{t.auth.register.nic}</Label>
                         <Input id="nic" name="nic" placeholder="National ID" />
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="addressLine">Address Line <span className="text-xs text-muted-foreground">(Optional)</span></Label>
+                      <Label htmlFor="addressLine">{t.auth.register.address}</Label>
                       <Input id="addressLine" name="addressLine" placeholder="123, Main Street" />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="city">City <span className="text-xs text-muted-foreground">(Optional)</span></Label>
+                        <Label htmlFor="city">{t.auth.register.city}</Label>
                         <Input id="city" name="city" placeholder="Gampaha" />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="province">Province <span className="text-xs text-muted-foreground">(Optional)</span></Label>
+                        <Label htmlFor="province">{t.auth.register.province}</Label>
                         <Input id="province" name="province" placeholder="Western Province" />
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="password-reg">Password</Label>
+                      <Label htmlFor="password-reg">{t.auth.register.password}</Label>
                       <Input id="password-reg" name="password" type="password" required />
                     </div>
                   </CardContent>
                   <CardFooter>
-                    <Button type="submit" className="w-full">Create Account</Button>
+                    <Button type="submit" className="w-full">{t.auth.register.button}</Button>
                   </CardFooter>
                 </form>
               </Card>

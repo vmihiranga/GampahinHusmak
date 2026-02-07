@@ -9,6 +9,7 @@ import mongoose from "mongoose";
 import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
 import crypto from "crypto";
+import sanitize from "mongo-sanitize";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -70,16 +71,13 @@ export async function registerRoutes(
 
   app.use("/api/", apiLimiter);
   app.use("/api/auth", authLimiter);
-
-  // Prevents NoSQL Injection
+ 
+ 
+   // Prevents NoSQL Injection
   app.use((req, res, next) => {
-    if (req.body) {
-      for (const key in req.body) {
-        if (key.startsWith('$')) {
-          return res.status(403).json({ message: "Invalid request payload detected" });
-        }
-      }
-    }
+    req.body = sanitize(req.body);
+    req.query = sanitize(req.query);
+    req.params = sanitize(req.params);
     next();
   });
 
@@ -174,7 +172,8 @@ export async function registerRoutes(
         },
       });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
   });
 
@@ -214,7 +213,8 @@ export async function registerRoutes(
         },
       });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
   });
 
@@ -243,7 +243,8 @@ export async function registerRoutes(
 
       res.json({ user });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
   });
 
@@ -296,7 +297,8 @@ export async function registerRoutes(
         }
       });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
   });
 
@@ -317,7 +319,8 @@ export async function registerRoutes(
 
       res.json({ tree, updates });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
   });
 
@@ -375,7 +378,8 @@ export async function registerRoutes(
 
       res.status(201).json({ message: "Tree registered successfully", tree });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
   });
 
@@ -395,7 +399,8 @@ export async function registerRoutes(
 
       res.json({ message: "Tree updated successfully", tree });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
   });
 
@@ -425,7 +430,8 @@ export async function registerRoutes(
 
       res.status(201).json({ message: "Update added successfully", update });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
   });
 
@@ -460,7 +466,8 @@ export async function registerRoutes(
         }
       });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
   });
 
@@ -477,7 +484,8 @@ export async function registerRoutes(
 
       res.json({ event });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
   });
 
@@ -496,7 +504,8 @@ export async function registerRoutes(
 
       res.status(201).json({ message: "Event created successfully", event });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
   });
 
@@ -526,7 +535,8 @@ export async function registerRoutes(
 
       res.json({ message: "Joined event successfully", event });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
   });
 
@@ -614,7 +624,8 @@ export async function registerRoutes(
         }
       });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
   });
 
@@ -633,7 +644,8 @@ export async function registerRoutes(
 
       res.status(201).json({ message: "Gallery item created", item });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
   });
 
@@ -660,7 +672,8 @@ export async function registerRoutes(
       await item.save();
       res.json({ message: "Like toggled", likes: item.likes.length });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
   });
 
@@ -676,7 +689,8 @@ export async function registerRoutes(
       const contact = await Contact.create(contactData);
       res.status(201).json({ message: "Message sent successfully", contact });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
   });
 
@@ -705,7 +719,8 @@ export async function registerRoutes(
         }
       });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
   });
 
@@ -720,7 +735,8 @@ export async function registerRoutes(
       if (!contact) return res.status(404).json({ message: "Contact not found" });
       res.json({ message: "Marked as seen", contact });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
   });
 
@@ -748,7 +764,8 @@ export async function registerRoutes(
         }
       });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
   });
 
@@ -757,7 +774,13 @@ export async function registerRoutes(
   // Get dashboard stats
   app.get("/api/stats", async (req, res) => {
     try {
-      const totalTrees = await Tree.countDocuments({ status: "active" });
+      const activeTrees = await Tree.countDocuments({ status: "active" });
+      const deadTrees = await Tree.countDocuments({ status: "dead" });
+      const totalTrees = activeTrees + deadTrees;
+      const survivalRate = totalTrees > 0 
+        ? Math.round((activeTrees / totalTrees) * 100) 
+        : 100;
+      
       const totalUsers = await User.countDocuments();
       const totalEvents = await Event.countDocuments();
       const upcomingEvents = await Event.countDocuments({ status: "upcoming" });
@@ -768,15 +791,17 @@ export async function registerRoutes(
         .populate("plantedBy", "username fullName");
 
       res.json({
-        totalTrees,
+        totalTrees: activeTrees,
         totalUsers,
         totalEvents,
         upcomingEvents,
         recentTrees,
-        co2Offset: `${(totalTrees * 22).toFixed(1)} kg/year`, // Approximate
+        survivalRate: `${survivalRate}%`,
+        co2Offset: `${(activeTrees * 22).toFixed(1)} kg/year`, // Approximate
       });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
   });
 
@@ -833,7 +858,8 @@ export async function registerRoutes(
         }
       });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
   });
 
@@ -898,7 +924,8 @@ export async function registerRoutes(
         weatherAlert
       });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
   });
 
@@ -928,7 +955,8 @@ export async function registerRoutes(
         }
       });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
   });
 
@@ -953,7 +981,8 @@ export async function registerRoutes(
 
       res.json({ message: "User role updated", user });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
   });
 
@@ -993,7 +1022,8 @@ export async function registerRoutes(
         recentTrees,
       });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
   });
 
@@ -1014,7 +1044,8 @@ export async function registerRoutes(
 
       res.json({ message: `User ${isVerified ? 'verified' : 'unverified'} successfully`, user });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
   });
 
@@ -1031,7 +1062,8 @@ export async function registerRoutes(
 
       res.json({ message: "User and their data deleted successfully" });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
   });
 
@@ -1042,7 +1074,8 @@ export async function registerRoutes(
       if (!user) return res.status(404).json({ message: "User not found" });
       res.json({ message: "User updated successfully", user });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
   });
 
@@ -1058,7 +1091,8 @@ export async function registerRoutes(
       if (!user) return res.status(404).json({ message: "User not found" });
       res.json({ message: `User role updated to ${role}`, user });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
   });
 
@@ -1073,7 +1107,8 @@ export async function registerRoutes(
       
       res.json({ message: "Tree deleted successfully" });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
   });
 
@@ -1105,7 +1140,8 @@ export async function registerRoutes(
 
       res.status(201).json({ message: "Message sent successfully", contact });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
   });
 
@@ -1121,7 +1157,8 @@ export async function registerRoutes(
       if (!contact) return res.status(404).json({ message: "Contact not found" });
       res.json({ message: "Status updated", contact });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
   });
 
@@ -1153,7 +1190,8 @@ export async function registerRoutes(
       if (!contact) return res.status(404).json({ message: "Contact not found" });
       res.json({ message: "Response recorded", contact });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
   });
 
@@ -1184,7 +1222,8 @@ export async function registerRoutes(
 
       res.json({ message: "Reminder sent successfully" });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
   });
 
@@ -1249,7 +1288,8 @@ export async function registerRoutes(
         }
       });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
   });
 

@@ -46,8 +46,8 @@ export default function Gallery() {
     },
     onError: (error: any) => {
       toast({
-        title: language === 'en' ? "Action required" : "ක්‍රියාව අවශ්‍යයි",
-        description: language === 'en' ? "Please login to like images." : "ඡායාරූපවලට කැමැත්ත ප්‍රකාශ කිරීමට කරුණාකර ඇතුළු වන්න.",
+        title: t.gallery.like_toast_title,
+        description: t.gallery.like_toast_desc,
         variant: "destructive"
       });
     }

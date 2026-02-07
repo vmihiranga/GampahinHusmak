@@ -6,8 +6,8 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: "Inter", sans-serif;
-  --font-heading: "Outfit", sans-serif;
+  --font-sans: "Inter", "IBM Plex Sans Sinhala", "Noto Sans Tamil", sans-serif;
+  --font-heading: "Outfit", "Abhaya Libre", "Noto Sans Tamil", sans-serif;
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -158,4 +158,37 @@
   h6 {
     @apply font-heading tracking-tight;
   }
+}
+
+/* Language specific improvements */
+html[lang="si"] body, 
+html[lang="ta"] body {
+  line-height: 1.6;
+}
+
+html[lang="si"] h1, 
+html[lang="si"] h2, 
+html[lang="si"] h3,
+html[lang="ta"] h1, 
+html[lang="ta"] h2, 
+html[lang="ta"] h3 {
+  line-height: 1.4;
+  letter-spacing: normal;
+}
+
+/* Fix for small Sinhala/Tamil text */
+html[lang="si"] .text-xs,
+html[lang="ta"] .text-xs {
+  font-size: 0.8rem;
+}
+
+/* Language specific font overrides */
+html[lang="si"] {
+  --font-sans: "IBM Plex Sans Sinhala", sans-serif;
+  --font-heading: "Abhaya Libre", serif;
+}
+
+html[lang="ta"] {
+  --font-sans: "Noto Sans Tamil", sans-serif;
+  --font-heading: "Noto Sans Tamil", sans-serif;
 }

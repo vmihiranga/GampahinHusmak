@@ -16,14 +16,14 @@ import {
   Info,
   X,
 } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { format } from "date-fns";
-import { Loader2 } from "lucide-react";
+import { Loader2, ExternalLink, ChevronLeft, ChevronRight, Camera as CameraIcon } from "lucide-react";
 import { useState } from "react";
-import { useLocation } from "wouter";
-import { ExternalLink, ChevronLeft, ChevronRight, Camera as CameraIcon } from "lucide-react";
+import { useLanguage } from "@/hooks/use-language";
 
 export default function TreeDetails({ params }: { params: { id: string } }) {
+  const { t, language, getPathWithLang } = useLanguage();
   const [previewImageIndex, setPreviewImageIndex] = useState<number | null>(null);
   const [location] = useLocation();
   const isAdminView = location.includes("/admin"); // Not strictly used for routing but can check source
@@ -49,12 +49,12 @@ export default function TreeDetails({ params }: { params: { id: string } }) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-8 text-center space-y-4">
-          <h1 className="text-2xl font-bold">Tree Not Found</h1>
+          <h1 className="text-2xl font-bold">{t.tree_details.not_found}</h1>
           <p className="text-muted-foreground">
-            The tree you are looking for does not exist or has been removed.
+            {t.tree_details.not_found_desc}
           </p>
           <Button asChild>
-            <Link href="/dashboard">Back to Dashboard</Link>
+            <Link href={getPathWithLang("/dashboard")}>{t.tree_details.back_dashboard}</Link>
           </Button>
         </div>
       </Layout>
@@ -110,9 +110,9 @@ export default function TreeDetails({ params }: { params: { id: string } }) {
               asChild
               className="-ml-3 text-muted-foreground hover:text-primary"
             >
-              <Link href={fromAdmin ? "/admin" : "/dashboard"}>
+              <Link href={getPathWithLang(fromAdmin ? "/admin" : "/dashboard")}>
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to {fromAdmin ? "Admin Portal" : "Dashboard"}
+                {fromAdmin ? t.tree_details.back_admin : t.tree_details.back_dashboard}
               </Link>
             </Button>
 
@@ -152,7 +152,7 @@ export default function TreeDetails({ params }: { params: { id: string } }) {
                 <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
                    <div className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-full border border-white/30 text-white flex items-center gap-2">
                      <CameraIcon className="w-4 h-4" />
-                     <span className="text-sm font-medium">View Gallery ({allImages.length})</span>
+                     <span className="text-sm font-medium">{t.tree_details.view_gallery} ({allImages.length})</span>
                    </div>
                 </div>
                 {allImages.length > 1 && (
@@ -168,7 +168,7 @@ export default function TreeDetails({ params }: { params: { id: string } }) {
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                       <Calendar className="w-4 h-4" />
-                      Planted Date
+                      {t.tree_details.planted_date}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -181,7 +181,7 @@ export default function TreeDetails({ params }: { params: { id: string } }) {
                           new Date(tree.plantedDate).getTime()) /
                           (1000 * 60 * 60 * 24),
                       )}{" "}
-                      days ago
+                      {t.tree_details.days_ago}
                     </p>
                   </CardContent>
                 </Card>
@@ -190,7 +190,7 @@ export default function TreeDetails({ params }: { params: { id: string } }) {
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                       <MapPin className="w-4 h-4" />
-                      Location
+                      {t.tree_details.location}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -227,7 +227,7 @@ export default function TreeDetails({ params }: { params: { id: string } }) {
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                         <Ruler className="w-4 h-4" />
-                        Height
+                        {t.tree_details.height}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -242,7 +242,7 @@ export default function TreeDetails({ params }: { params: { id: string } }) {
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                       <Info className="w-4 h-4" />
-                      Tree ID
+                      {t.tree_details.tree_id}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -253,14 +253,14 @@ export default function TreeDetails({ params }: { params: { id: string } }) {
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Planted By
+                      {t.tree_details.planted_by}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="font-medium">
                       {tree.plantedBy?.fullName ||
                         tree.plantedBy?.username ||
-                        "Unknown"}
+                        t.tree_details.district_member}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {tree.plantedBy?.email}
@@ -273,7 +273,7 @@ export default function TreeDetails({ params }: { params: { id: string } }) {
               {tree.notes && (
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Planting Notes</CardTitle>
+                    <CardTitle className="text-lg">{t.tree_details.planting_notes}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-muted-foreground leading-relaxed">
@@ -287,8 +287,8 @@ export default function TreeDetails({ params }: { params: { id: string } }) {
               {allImages.length > 1 && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-2xl font-heading font-bold">Growth Gallery</h2>
-                    <Badge variant="outline" className="text-xs">{allImages.length} Photos</Badge>
+                    <h2 className="text-2xl font-heading font-bold">{t.tree_details.growth_gallery}</h2>
+                    <Badge variant="outline" className="text-xs">{allImages.length} {t.tree_details.photos_count}</Badge>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                     {allImages.map((img, idx) => (
@@ -303,7 +303,7 @@ export default function TreeDetails({ params }: { params: { id: string } }) {
                         </div>
                         {idx === 0 && (
                           <div className="absolute top-2 left-2 px-2 py-0.5 bg-green-500 text-white text-[10px] font-bold rounded-full uppercase tracking-wider">
-                            Planted
+                            {t.tree_details.planted_tag}
                           </div>
                         )}
                       </div>
@@ -319,7 +319,7 @@ export default function TreeDetails({ params }: { params: { id: string } }) {
                 <CardHeader className="bg-primary/5 pb-4">
                   <div className="flex items-center gap-2 text-primary">
                     <Activity className="w-5 h-5" />
-                    <CardTitle>Growth Timeline</CardTitle>
+                    <CardTitle>{t.tree_details.growth_timeline}</CardTitle>
                   </div>
                 </CardHeader>
                 <CardContent className="pt-6">
@@ -340,7 +340,7 @@ export default function TreeDetails({ params }: { params: { id: string } }) {
                             <div className="p-4 rounded-xl bg-muted/50 border space-y-2">
                               <div className="flex items-center justify-between">
                                 <span className="text-sm font-medium">
-                                  height: {update.height}cm
+                                  {t.tree_details.height}: {update.height}cm
                                 </span>
                                 <Badge
                                   variant="outline"
@@ -375,7 +375,7 @@ export default function TreeDetails({ params }: { params: { id: string } }) {
                       ))
                     ) : (
                       <div className="text-sm text-muted-foreground italic">
-                        No updates recorded yet.
+                        {t.tree_details.no_updates}
                       </div>
                     )}
 
@@ -388,9 +388,9 @@ export default function TreeDetails({ params }: { params: { id: string } }) {
                         <span className="text-xs font-bold text-green-600 uppercase tracking-wider block mb-1">
                           {format(new Date(tree.plantedDate), "MMM d, yyyy")}
                         </span>
-                        <div className="text-sm font-medium">Tree Planted</div>
+                        <div className="text-sm font-medium">{t.tree_details.tree_planted}</div>
                         <p className="text-xs text-muted-foreground">
-                          Initial planting record
+                          {t.tree_details.initial_record}
                         </p>
                       </div>
                     </div>
@@ -441,7 +441,7 @@ export default function TreeDetails({ params }: { params: { id: string } }) {
                     </Button>
                     
                     <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-md px-4 py-2 rounded-full text-white text-sm font-medium border border-white/10">
-                      Photo {previewImageIndex + 1} of {allImages.length}
+                      {t.tree_details.photo_counter} {previewImageIndex + 1} {t.tree_details.of} {allImages.length}
                     </div>
                   </>
                 )}

@@ -88,6 +88,7 @@ export interface Stats {
   locations: number;
   co2Offset: string;
   upcomingEvents?: number;
+  survivalRate?: string;
 }
 
 export interface Achievement {

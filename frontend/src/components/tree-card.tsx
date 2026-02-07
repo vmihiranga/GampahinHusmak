@@ -24,8 +24,10 @@ interface TreeProps {
   showActions?: boolean;
   onAddUpdate?: () => void;
 }
+import { useLanguage } from "@/hooks/use-language";
 
 export function TreeCard({ tree, showActions = false, onAddUpdate }: TreeProps) {
+  const { getPathWithLang } = useLanguage();
   const statusColors: Record<string, string> = {
     healthy: "bg-green-100 text-green-700 border-green-200",
     needs_attention: "bg-orange-100 text-orange-700 border-orange-200",
@@ -85,7 +87,7 @@ export function TreeCard({ tree, showActions = false, onAddUpdate }: TreeProps) 
       </CardContent>
       {showActions && (
         <CardFooter className="p-4 pt-0 flex gap-2">
-          <Link href={`/trees/${tree._id || tree.id}`} className="flex-1">
+          <Link href={getPathWithLang(`/trees/${tree._id || tree.id}`)} className="flex-1">
             <Button variant="outline" size="sm" className="w-full">Details</Button>
           </Link>
           <Button 

@@ -29,7 +29,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { language, setLanguage, t } = useLanguage();
+  const { language, setLanguage, t, getPathWithLang } = useLanguage();
 
   // Check authentication status on mount
   useEffect(() => {
@@ -61,13 +61,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       await authAPI.logout();
       setUser(null);
       setIsMobileMenuOpen(false);
-      navigate("/");
+      navigate(getPathWithLang("/"));
     } catch (error) {
       console.error("Logout failed:", error);
     }
   };
 
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
+  const isHome = location === "/" || ["/en", "/si", "/ta", "/en/", "/si/", "/ta/"].includes(location);
 
   const NavLink = ({ 
     href, 
@@ -83,7 +84,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     mobile?: boolean;
   }) => {
     const isActive = location === href;
-    const isHome = location === "/";
 
     if (mobile) {
       return (
@@ -143,39 +143,46 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     );
   };
 
-  const isHome = location === "/";
-
   return (
     <div className="min-h-screen flex flex-col bg-background font-sans">
       <header className={cn(
         "absolute top-0 z-50 w-full transition-all duration-300",
         !isHome ? "relative bg-background/80 backdrop-blur-md border-b" : "bg-transparent"
       )}>
-        <div className="container mx-auto px-4 h-20 flex items-center justify-between">
-          <Link href="/">
+        <div className="container mx-auto px-4 h-24 flex items-center justify-between">
+          <Link href={getPathWithLang("/")}>
             <a className="flex items-center gap-3 group">
               <div className="bg-transparent group-hover:scale-110 transition-all">
                 <img 
-                  src={isHome ? "/logo.png" : "/logo-alt.png"} 
+                  src="/favicon.png" 
                   alt="Gampahin Husmak" 
-                  className="h-24 md:h-32 w-auto object-contain" 
+                  className="h-12 md:h-18 w-auto object-contain" 
                 />
               </div>
             </a>
           </Link>
 
+          {/* Sponsor Logos in Middle */}
+          <div className="hidden lg:flex items-center justify-center flex-1 px-8 animate-in fade-in duration-700">
+            <img 
+              src="/2logo.png" 
+              alt="Sponsors" 
+              className="h-16 md:h-20 w-auto object-contain opacity-90 hover:opacity-100 transition-opacity" 
+            />
+          </div>
+
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-2">
-            <NavLink href="/">{t.nav.home}</NavLink>
-            <NavLink href="/gallery">{t.nav.gallery}</NavLink>
-            <NavLink href="/contact">{t.nav.contact}</NavLink>
-            <NavLink href="/leaderboard">{t.nav.leaderboard}</NavLink>
+            <NavLink href={getPathWithLang("/")}>{t.nav.home}</NavLink>
+            <NavLink href={getPathWithLang("/gallery")}>{t.nav.gallery}</NavLink>
+            <NavLink href={getPathWithLang("/contact")}>{t.nav.contact}</NavLink>
+            <NavLink href={getPathWithLang("/leaderboard")}>{t.nav.leaderboard}</NavLink>
             
             {/* Show Dashboard only when logged in */}
-            {user && <NavLink href="/dashboard" badge={unreadCount}>{t.nav.dashboard}</NavLink>}
+            {user && <NavLink href={getPathWithLang("/dashboard")} badge={unreadCount}>{t.nav.dashboard}</NavLink>}
             
             {/* Show Admin only for admin/superadmin */}
-            {isAdmin && <NavLink href="/admin">{t.nav.admin}</NavLink>}
+            {isAdmin && <NavLink href={getPathWithLang("/admin")}>{t.nav.admin}</NavLink>}
             
             <div className={cn("h-4 w-px mx-2", isHome ? "bg-white/20" : "bg-border")} />
             {/* Language Toggle Switcher */}
@@ -186,19 +193,27 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 "gap-2 px-3 border border-transparent hover:border-primary/20 transition-all rounded-full",
                 isHome ? "text-white hover:bg-white/10" : "text-foreground hover:bg-primary/5"
               )}
-              onClick={() => setLanguage(language === 'en' ? 'si' : 'en')}
-              title={language === 'en' ? "සිංහලට මාරු වන්න" : "Switch to English"}
+              onClick={() => {
+                if (language === 'en') setLanguage('si');
+                else if (language === 'si') setLanguage('ta');
+                else setLanguage('en');
+              }}
+              title={language === 'en' ? "සිංහලට මාරු වන්න" : language === 'si' ? "தமிழ் மொழிக்கு மாற்றவும்" : "Switch to English"}
             >
               <Languages className="w-4 h-4 text-primary" />
-              <div className="flex items-center gap-1.5 overflow-hidden">
+              <div className="flex items-center gap-1 overflow-hidden">
                 <span className={cn(
-                  "text-[10px] font-bold transition-all px-1.5 py-0.5 rounded",
+                  "text-[9px] font-bold transition-all px-1 py-0.5 rounded",
                   language === 'en' ? "bg-primary text-white" : "opacity-40"
                 )}>EN</span>
                 <span className={cn(
-                  "text-[10px] font-bold transition-all px-1.5 py-0.5 rounded",
+                  "text-[9px] font-bold transition-all px-1 py-0.5 rounded",
                   language === 'si' ? "bg-primary text-white" : "opacity-40"
                 )}>සිං</span>
+                <span className={cn(
+                  "text-[9px] font-bold transition-all px-1 py-0.5 rounded",
+                  language === 'ta' ? "bg-primary text-white" : "opacity-40"
+                )}>தமிழ்</span>
               </div>
             </Button>
 
@@ -206,7 +221,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
             {/* Show Login button when not authenticated */}
             {!user && !isLoading && (
-              <Link href="/auth">
+              <Link href={getPathWithLang("/auth")}>
                 <Button 
                   variant="default" 
                   size="sm" 
@@ -261,7 +276,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                       </div>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild className="rounded-xl">
-                      <Link href="/dashboard">
+                      <Link href={getPathWithLang("/dashboard")}>
                         <a className="flex items-center w-full px-3 py-2 cursor-pointer">
                           <LayoutDashboard className="w-4 h-4 mr-2" />
                           <span className="text-sm font-medium">{t.nav.dashboard}</span>
@@ -270,7 +285,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     </DropdownMenuItem>
                     {isAdmin && (
                       <DropdownMenuItem asChild className="rounded-xl">
-                        <Link href="/admin">
+                        <Link href={getPathWithLang("/admin")}>
                           <a className="flex items-center w-full px-3 py-2 cursor-pointer">
                             <User className="w-4 h-4 mr-2" />
                             <span className="text-sm font-medium">{t.nav.admin_panel}</span>
@@ -311,22 +326,22 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   <SheetHeader className="text-left mb-8">
                     <SheetTitle className="flex items-center justify-center">
                       <div className="bg-transparent">
-                        <img src="/logo-alt.png" alt="Gampahin Husmak" className="h-28 w-auto object-contain" />
+                        <img src="/favicon.png" alt="Gampahin Husmak" className="h-16 w-auto object-contain" />
                       </div>
                     </SheetTitle>
                   </SheetHeader>
 
                   <div className="space-y-2 pb-8">
-                    <NavLink mobile href="/" icon={Home}>{t.nav.home}</NavLink>
-                    <NavLink mobile href="/gallery" icon={ImageIcon}>{t.nav.gallery}</NavLink>
-                    <NavLink mobile href="/contact" icon={MessageSquare}>{t.nav.contact}</NavLink>
-                    <NavLink mobile href="/leaderboard" icon={Trophy}>{t.nav.leaderboard}</NavLink>
+                    <NavLink mobile href={getPathWithLang("/")} icon={Home}>{t.nav.home}</NavLink>
+                    <NavLink mobile href={getPathWithLang("/gallery")} icon={ImageIcon}>{t.nav.gallery}</NavLink>
+                    <NavLink mobile href={getPathWithLang("/contact")} icon={MessageSquare}>{t.nav.contact}</NavLink>
+                    <NavLink mobile href={getPathWithLang("/leaderboard")} icon={Trophy}>{t.nav.leaderboard}</NavLink>
                     
                     {user && (
                       <>
                         <div className="h-px w-full bg-border/50 my-4" />
-                        <NavLink mobile href="/dashboard" icon={LayoutDashboard} badge={unreadCount}>{t.nav.dashboard}</NavLink>
-                        {isAdmin && <NavLink mobile href="/admin" icon={User}>{t.nav.admin}</NavLink>}
+                        <NavLink mobile href={getPathWithLang("/dashboard")} icon={LayoutDashboard} badge={unreadCount}>{t.nav.dashboard}</NavLink>
+                        {isAdmin && <NavLink mobile href={getPathWithLang("/admin")} icon={User}>{t.nav.admin}</NavLink>}
                       </>
                     )}
                   </div>
@@ -335,19 +350,28 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
                   {/* Language Selection in Mobile */}
                   <div className="pb-8">
-                    <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-3 px-2">{language === 'en' ? 'Select Language' : 'භාෂාව තෝරන්න'}</div>
+                    <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-3 px-2">
+                      {language === 'en' ? 'Select Language' : language === 'si' ? 'භාෂාව තෝරන්න' : 'மொழி தேர்வு'}
+                    </div>
                     <Button 
                       variant="outline" 
                       className="w-full justify-between gap-4 h-14 px-5 rounded-2xl transition-all border-primary/10 bg-primary/5 hover:bg-primary/10"
-                      onClick={() => setLanguage(language === 'en' ? 'si' : 'en')}
+                      onClick={() => {
+                        if (language === 'en') setLanguage('si');
+                        else if (language === 'si') setLanguage('ta');
+                        else setLanguage('en');
+                      }}
                     >
                       <div className="flex items-center gap-3">
                         <Languages className="w-5 h-5 text-primary" />
-                        <span className="font-bold text-sm">{language === 'en' ? "සිංහල" : "English"}</span>
+                        <span className="font-bold text-sm">
+                          {language === 'en' ? "English" : language === 'si' ? "සිංහල" : "தமிழ்"}
+                        </span>
                       </div>
                       <div className="flex items-center gap-1 bg-background p-1 rounded-xl shadow-inner">
-                        <span className={cn("text-[10px] font-bold px-3 py-1.5 rounded-lg transition-colors", language === 'en' ? "bg-primary text-white" : "text-muted-foreground")}>EN</span>
-                        <span className={cn("text-[10px] font-bold px-3 py-1.5 rounded-lg transition-colors", language === 'si' ? "bg-primary text-white" : "text-muted-foreground")}>SI</span>
+                        <span className={cn("text-[9px] font-bold px-2 py-1.5 rounded-lg transition-colors", language === 'en' ? "bg-primary text-white" : "text-muted-foreground")}>EN</span>
+                        <span className={cn("text-[9px] font-bold px-2 py-1.5 rounded-lg transition-colors", language === 'si' ? "bg-primary text-white" : "text-muted-foreground")}>SI</span>
+                        <span className={cn("text-[9px] font-bold px-1.5 py-1.5 rounded-lg transition-colors", language === 'ta' ? "bg-primary text-white" : "text-muted-foreground")}>TA</span>
                       </div>
                     </Button>
                   </div>
@@ -356,10 +380,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 {/* Mobile Bottom Section: User / Login */}
                 <div className="p-6 bg-muted/30 border-t border-border/50 mt-auto">
                   {!user && !isLoading ? (
-                    <Link href="/auth">
+                    <Link href={getPathWithLang("/auth")}>
                       <Button className="w-full h-14 rounded-2xl gap-3 font-black text-base shadow-xl shadow-primary/20" onClick={() => setIsMobileMenuOpen(false)}>
                         <LogIn className="w-5 h-5" />
-                        {language === 'en' ? 'Login Now' : 'දැන් ඇතුළු වන්න'}
+                        {language === 'en' ? 'Login Now' : language === 'si' ? 'දැන් ඇතුළු වන්න' : 'இப்போதே உள்நுழைய'}
                       </Button>
                     </Link>
                   ) : user ? (
@@ -411,10 +435,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <footer className="bg-black text-white py-16 border-t border-white/5">
         <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-12">
           <div className="space-y-6">
-            <div className="flex items-center">
-              <div className="bg-transparent">
-                <img src="/logo.png" alt="Gampahin Husmak" className="h-24 md:h-32 w-auto object-contain" />
-              </div>
+            <div className="flex items-center gap-6">
+              <img src="/favicon.png" alt="Gampahin Husmak" className="h-12 w-auto object-contain" />
+              <img src="/New Project (3).png" alt="Sponsors" className="h-14 w-auto object-contain" />
             </div>
             <p className="text-sm text-white/60 leading-relaxed font-medium">
               {t.footer.description}
@@ -424,10 +447,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div>
             <h3 className="font-heading font-bold text-sm uppercase tracking-[0.2em] mb-6 text-primary">{t.footer.quick_links}</h3>
             <ul className="space-y-4 text-sm text-white/50 font-medium">
-              <li><Link href="/gallery" className="hover:text-primary transition-colors flex items-center gap-2 capitalize"> <ImageIcon className="w-3.5 h-3.5" /> {t.nav.gallery}</Link></li>
-              <li><Link href="/contact" className="hover:text-primary transition-colors flex items-center gap-2 capitalize"> <MessageSquare className="w-3.5 h-3.5" /> {t.nav.contact}</Link></li>
-              <li><Link href="/dashboard" className="hover:text-primary transition-colors flex items-center gap-2 capitalize"> <LayoutDashboard className="w-3.5 h-3.5" /> {t.nav.dashboard}</Link></li>
-              <li><Link href="/admin" className="hover:text-primary transition-colors flex items-center gap-2 capitalize"> <User className="w-3.5 h-3.5" /> {t.nav.admin}</Link></li>
+              <li><Link href={getPathWithLang("/gallery")} className="hover:text-primary transition-colors flex items-center gap-2 capitalize"> <ImageIcon className="w-3.5 h-3.5" /> {t.nav.gallery}</Link></li>
+              <li><Link href={getPathWithLang("/contact")} className="hover:text-primary transition-colors flex items-center gap-2 capitalize"> <MessageSquare className="w-3.5 h-3.5" /> {t.nav.contact}</Link></li>
+              {user && (
+                <li><Link href={getPathWithLang("/dashboard")} className="hover:text-primary transition-colors flex items-center gap-2 capitalize"> <LayoutDashboard className="w-3.5 h-3.5" /> {t.nav.dashboard}</Link></li>
+              )}
+              {isAdmin && (
+                <li><Link href={getPathWithLang("/admin")} className="hover:text-primary transition-colors flex items-center gap-2 capitalize"> <User className="w-3.5 h-3.5" /> {t.nav.admin}</Link></li>
+              )}
             </ul>
           </div>
  
@@ -446,7 +473,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                  <div className="w-5 h-5 rounded-full bg-white/5 flex items-center justify-center shrink-0"><Activity className="w-3 h-3 text-primary" /></div>
                  <span>+94 33 222 2222</span>
               </li>
-              <li className="pt-4 text-[10px] font-bold uppercase tracking-widest text-white/30">{t.footer.developed_by} <span className="text-white/60">{t.footer.team}</span></li>
             </ul>
           </div>
         </div>
@@ -464,5 +490,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </footer>
     </div>
+
   );
 }

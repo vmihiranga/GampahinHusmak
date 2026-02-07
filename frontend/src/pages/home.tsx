@@ -9,9 +9,10 @@ import { StatsResponse } from "@/lib/types";
 import { useLanguage } from "@/hooks/use-language";
 import heroImage from "@assets/generated_images/community_tree_planting_hero_image.png";
 import forestImage from "@assets/generated_images/lush_green_forest_landscape.png";
+import { PWAInstallSection } from "@/components/PWAInstallSection";
 
 export default function Home() {
-  const { t, language } = useLanguage();
+  const { t, language, getPathWithLang } = useLanguage();
   // Fetch real stats from API
   const { data: stats } = useQuery<StatsResponse>({
     queryKey: ['stats'],
@@ -31,38 +32,28 @@ export default function Home() {
           <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
         </div>
         
-        <div className="container relative z-10 px-4 text-center text-white space-y-8 max-w-4xl mx-auto pt-24 pb-32">
+        <div className="container relative z-10 px-4 text-center text-white space-y-8 max-w-4xl mx-auto pt-40 pb-32">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-sm font-medium animate-in fade-in slide-in-from-bottom-4 duration-700">
             <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-            Launch Initiative for Independence Day
+            {t.home.hero.badge}
           </div>
           
-          <h1 className="text-4xl sm:text-5xl md:text-7xl font-heading font-bold leading-[1.1] animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100 px-4">
-            {language === 'en' ? (
-              <>
-                Planting Hope for <br />
-                <span className="text-green-400">Gampaha's Future</span>
-              </>
-            ) : (
-              <>
-                හෙට දිනෙන <br />
-                <span className="text-green-400">හරිත ගම්පහක්</span>
-              </>
-            )}
-          </h1>
+          <div className="flex justify-center animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100 px-4">
+            <img src="/logo.png" alt="Gampahin Husmak" className="h-32 sm:h-48 md:h-64 w-auto object-contain" />
+          </div>
           
           <p className="text-lg md:text-xl text-white/90 max-w-2xl mx-auto leading-relaxed animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
             {t.home.hero.subtitle}
           </p>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300">
-            <Link href="/auth">
-              <Button size="lg" className="bg-green-600 hover:bg-green-500 text-white border-none min-w-[160px] h-12 text-base shadow-lg hover:shadow-green-500/25 transition-all">
+            <Link href={getPathWithLang("/auth?mode=register")}>
+              <Button size="lg" className="bg-green-600 hover:bg-green-500 text-white border-none min-w-[160px] h-12 text-base shadow-lg hover:shadow-green-500/25 transition-all rounded-full">
                 {t.home.hero.cta_start}
               </Button>
             </Link>
-            <Link href="/gallery">
-              <Button size="lg" variant="outline" className="bg-white/10 hover:bg-white/20 text-white border-white/20 min-w-[160px] h-12 text-base backdrop-blur-sm">
+            <Link href={getPathWithLang("/gallery")}>
+              <Button size="lg" variant="outline" className="bg-white/10 hover:bg-white/20 text-white border-white/20 min-w-[160px] h-12 text-base backdrop-blur-sm rounded-full">
                 {t.home.hero.cta_explore}
               </Button>
             </Link>
@@ -76,7 +67,7 @@ export default function Home() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 -mt-36 relative z-20">
             <StatCard icon={TreePine} value={stats?.totalTrees || 0} label={t.home.stats.trees_planted} />
             <StatCard icon={Users} value={stats?.totalUsers || 0} label={t.home.stats.active_volunteers} />
-            <StatCard icon={Activity} value="94%" label={t.home.stats.survival_rate} />
+            <StatCard icon={Activity} value={stats?.survivalRate || '100%'} label={t.home.stats.survival_rate} />
             <StatCard icon={Sprout} value={stats?.co2Offset || '0 kg/year'} label={t.home.stats.co2_offset} />
           </div>
 
@@ -123,13 +114,14 @@ export default function Home() {
           <p className="text-xl text-primary-foreground/80 max-w-2xl mx-auto">
             {t.home.cta_section.subtitle}
           </p>
-          <Link href="/auth">
+          <Link href={getPathWithLang("/auth?mode=register")}>
             <Button size="lg" variant="secondary" className="h-14 px-8 text-lg shadow-xl hover:shadow-2xl transition-all">
               {t.home.cta_section.button}
             </Button>
           </Link>
         </div>
       </section>
+      <PWAInstallSection />
     </Layout>
   );
 }

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/hooks/use-language";
 
 export default function NotFound() {
-  const { language } = useLanguage();
+  const { language, getPathWithLang } = useLanguage();
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#fdfdfd] p-6 text-center">
@@ -27,7 +27,7 @@ export default function NotFound() {
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
           <Button className="rounded-2xl h-12 px-8 font-bold gap-2 group shadow-lg shadow-primary/20" asChild>
-            <Link href="/">
+            <Link href={getPathWithLang("/")}>
               <Home className="w-4 h-4 group-hover:scale-110 transition-transform" />
               {language === 'si' ? "මුල් පිටුවට" : "Back to Home"}
             </Link>
