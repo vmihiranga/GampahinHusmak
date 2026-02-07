@@ -54,9 +54,9 @@ export default function Contact() {
           <div className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <ContactInfoCard icon={Phone} title={t.contact.call_us} detail="+94 33 222 2222" />
-              <ContactInfoCard icon={Mail} title={t.contact.email} detail="info@gampahinhusmak.lk" />
+              <ContactInfoCard icon={Mail} title={t.contact.email} detail="info@gampahathuru.lk" />
               <ContactInfoCard icon={MapPin} title={t.contact.location} detail={t.footer.address} />
-              <ContactInfoCard icon={Globe} title={t.contact.website} detail="www.gampahinhusmak.lk" />
+              <ContactInfoCard icon={Globe} title={t.contact.website} detail="www.gampahathuru.lk" />
             </div>
 
             <div className="bg-primary/5 rounded-2xl p-8 border border-primary/10">
