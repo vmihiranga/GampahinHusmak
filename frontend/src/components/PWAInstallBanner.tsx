@@ -14,12 +14,14 @@ export function PWAInstallBanner() {
     // Show banner after a small delay if installable and not already installed
     if (isInstallable && !isInstalled) {
       const timer = setTimeout(() => {
-        // Check local storage to see if user dismissed it recently
+        // Check local storage to see if user dismissed it or has seen it before
         const dismissed = localStorage.getItem("pwa-banner-dismissed");
         if (!dismissed) {
           setShowBanner(true);
+          // Auto-mark as seen so it only ever shows once
+          localStorage.setItem("pwa-banner-dismissed", Date.now().toString());
         }
-      }, 3000);
+      }, 5000); // 5 second delay for better user experience
       return () => clearTimeout(timer);
     }
   }, [isInstallable, isInstalled]);
