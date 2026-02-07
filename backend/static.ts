@@ -14,13 +14,23 @@ export function serveStatic(app: Express) {
     );
   }
 
-  // Serve static files without caching
+  // Serve static files with optimized caching
+  // Hashed assets (JS/CSS/Images) can be cached for a long time
   app.use(express.static(distPath, {
-    maxAge: 0,
-    setHeaders: (res) => {
-      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-      res.setHeader('Pragma', 'no-cache');
-      res.setHeader('Expires', '0');
+    maxAge: '1y',
+    setHeaders: (res, filePath) => {
+      // Only cache files in the assets directory (they have hashes)
+      // Root files (index.html, manifest, icons) should not be cached long-term
+      const isAsset = filePath.includes(path.join('public', 'assets')) || 
+                      filePath.includes(path.join('dist', 'public', 'assets'));
+      
+      if (!isAsset) {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+      } else {
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      }
     }
   }));
 

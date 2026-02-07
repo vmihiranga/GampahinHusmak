@@ -336,6 +336,19 @@ export async function registerRoutes(
 
       const treeId = `TREE-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
       
+      // Prevent duplication: Check if user already registered a similar tree at this location recently (5 mins)
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+      const existingTree = await Tree.findOne({
+        plantedBy: userId,
+        commonName: req.body.commonName,
+        createdAt: { $gte: fiveMinutesAgo },
+        "location.coordinates": req.body.location.coordinates
+      });
+
+      if (existingTree) {
+        return res.status(409).json({ message: "This tree appears to be a duplicate. Please wait a few minutes before registering again." });
+      }
+
       const tree = await Tree.create({
         ...req.body,
         treeId,
@@ -464,6 +477,19 @@ export async function registerRoutes(
       const tree = await Tree.findById(req.params.id);
       if (!tree) {
         return res.status(404).json({ message: "Tree not found" });
+      }
+
+      // Prevent duplicate updates on the same day for the same tree
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+      const existingUpdate = await TreeUpdate.findOne({
+        treeId: tree._id,
+        updatedBy: userId,
+        createdAt: { $gte: startOfDay }
+      });
+
+      if (existingUpdate) {
+        return res.status(409).json({ message: "You have already submitted an update for this tree today." });
       }
 
       const update = await TreeUpdate.create({
