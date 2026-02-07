@@ -988,9 +988,11 @@ export async function registerRoutes(
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 50;
       const skip = (page - 1) * limit;
+      
+      const filter = (req.user as any).role === 'superadmin' ? {} : { role: "volunteer" };
 
-      const totalItems = await User.countDocuments({ role: "volunteer" });
-      const users = await User.find({ role: "volunteer" })
+      const totalItems = await User.countDocuments(filter);
+      const users = await User.find(filter)
         .select("-password")
         .sort({ createdAt: -1 })
         .skip(skip)

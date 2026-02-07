@@ -14,6 +14,7 @@ interface MapProps {
       address: string;
     };
     currentHealth: string;
+    images?: string[];
   }>;
   center?: { lat: number; lng: number };
   zoom?: number;
@@ -101,19 +102,27 @@ export default function TreeMap({ trees, center, zoom = 12, height = '500px' }: 
 
       const marker = L.marker(position, { icon: customIcon });
 
+      // Get first image or use a reliable placeholder
+      const treeImage = tree.images?.[0] || 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=400';
+
       // Create popup content
       const popupContent = `
-        <div style="padding: 4px; min-width: 180px; font-family: 'Inter', sans-serif;">
-          <h3 style="margin: 0 0 6px 0; font-size: 14px; font-weight: 700; color: #111827;">
+        <div style="padding: 2px; min-width: 220px; font-family: 'Inter', sans-serif;">
+          ${tree.images?.length > 0 ? `
+            <div style="width: 100%; height: 120px; border-radius: 8px; overflow: hidden; margin-bottom: 10px; border: 1px solid #e5e7eb;">
+              <img src="${treeImage}" style="width: 100%; height: 100%; object-fit: cover;" alt="${tree.commonName}" />
+            </div>
+          ` : ''}
+          <h3 style="margin: 0 0 6px 0; font-size: 15px; font-weight: 800; color: #111827;">
             ${tree.commonName}
           </h3>
-          <div style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4b5563;">
+          <div style="display: flex; flex-direction: column; gap: 4px; font-size: 11px; color: #4b5563;">
             <span><strong>Species:</strong> ${tree.species}</span>
-            <span><strong>Tree ID:</strong> <code style="background: #f3f4f6; padding: 1px 4px; border-radius: 4px;">${tree.treeId}</code></span>
+            <span><strong>Tree ID:</strong> <code style="background: #f3f4f6; padding: 1px 4px; border-radius: 4px; font-size: 10px;">${tree.treeId}</code></span>
             <span><strong>Location:</strong> ${tree.location.address}</span>
             <div style="margin-top: 4px; display: flex; items-center; gap: 6px;">
               <strong>Health:</strong>
-              <span style="color: ${markerColor}; font-weight: 700; text-transform: capitalize;">${tree.currentHealth}</span>
+              <span style="color: ${markerColor}; font-weight: 800; text-transform: capitalize;">${tree.currentHealth}</span>
             </div>
           </div>
         </div>
