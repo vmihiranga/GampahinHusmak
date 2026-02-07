@@ -261,6 +261,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   <DropdownMenuLabel className="p-4">
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-black text-foreground">{user.fullName}</p>
+                      <p className="text-[10px] text-primary font-bold">@{user.username}</p>
                       <p className="text-xs text-muted-foreground font-medium">{user.email}</p>
                       <div className="pt-2">
                         <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold uppercase tracking-widest">{user.role}</span>
@@ -397,7 +398,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-black text-foreground truncate">{user.fullName || user.username}</p>
+                            <p className="text-sm font-black text-foreground truncate">{user.fullName}</p>
+                            <p className="text-[10px] text-primary font-bold truncate">@{user.username}</p>
                             <p className="text-xs text-muted-foreground truncate font-medium">{user.email}</p>
                             <div className="flex mt-1">
                                <span className="text-[9px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">{user.role}</span>
