@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Search, Filter, AlertCircle, MapPin as MapPinIcon, LocateFixed, Loader2, Clock, MessageSquare, CheckCircle2, History, TreePine, Camera, Trophy, Sprout, CloudRain, Droplets } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/hooks/use-language";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { treesAPI, authAPI, contactAPI, statsAPI } from "@/lib/api";
 import { AuthResponse, TreesResponse, ContactsResponse } from "@/lib/types";
@@ -20,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 
 export default function Dashboard() {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
@@ -204,7 +206,7 @@ export default function Dashboard() {
       // 2. Create Tree in MongoDB
       const treeData = {
         commonName: formData.get('tree-type'),
-        species: formData.get('tree-type'), // Fallback
+        species: formData.get('sci-name') || formData.get('tree-type'), // Use sci-name or fallback to common name
         plantedDate: formData.get('date'),
         location: {
           address: formData.get('location'),
@@ -344,13 +346,12 @@ export default function Dashboard() {
               <Clock className="w-12 h-12" />
             </div>
           </div>
-          <h1 className="text-3xl font-heading font-bold">Account Pending Approval</h1>
+          <h1 className="text-3xl font-heading font-bold">{t.auth.pending.title}</h1>
           <p className="text-muted-foreground max-w-lg mx-auto">
-            Thank you for registering! Your account is currently under review by our administrators. 
-            You will be notified once your account has been approved.
+            {t.auth.pending.desc}
           </p>
           <Button variant="outline" asChild>
-            <a href="/">Return Home</a>
+            <a href="/">{t.auth.pending.return}</a>
           </Button>
         </div>
       </Layout>
@@ -362,8 +363,8 @@ export default function Dashboard() {
       <div className="container mx-auto px-4 py-8 space-y-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-heading font-bold">My Dashboard</h1>
-            <p className="text-muted-foreground">Manage your planted trees and track their progress.</p>
+            <h1 className="text-3xl font-heading font-bold">{t.dashboard.title}</h1>
+            <p className="text-muted-foreground">{t.dashboard.subtitle}</p>
           </div>
           
           <div className="flex gap-3">
@@ -372,22 +373,22 @@ export default function Dashboard() {
               <DialogTrigger asChild>
                 <Button variant="outline" className="gap-2 border-primary/20 hover:bg-primary/5">
                   <AlertCircle className="w-4 h-4 text-primary" />
-                  Submit Request
+                  {t.dashboard.btn_submit_request}
                 </Button>
               </DialogTrigger>
               <DialogContent className="w-[95vw] sm:max-w-[500px] max-h-[95vh] overflow-y-auto custom-scrollbar">
                 <DialogHeader>
-                  <DialogTitle>Submit a Tree Request</DialogTitle>
+                  <DialogTitle>{t.dashboard.dialogs.request.title}</DialogTitle>
                   <DialogDescription>
-                    Report issues or request assistance for your trees.
+                    {t.dashboard.dialogs.request.desc}
                   </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSendRequest} className="space-y-4 py-4">
                   <div className="space-y-2">
-                    <Label htmlFor="tree-select">Select Tree</Label>
+                    <Label htmlFor="tree-select">{t.dashboard.dialogs.request.tree_label}</Label>
                     <Select required value={requestTreeId} onValueChange={setRequestTreeId}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Choose a tree" />
+                        <SelectValue placeholder={t.dashboard.dialogs.request.tree_placeholder} />
                       </SelectTrigger>
                       <SelectContent>
                         {trees.map((tree: any) => (
@@ -399,26 +400,26 @@ export default function Dashboard() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="request-type">Request Type</Label>
+                    <Label htmlFor="request-type">{t.dashboard.dialogs.request.type_label}</Label>
                     <Select required value={requestType} onValueChange={setRequestType}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Choose type" />
+                        <SelectValue placeholder={t.dashboard.dialogs.request.type_placeholder} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="damage">Damage Report</SelectItem>
-                        <SelectItem value="removal">Removal Request</SelectItem>
-                        <SelectItem value="needed">Assistance Needed</SelectItem>
-                        <SelectItem value="unhealthy">Unhealthy Tree</SelectItem>
+                        <SelectItem value="damage">{t.dashboard.dialogs.request.types.damage}</SelectItem>
+                        <SelectItem value="removal">{t.dashboard.dialogs.request.types.removal}</SelectItem>
+                        <SelectItem value="needed">{t.dashboard.dialogs.request.types.needed}</SelectItem>
+                        <SelectItem value="unhealthy">{t.dashboard.dialogs.request.types.unhealthy}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="req-notes">Details</Label>
-                    <Textarea id="req-notes" name="req-notes" placeholder="Describe the situation..." required />
+                    <Label htmlFor="req-notes">{t.dashboard.dialogs.request.details_label}</Label>
+                    <Textarea id="req-notes" name="req-notes" placeholder={t.dashboard.dialogs.request.details_placeholder} required />
                   </div>
-                   <div className="space-y-2">
+                  <div className="space-y-2">
                     <Label htmlFor="req-image" className="flex items-center justify-between">
-                      Attach Photo (Optional)
+                      {t.dashboard.dialogs.request.photo_label}
                       <Button 
                         type="button" 
                         variant="ghost" 
@@ -427,7 +428,7 @@ export default function Dashboard() {
                         onClick={() => document.getElementById('req-image')?.click()}
                       >
                         <Camera className="w-4 h-4 mr-2" />
-                        Capture
+                        {t.dashboard.dialogs.request.capture}
                       </Button>
                     </Label>
                     <Input 
@@ -440,9 +441,9 @@ export default function Dashboard() {
                     />
                   </div>
                   <div className="pt-4 flex justify-end gap-2">
-                    <Button variant="outline" type="button" onClick={() => setIsRequestDialogOpen(false)}>Cancel</Button>
+                    <Button variant="outline" type="button" onClick={() => setIsRequestDialogOpen(false)}>{t.dashboard.dialogs.request.cancel}</Button>
                     <Button type="submit" disabled={isUploading}>
-                      {isUploading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Sending...</> : "Send Request"}
+                      {isUploading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> {t.dashboard.dialogs.request.submitting}</> : t.dashboard.dialogs.request.submit}
                     </Button>
                   </div>
                 </form>
@@ -454,31 +455,35 @@ export default function Dashboard() {
               <DialogTrigger asChild>
                 <Button className="gap-2 shadow-lg shadow-primary/20">
                   <Plus className="w-4 h-4" />
-                  Add New Tree
+                  {t.dashboard.btn_add_tree}
                 </Button>
               </DialogTrigger>
               <DialogContent className="w-[95vw] sm:max-w-[550px] max-h-[95vh] overflow-y-auto custom-scrollbar">
                 <DialogHeader>
-                  <DialogTitle>Record a New Tree</DialogTitle>
+                  <DialogTitle>{t.dashboard.dialogs.add_tree.title}</DialogTitle>
                   <DialogDescription>
-                    Enter the details of the tree you just planted.
+                    {t.dashboard.dialogs.add_tree.desc}
                   </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleAddTree} className="space-y-4 py-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="tree-type">Tree Type</Label>
-                      <Input id="tree-type" name="tree-type" placeholder="e.g. Kumbuk" required />
+                      <Label htmlFor="tree-type">{t.dashboard.dialogs.add_tree.tree_type}</Label>
+                      <Input id="tree-type" name="tree-type" placeholder={t.dashboard.dialogs.add_tree.tree_type_placeholder} required />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="date">Date Planted</Label>
-                      <Input id="date" name="date" type="date" required />
+                      <Label htmlFor="sci-name">{t.dashboard.dialogs.add_tree.scientific_name}</Label>
+                      <Input id="sci-name" name="sci-name" placeholder={t.dashboard.dialogs.add_tree.scientific_name_placeholder} />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="location">Location (Address)</Label>
+                    <Label htmlFor="date">{t.dashboard.dialogs.add_tree.date_planted}</Label>
+                    <Input id="date" name="date" type="date" required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="location">{t.dashboard.dialogs.add_tree.location}</Label>
                     <div className="flex gap-2">
-                      <Input id="location" name="location" placeholder="e.g. 123 Main St, Gampaha" required className="flex-1" />
+                      <Input id="location" name="location" placeholder={t.dashboard.dialogs.add_tree.location_placeholder} required className="flex-1" />
                       <Button 
                         type="button" 
                         variant="outline" 
@@ -496,20 +501,20 @@ export default function Dashboard() {
                     </div>
                     <div className="flex-1">
                       <p className={cn("text-sm font-bold uppercase tracking-tighter", coordinates ? "text-green-600" : "text-primary")}>
-                        {coordinates ? "GPS COORDINATES CAPTURED" : "GPS LOCATION REQUIRED"}
+                        {coordinates ? t.dashboard.dialogs.add_tree.gps_captured : t.dashboard.dialogs.add_tree.gps_required}
                       </p>
                       <p className="text-xs text-muted-foreground leading-tight">
-                        {coordinates ? `Lon: ${coordinates[0].toFixed(4)}, Lat: ${coordinates[1].toFixed(4)}` : "Click the target icon above to fetch your current coordinates."}
+                        {coordinates ? `Lon: ${coordinates[0].toFixed(4)}, Lat: ${coordinates[1].toFixed(4)}` : t.dashboard.dialogs.add_tree.gps_desc}
                       </p>
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="notes">Notes</Label>
-                    <Textarea id="notes" name="notes" placeholder="Any specific details about the planting..." />
+                    <Label htmlFor="notes">{t.dashboard.dialogs.add_tree.notes}</Label>
+                    <Textarea id="notes" name="notes" placeholder={t.dashboard.dialogs.add_tree.notes_placeholder} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="image" className="flex items-center justify-between">
-                      Upload Photo
+                      {t.dashboard.dialogs.add_tree.photo_label}
                       <Button 
                         type="button" 
                         variant="ghost" 
@@ -518,20 +523,20 @@ export default function Dashboard() {
                         onClick={() => document.getElementById('image')?.click()}
                       >
                         <Camera className="w-4 h-4 mr-2" />
-                        Capture
+                        {t.dashboard.dialogs.add_tree.capture || "Capture"}
                       </Button>
                     </Label>
                     <Input id="image" name="image" type="file" accept="image/*" capture="environment" className="cursor-pointer" />
                   </div>
                   <div className="pt-4 flex justify-end gap-2">
-                    <Button variant="outline" type="button" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
+                    <Button variant="outline" type="button" onClick={() => setIsAddDialogOpen(false)}>{t.dashboard.dialogs.add_tree.cancel}</Button>
                     <Button type="submit" disabled={isUploading || createTreeMutation.isPending}>
                       {(isUploading || createTreeMutation.isPending) ? (
                         <>
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Submitting...
+                          {t.dashboard.dialogs.add_tree.submitting}
                         </>
-                      ) : "Submit for Approval"}
+                      ) : t.dashboard.dialogs.add_tree.submit}
                     </Button>
                   </div>
                 </form>

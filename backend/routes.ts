@@ -756,11 +756,36 @@ export async function registerRoutes(
       const skip = (page - 1) * limit;
 
       const totalItems = await Contact.countDocuments();
-      const contacts = await Contact.find()
-        .populate("relatedTreeId", "treeId commonName location")
+      let contacts = await Contact.find()
+        .populate("relatedTreeId", "treeId commonName location status updatedAt")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit);
+      
+      // Virtual contacts for stale trees (neglected for > 30 days)
+      if (page === 1) {
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        const staleTrees = await Tree.find({ 
+          status: "active",
+          updatedAt: { $lt: thirtyDaysAgo } 
+        }).limit(20); // Limit alert count
+
+        const staleAlerts = staleTrees.map(tree => ({
+          _id: `stale-${tree._id}`,
+          name: "System Monitor",
+          email: "alerts@gampahinhusmak.lk",
+          subject: "Neglected Tree",
+          message: `Tree "${tree.commonName}" (${tree.treeId}) has not been updated for over 30 days. Success of reforestation depends on regular monitoring.`,
+          status: "new",
+          createdAt: tree.updatedAt,
+          relatedTreeId: tree,
+          isStale: true
+        }));
+
+        contacts = [...staleAlerts as any, ...contacts];
+      }
         
       res.json({ 
         contacts,

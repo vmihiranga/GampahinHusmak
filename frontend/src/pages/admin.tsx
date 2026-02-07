@@ -782,16 +782,20 @@ export default function Admin() {
                       >
                         <div className="flex justify-between items-start">
                           <div>
-                            <Badge
-                              variant={
-                                contact.status === "new"
-                                  ? "destructive"
-                                  : "outline"
-                              }
-                              className="mb-2"
-                            >
-                              {t.admin.issues.status[contact.status as keyof typeof t.admin.issues.status] || contact.status}
-                            </Badge>
+                            <div className="flex flex-wrap gap-2 mb-2">
+                              <Badge 
+                                variant={
+                                  contact.status === "new" ? "default" : "secondary"
+                                }
+                              >
+                                {t.admin.issues.status[contact.status as keyof typeof t.admin.issues.status] || contact.status}
+                              </Badge>
+                              {(contact as any).isStale && (
+                                <Badge className="bg-orange-500 hover:bg-orange-600 text-[10px] h-5">
+                                  {t.admin.issues.stale_alert}
+                                </Badge>
+                              )}
+                            </div>
                             <h4 className="font-semibold">{contact.subject}</h4>
                             <p className="text-sm text-muted-foreground">
                               {contact.name} - {contact.email}
@@ -831,7 +835,7 @@ export default function Admin() {
                             variant="outline"
                             onClick={() => {
                               setSelectedContact(contact);
-                              if (contact.status === "new") {
+                              if (contact.status === "new" && !((contact as any).isStale)) {
                                 updateContactStatusMutation.mutate({
                                   id: contact._id,
                                   status: "read",
@@ -841,15 +845,29 @@ export default function Admin() {
                           >
                             View Details
                           </Button>
-                          <Button
-                            size="sm"
-                            onClick={() => {
-                              setSelectedContact(contact);
-                              setReplyText(contact.reply || "");
-                            }}
-                          >
-                            Respond
-                          </Button>
+                          {(contact as any).isStale ? (
+                            <Button
+                              size="sm"
+                              className="bg-orange-500 hover:bg-orange-600 text-white gap-1"
+                              onClick={() => {
+                                sendReminderMutation.mutate(contact.relatedTreeId._id);
+                              }}
+                              disabled={sendReminderMutation.isPending}
+                            >
+                              {sendReminderMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Bell className="w-3 h-3" />}
+                              Send Reminder
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                setSelectedContact(contact);
+                                setReplyText(contact.reply || "");
+                              }}
+                            >
+                              Respond
+                            </Button>
+                          )}
                         </div>
                       </div>
                     ))
@@ -1268,26 +1286,81 @@ export default function Admin() {
             <DialogTitle>{t.admin.dialogs.edit_user.title}</DialogTitle>
             <DialogDescription>{t.admin.dialogs.edit_user.desc}</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>{t.admin.dialogs.edit_user.full_name}</Label>
-              <Input 
-                value={editUser?.fullName || ""} 
-                onChange={(e) => setEditUser({ ...editUser, fullName: e.target.value })} 
-              />
+          <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto px-1">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>{t.admin.dialogs.edit_user.full_name}</Label>
+                <Input 
+                  value={editUser?.fullName || ""} 
+                  onChange={(e) => setEditUser({ ...editUser, fullName: e.target.value })} 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>{t.admin.dialogs.edit_user.phone}</Label>
+                <Input 
+                  value={editUser?.phoneNumber || ""} 
+                  onChange={(e) => setEditUser({ ...editUser, phoneNumber: e.target.value })} 
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>{t.admin.dialogs.edit_user.phone}</Label>
-              <Input 
-                value={editUser?.phoneNumber || ""} 
-                onChange={(e) => setEditUser({ ...editUser, phoneNumber: e.target.value })} 
-              />
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>{t.admin.dialogs.edit_user.username}</Label>
+                <Input 
+                  value={editUser?.username || ""} 
+                  onChange={(e) => setEditUser({ ...editUser, username: e.target.value })} 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>{t.admin.dialogs.edit_user.email}</Label>
+                <Input 
+                  value={editUser?.email || ""} 
+                  onChange={(e) => setEditUser({ ...editUser, email: e.target.value })} 
+                />
+              </div>
             </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>{t.admin.dialogs.edit_user.role}</Label>
+                <Select 
+                  value={editUser?.role} 
+                  onValueChange={(val) => setEditUser({ ...editUser, role: val })}
+                >
+                  <SelectTrigger className="rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="volunteer">Volunteer</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="superadmin">Super Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>{t.admin.dialogs.edit_user.is_verified}</Label>
+                <Select 
+                  value={editUser?.isVerified?.toString()} 
+                  onValueChange={(val) => setEditUser({ ...editUser, isVerified: val === 'true' })}
+                >
+                  <SelectTrigger className="rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="true">Verified</SelectItem>
+                    <SelectItem value="false">Pending</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label>{t.admin.dialogs.edit_user.address}</Label>
               <Textarea 
                 value={editUser?.address || ""} 
                 onChange={(e) => setEditUser({ ...editUser, address: e.target.value })} 
+                className="rounded-xl min-h-[80px]"
               />
             </div>
           </div>
