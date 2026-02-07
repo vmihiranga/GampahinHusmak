@@ -1242,7 +1242,7 @@ export async function registerRoutes(
 
       let stats: any = { ok: 1 };
       try {
-        stats = await db.stats();
+        stats = await db.command({ dbStats: 1 });
       } catch (e) {
         console.error("Error fetching db stats:", e);
       }
@@ -1252,14 +1252,28 @@ export async function registerRoutes(
       const collStats = await Promise.all(
         collections.map(async (c) => {
           try {
-            const s = await db.collection(c.name).stats();
+            // Get accurate count
+            const count = await db.collection(c.name).countDocuments();
+            
+            // Try to get storage stats, but provide fallback
+            let size = 0;
+            let avgObjSize = 0;
+            try {
+              const s = await db.command({ collStats: c.name });
+              size = s.size || 0;
+              avgObjSize = s.avgObjSize || 0;
+            } catch (e) {
+              // Silently fail storage stats, keep count
+            }
+
             return {
               name: c.name,
-              count: s.count || 0,
-              size: s.size || 0,
-              avgObjSize: s.avgObjSize || 0
+              count: count,
+              size: size,
+              avgObjSize: avgObjSize
             };
           } catch (e) {
+            console.error(`Error fetching stats for collection ${c.name}:`, e);
             return {
               name: c.name,
               count: 0,

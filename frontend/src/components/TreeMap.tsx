@@ -1,6 +1,7 @@
-/// <reference types="@types/google.maps" />
 import { useEffect, useRef, useState } from 'react';
 import { Loader2 } from 'lucide-react';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
 interface MapProps {
   trees: Array<{
@@ -19,64 +20,56 @@ interface MapProps {
   height?: string;
 }
 
-const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8';
-
 export default function TreeMap({ trees, center, zoom = 12, height = '500px' }: MapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
-  const [map, setMap] = useState<google.maps.Map | null>(null);
+  const mapInstanceRef = useRef<L.Map | null>(null);
+  const markersRef = useRef<L.LayerGroup | null>(null);
   const [loading, setLoading] = useState(true);
-  const markersRef = useRef<google.maps.Marker[]>([]);
 
   // Default center to Gampaha, Sri Lanka
-  const defaultCenter = center || { lat: 7.0917, lng: 80.0167 };
+  const defaultCenter: [number, number] = center ? [center.lat, center.lng] : [7.0917, 80.0167];
 
+  // Fix Leaflet default icon issue
   useEffect(() => {
-    // Load Google Maps script
-    const loadGoogleMaps = () => {
-      if (window.google && window.google.maps) {
-        initMap();
-        return;
-      }
-
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
-      script.async = true;
-      script.defer = true;
-      script.onload = () => initMap();
-      document.head.appendChild(script);
-    };
-
-    const initMap = () => {
-      if (!mapRef.current) return;
-
-      const mapInstance = new google.maps.Map(mapRef.current, {
-        center: defaultCenter,
-        zoom: zoom,
-        mapTypeControl: true,
-        streetViewControl: false,
-        fullscreenControl: true,
-        styles: [
-          {
-            featureType: 'poi',
-            elementType: 'labels',
-            stylers: [{ visibility: 'off' }]
-          }
-        ]
-      });
-
-      setMap(mapInstance);
-      setLoading(false);
-    };
-
-    loadGoogleMaps();
+    delete (L.Icon.Default.prototype as any)._getIconUrl;
+    L.Icon.Default.mergeOptions({
+      iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    });
   }, []);
 
   useEffect(() => {
-    if (!map || !trees.length) return;
+    if (!mapRef.current || mapInstanceRef.current) return;
+
+    // Initialize Map
+    const map = L.map(mapRef.current).setView(defaultCenter, zoom);
+
+    // Add Tile Layer (OpenStreetMap)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    mapInstanceRef.current = map;
+    markersRef.current = L.layerGroup().addTo(map);
+    setLoading(false);
+
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!mapInstanceRef.current || !markersRef.current || !trees.length) return;
+
+    const map = mapInstanceRef.current;
+    const markerGroup = markersRef.current;
 
     // Clear existing markers
-    markersRef.current.forEach(marker => marker.setMap(null));
-    markersRef.current = [];
+    markerGroup.clearLayers();
 
     // Health status colors
     const healthColors: Record<string, string> = {
@@ -87,91 +80,76 @@ export default function TreeMap({ trees, center, zoom = 12, height = '500px' }: 
       dead: '#ef4444',
     };
 
-    // Add markers for each tree
-    const bounds = new google.maps.LatLngBounds();
+    const bounds: L.LatLngExpression[] = [];
 
     trees.forEach((tree) => {
+      if (!tree.location?.coordinates || tree.location.coordinates.length < 2) return;
+      
       const [lng, lat] = tree.location.coordinates;
-      const position = { lat, lng };
+      const position: [number, number] = [lat, lng];
+      bounds.push(position);
 
-      // Create custom marker icon
       const markerColor = healthColors[tree.currentHealth] || '#22c55e';
       
-      const marker = new google.maps.Marker({
-        position,
-        map,
-        title: tree.commonName,
-        icon: {
-          path: google.maps.SymbolPath.CIRCLE,
-          scale: 8,
-          fillColor: markerColor,
-          fillOpacity: 0.9,
-          strokeColor: '#ffffff',
-          strokeWeight: 2,
-        },
-        animation: google.maps.Animation.DROP,
+      // Create custom div icon for colored markers
+      const customIcon = L.divIcon({
+        className: 'custom-tree-marker',
+        html: `<div style="background-color: ${markerColor}; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.3);"></div>`,
+        iconSize: [20, 20],
+        iconAnchor: [10, 10],
       });
 
-      // Create info window
-      const infoWindow = new google.maps.InfoWindow({
-        content: `
-          <div style="padding: 8px; max-width: 250px;">
-            <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600; color: #1f2937;">
-              ${tree.commonName}
-            </h3>
-            <p style="margin: 0 0 4px 0; font-size: 13px; color: #6b7280;">
-              <strong>Species:</strong> ${tree.species}
-            </p>
-            <p style="margin: 0 0 4px 0; font-size: 13px; color: #6b7280;">
-              <strong>Tree ID:</strong> ${tree.treeId}
-            </p>
-            <p style="margin: 0 0 4px 0; font-size: 13px; color: #6b7280;">
-              <strong>Location:</strong> ${tree.location.address}
-            </p>
-            <p style="margin: 0; font-size: 13px;">
-              <strong>Health:</strong> 
-              <span style="color: ${markerColor}; font-weight: 600; text-transform: capitalize;">
-                ${tree.currentHealth}
-              </span>
-            </p>
+      const marker = L.marker(position, { icon: customIcon });
+
+      // Create popup content
+      const popupContent = `
+        <div style="padding: 4px; min-width: 180px; font-family: 'Inter', sans-serif;">
+          <h3 style="margin: 0 0 6px 0; font-size: 14px; font-weight: 700; color: #111827;">
+            ${tree.commonName}
+          </h3>
+          <div style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4b5563;">
+            <span><strong>Species:</strong> ${tree.species}</span>
+            <span><strong>Tree ID:</strong> <code style="background: #f3f4f6; padding: 1px 4px; border-radius: 4px;">${tree.treeId}</code></span>
+            <span><strong>Location:</strong> ${tree.location.address}</span>
+            <div style="margin-top: 4px; display: flex; items-center; gap: 6px;">
+              <strong>Health:</strong>
+              <span style="color: ${markerColor}; font-weight: 700; text-transform: capitalize;">${tree.currentHealth}</span>
+            </div>
           </div>
-        `,
-      });
+        </div>
+      `;
 
-      marker.addListener('click', () => {
-        infoWindow.open(map, marker);
-      });
-
-      markersRef.current.push(marker);
-      bounds.extend(position);
+      marker.bindPopup(popupContent);
+      markerGroup.addLayer(marker);
     });
 
-    // Fit map to show all markers
-    if (trees.length > 1) {
-      map.fitBounds(bounds);
-    } else if (trees.length === 1) {
-      const [lng, lat] = trees[0].location.coordinates;
-      map.setCenter({ lat, lng });
-      map.setZoom(15);
+    // Fit map to markers
+    if (bounds.length > 1) {
+      map.fitBounds(L.latLngBounds(bounds), { padding: [40, 40] });
+    } else if (bounds.length === 1) {
+      map.setView(bounds[0], 15);
     }
-  }, [map, trees]);
+  }, [trees]);
 
   return (
-    <div className="relative w-full rounded-lg overflow-hidden border border-border shadow-lg" style={{ height }}>
+    <div className="relative w-full rounded-2xl overflow-hidden border border-border shadow-xl" style={{ height }}>
       {loading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-10">
+        <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-[1000]">
           <div className="flex flex-col items-center gap-3">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            <p className="text-sm text-muted-foreground">Loading map...</p>
+            <p className="text-sm font-medium text-muted-foreground tracking-tight">Loading map...</p>
           </div>
         </div>
       )}
-      <div ref={mapRef} className="w-full h-full" />
+      <div ref={mapRef} className="w-full h-full z-0" />
       
       {/* Legend */}
-      <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-3 border border-border">
-        <p className="text-xs font-semibold text-foreground mb-2">Tree Health</p>
-        <div className="space-y-1">
+      <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl p-4 border border-white/40 z-[1000] min-w-[140px]">
+        <p className="text-xs font-black text-slate-900 uppercase tracking-widest mb-3 flex items-center gap-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+          Tree Health
+        </p>
+        <div className="grid gap-2">
           {[
             { label: 'Excellent', color: '#22c55e' },
             { label: 'Good', color: '#84cc16' },
@@ -179,22 +157,48 @@ export default function TreeMap({ trees, center, zoom = 12, height = '500px' }: 
             { label: 'Poor', color: '#f97316' },
             { label: 'Dead', color: '#ef4444' },
           ].map((item) => (
-            <div key={item.label} className="flex items-center gap-2">
+            <div key={item.label} className="flex items-center gap-3 group">
               <div
-                className="w-3 h-3 rounded-full border-2 border-white"
+                className="w-3.5 h-3.5 rounded-full border-2 border-white shadow-sm transition-transform group-hover:scale-110"
                 style={{ backgroundColor: item.color }}
               />
-              <span className="text-xs text-muted-foreground">{item.label}</span>
+              <span className="text-[11px] font-bold text-slate-600 tracking-tight group-hover:text-slate-900 transition-colors uppercase">{item.label}</span>
             </div>
           ))}
         </div>
       </div>
+
+      <style>{`
+        .leaflet-container {
+          background-color: #f8fafc;
+        }
+        .leaflet-popup-content-wrapper {
+          border-radius: 12px;
+          padding: 0;
+          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .leaflet-popup-content {
+          margin: 12px;
+        }
+        .leaflet-top.leaflet-left {
+          margin: 12px;
+        }
+        .leaflet-bar {
+          border: none !important;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+          border-radius: 8px !important;
+          overflow: hidden;
+        }
+        .leaflet-bar a {
+          background-color: white !important;
+          border-bottom: 1px solid #f1f5f9 !important;
+          color: #475569 !important;
+        }
+        .leaflet-bar a:hover {
+          background-color: #f8fafc !important;
+          color: #1e293b !important;
+        }
+      `}</style>
     </div>
   );
-}
-
-declare global {
-  interface Window {
-    google: typeof google;
-  }
 }
