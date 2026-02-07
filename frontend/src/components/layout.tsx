@@ -163,11 +163,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </Link>
 
           {/* Sponsor Logos in Middle */}
-          <div className="hidden lg:flex items-center justify-center flex-1 px-8 animate-in fade-in duration-700">
+          <div className="hidden lg:flex items-start justify-center flex-1 px-8 h-full animate-in fade-in duration-700">
             <img 
               src="/2logo.png" 
               alt="Sponsors" 
-              className="h-18 md:h-22 w-auto object-contain opacity-100 transition-opacity" 
+              className="h-full w-auto object-contain object-top opacity-100 transition-opacity" 
             />
           </div>
 
