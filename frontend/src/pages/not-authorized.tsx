@@ -18,19 +18,21 @@ export default function NotAuthorized() {
             </div>
           </div>
           
-          <div className="space-y-2">
-            <h1 className="text-3xl font-heading font-black text-gray-900">
-              {language === 'si' ? "ඔබට අවසර නැත" : "Access Denied"}
+          <div className="space-y-4">
+            <h1 className="text-4xl font-heading font-black text-red-600 tracking-tighter uppercase italic">
+              {language === 'si' ? "ඔබට අවසර නැත!" : "NO PERMISSION!"}
             </h1>
-            <p className="text-red-600 font-bold text-lg leading-relaxed">
+            <div className="p-4 bg-red-50 border-2 border-red-200 rounded-2xl">
+              <p className="text-red-700 font-black text-xl leading-tight">
+                {language === 'si' 
+                  ? "මෙම පිටුවට ඇතුළු වීමට ඔබට අවසර නැත." 
+                  : "YOU DO NOT HAVE PERMISSION TO ACCESS THIS PAGE"}
+              </p>
+            </div>
+            <p className="text-muted-foreground text-sm font-medium">
               {language === 'si' 
-                ? "මෙම පිටුවට ඇතුළු වීමට ඔබට අවසර නැත." 
-                : "YOU DO NOT HAVE PERMISSION TO ACCESS THIS PAGE"}
-            </p>
-            <p className="text-muted-foreground text-sm">
-              {language === 'si' 
-                ? "කරුණාකර නිවැරදි ගිණුමකින් ඇතුළු වන්න." 
-                : "Please make sure you are logged in with administrative privileges."}
+                ? "කරුණාකර පරිපාලක ගිණුමකින් ඇතුළු වන්න." 
+                : "Please login with an administrator account to view this dashboard."}
             </p>
           </div>
 
