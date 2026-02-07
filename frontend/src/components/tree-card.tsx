@@ -27,7 +27,7 @@ interface TreeProps {
 import { useLanguage } from "@/hooks/use-language";
 
 export function TreeCard({ tree, showActions = false, onAddUpdate }: TreeProps) {
-  const { getPathWithLang } = useLanguage();
+  const { getPathWithLang, t } = useLanguage();
   const statusColors: Record<string, string> = {
     healthy: "bg-green-100 text-green-700 border-green-200",
     needs_attention: "bg-orange-100 text-orange-700 border-orange-200",
@@ -39,13 +39,13 @@ export function TreeCard({ tree, showActions = false, onAddUpdate }: TreeProps) 
   };
 
   const statusLabels: Record<string, string> = {
-    healthy: "Healthy",
-    needs_attention: "Needs Attention",
-    issue_reported: "Issue Reported",
-    excellent: "Excellent",
-    good: "Good",
-    fair: "Fair",
-    poor: "Poor",
+    healthy: t.dashboard.tree_card.status.good,
+    needs_attention: t.dashboard.tree_card.status.fair,
+    issue_reported: t.dashboard.tree_card.status.poor,
+    excellent: t.dashboard.tree_card.status.excellent,
+    good: t.dashboard.tree_card.status.good,
+    fair: t.dashboard.tree_card.status.fair,
+    poor: t.dashboard.tree_card.status.poor,
   };
 
   const treeImage = tree.images?.[0] || tree.image || "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800";
@@ -74,7 +74,7 @@ export function TreeCard({ tree, showActions = false, onAddUpdate }: TreeProps) 
       <CardContent className="p-4 pt-0 space-y-2 text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
           <Calendar className="w-4 h-4 text-primary" />
-          <span>Planted: {plantedDate ? format(new Date(plantedDate), "MMM d, yyyy") : "N/A"}</span>
+          <span>{t.dashboard.tree_card.planted} {plantedDate ? format(new Date(plantedDate), "MMM d, yyyy") : "N/A"}</span>
         </div>
         <div className="flex items-center gap-2">
           <MapPin className="w-4 h-4 text-primary" />
@@ -82,13 +82,13 @@ export function TreeCard({ tree, showActions = false, onAddUpdate }: TreeProps) 
         </div>
         <div className="flex items-center gap-2">
           <Activity className="w-4 h-4 text-primary" />
-          <span>{tree.updates} Monthly Updates</span>
+          <span>{tree.updates} {t.dashboard.tree_card.monthly_updates}</span>
         </div>
       </CardContent>
       {showActions && (
         <CardFooter className="p-4 pt-0 flex gap-2">
           <Link href={getPathWithLang(`/trees/${tree._id || tree.id}`)} className="flex-1">
-            <Button variant="outline" size="sm" className="w-full">Details</Button>
+            <Button variant="outline" size="sm" className="w-full">{t.dashboard.tree_card.details}</Button>
           </Link>
           <Button 
             size="sm" 
@@ -102,7 +102,7 @@ export function TreeCard({ tree, showActions = false, onAddUpdate }: TreeProps) 
               }
             }}
           >
-            Add Update
+            {t.dashboard.tree_card.add_update}
           </Button>
         </CardFooter>
       )}

@@ -163,6 +163,31 @@ export const translations = {
       search_placeholder: "Search your trees...",
       no_trees: "No trees planted yet. Start by adding your first tree!",
       no_search_results: "No trees found matching your search.",
+      no_requests: "You haven't submitted any requests yet.",
+      no_requests_help: "Need help? Use the \"Submit Request\" button above.",
+      filter: {
+        all: "All Trees",
+        excellent: "Excellent",
+        good: "Good",
+        fair: "Fair",
+        poor: "Poor",
+        active: "Active",
+        dead: "Dead",
+      },
+      tree_card: {
+        planted: "Planted:",
+        monthly_updates: "Monthly Updates",
+        details: "Details",
+        add_update: "Add Update",
+        status: {
+          excellent: "Excellent",
+          good: "Good",
+          fair: "Fair",
+          poor: "Poor",
+          active: "Active",
+          dead: "Dead",
+        }
+      },
       dialogs: {
         request: {
           title: "Submit a Tree Request",
@@ -409,7 +434,7 @@ export const translations = {
   si: {
     nav: {
       home: "මුල් පිටුව",
-      gallery: "ඡායාරූප ගැලරිය",
+      gallery: "ඡායාරූප ",
       contact: "සම්බන්ධ වන්න",
       dashboard: "දත්ත පුවරුව",
       admin: "පරිපාලක",

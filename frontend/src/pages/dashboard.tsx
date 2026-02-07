@@ -559,17 +559,17 @@ export default function Dashboard() {
                       <Input id="height" name="height" type="number" placeholder="e.g. 120" required />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="health">Tree Health</Label>
+                      <Label htmlFor="health">{t.dashboard.dialogs.update.health}</Label>
                       <Select required name="health">
                         <SelectTrigger>
-                          <SelectValue placeholder="Choose health" />
+                          <SelectValue placeholder={t.dashboard.dialogs.update.health_placeholder} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="excellent">Excellent</SelectItem>
-                          <SelectItem value="good">Good</SelectItem>
-                          <SelectItem value="fair">Fair</SelectItem>
-                          <SelectItem value="poor">Poor</SelectItem>
-                          <SelectItem value="dead">Dead</SelectItem>
+                          <SelectItem value="excellent">{t.dashboard.filter.excellent}</SelectItem>
+                          <SelectItem value="good">{t.dashboard.filter.good}</SelectItem>
+                          <SelectItem value="fair">{t.dashboard.filter.fair}</SelectItem>
+                          <SelectItem value="poor">{t.dashboard.filter.poor}</SelectItem>
+                          <SelectItem value="dead">{t.dashboard.filter.dead}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -640,11 +640,11 @@ export default function Dashboard() {
           <TabsList className="mb-6 w-full justify-start md:justify-center overflow-x-auto overflow-y-hidden h-auto p-1 bg-muted/50 rounded-xl no-scrollbar">
             <TabsTrigger value="trees" className="gap-2 rounded-lg py-2.5 px-4 underline-offset-4">
               <TreePine className="w-4 h-4" />
-              My Trees
+              {t.dashboard.tabs.trees}
             </TabsTrigger>
             <TabsTrigger value="requests" className="gap-2 rounded-lg py-2.5 px-4 underline-offset-4">
               <MessageSquare className="w-4 h-4" />
-              My Requests
+              {t.dashboard.tabs.requests}
               {myContacts.filter(c => c.status === 'replied').length > 0 && (
                 <Badge className="ml-2 bg-primary text-primary-foreground h-5 w-5 p-0 flex items-center justify-center rounded-full text-[10px] font-bold">
                   {myContacts.filter(c => c.status === 'replied').length}
@@ -653,7 +653,7 @@ export default function Dashboard() {
             </TabsTrigger>
             <TabsTrigger value="achievements" className="gap-2 rounded-lg py-2.5 px-4 underline-offset-4">
               <Trophy className="w-4 h-4" />
-              Achievements
+              {t.dashboard.tabs.achievements}
             </TabsTrigger>
           </TabsList>
 
@@ -664,7 +664,7 @@ export default function Dashboard() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input 
                   className="pl-9" 
-                  placeholder="Search your trees..." 
+                  placeholder={t.dashboard.search_placeholder} 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -675,12 +675,12 @@ export default function Dashboard() {
                   <SelectValue placeholder="Filter" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Trees</SelectItem>
-                  <SelectItem value="excellent">Excellent</SelectItem>
-                  <SelectItem value="good">Good</SelectItem>
-                  <SelectItem value="fair">Fair</SelectItem>
-                  <SelectItem value="poor">Poor</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="all">{t.dashboard.filter.all}</SelectItem>
+                  <SelectItem value="excellent">{t.dashboard.filter.excellent}</SelectItem>
+                  <SelectItem value="good">{t.dashboard.filter.good}</SelectItem>
+                  <SelectItem value="fair">{t.dashboard.filter.fair}</SelectItem>
+                  <SelectItem value="poor">{t.dashboard.filter.poor}</SelectItem>
+                  <SelectItem value="active">{t.dashboard.filter.active}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -689,11 +689,11 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {trees.length === 0 ? (
                 <div className="col-span-full text-center py-12">
-                  <p className="text-muted-foreground">No trees planted yet. Start by adding your first tree!</p>
+                  <p className="text-muted-foreground">{t.dashboard.no_trees}</p>
                 </div>
               ) : filteredTrees.length === 0 ? (
                 <div className="col-span-full text-center py-12">
-                  <p className="text-muted-foreground">No trees found matching your search.</p>
+                  <p className="text-muted-foreground">{t.dashboard.no_search_results}</p>
                 </div>
               ) : (
                 filteredTrees.map((tree: any) => (
@@ -717,8 +717,8 @@ export default function Dashboard() {
                 <Card className="p-12 text-center border-dashed">
                   <div className="flex flex-col items-center gap-2">
                     <MessageSquare className="w-12 h-12 text-muted-foreground opacity-20" />
-                    <p className="text-muted-foreground font-medium">You haven't submitted any requests yet.</p>
-                    <p className="text-sm text-muted-foreground">Need help? Use the "Submit Request" button above.</p>
+                    <p className="text-muted-foreground font-medium">{t.dashboard.no_requests}</p>
+                    <p className="text-sm text-muted-foreground">{t.dashboard.no_requests_help}</p>
                   </div>
                 </Card>
               ) : (
