@@ -77,17 +77,10 @@ export default function TreeDetails({ params }: { params: { id: string } }) {
   const currentStatus = tree.currentHealth || tree.status || "active";
 
   // Aggregate all images for the slider
-  const MOCKUP_URL = "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=1200";
   const treeImages = tree.images || [];
   const updateImages = updates?.flatMap((u: any) => u.images || []) || [];
   
-  // Filter out the mockup URL if there are ANY other real images
-  let allImages = [...treeImages, ...updateImages].filter(img => img && img !== MOCKUP_URL);
-
-  // If after filtering we have images, great. If not, only then show the mockup.
-  if (allImages.length === 0) {
-    allImages = [MOCKUP_URL];
-  }
+  let allImages = [...treeImages, ...updateImages].filter(img => img && img !== "");
 
   const nextImage = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -154,13 +147,6 @@ export default function TreeDetails({ params }: { params: { id: string } }) {
                   alt={tree.commonName}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   referrerPolicy="no-referrer"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    if (!target.dataset.triedFallback) {
-                      target.dataset.triedFallback = "true";
-                      target.src = "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=1200";
-                    }
-                  }}
                 />
                 <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
                    <div className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-full border border-white/30 text-white flex items-center gap-2">
@@ -315,13 +301,6 @@ export default function TreeDetails({ params }: { params: { id: string } }) {
                           alt={`Growth step ${idx}`} 
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
                           referrerPolicy="no-referrer"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            if (!target.dataset.triedFallback) {
-                              target.dataset.triedFallback = "true";
-                              target.src = "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800";
-                            }
-                          }}
                         />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                            <CameraIcon className="w-6 h-6 text-white" />
@@ -392,13 +371,6 @@ export default function TreeDetails({ params }: { params: { id: string } }) {
                                     alt="Update"
                                     className="w-full h-full object-cover"
                                     referrerPolicy="no-referrer"
-                                    onError={(e) => {
-                                      const target = e.target as HTMLImageElement;
-                                      if (!target.dataset.triedFallback) {
-                                        target.dataset.triedFallback = "true";
-                                        target.src = "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=400";
-                                      }
-                                    }}
                                   />
                                 </div>
                               )}
@@ -453,13 +425,6 @@ export default function TreeDetails({ params }: { params: { id: string } }) {
                   alt="Preview"
                   className="w-full h-full object-contain"
                   referrerPolicy="no-referrer"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    if (!target.dataset.triedFallback) {
-                      target.dataset.triedFallback = "true";
-                      target.src = "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=1200";
-                    }
-                  }}
                 />
 
                 {allImages.length > 1 && (

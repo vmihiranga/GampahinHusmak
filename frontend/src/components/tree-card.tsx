@@ -48,9 +48,7 @@ export function TreeCard({ tree, showActions = false, onAddUpdate }: TreeProps) 
     poor: t.dashboard.tree_card.status.poor,
   };
 
-  const MOCKUP_URL_SMALL = "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800";
-  const realImages = (tree.images || []).filter((img: string) => img && img !== MOCKUP_URL_SMALL && img !== "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=1200");
-  const treeImage = realImages.length > 0 ? realImages[0] : (tree.image || MOCKUP_URL_SMALL);
+  const treeImage = (tree.images && tree.images.length > 0) ? tree.images[0] : tree.image;
   const treeName = tree.commonName || tree.type || tree.species || "Unknown Tree";
   const treeStatus = tree.currentHealth || tree.status || "good";
   const plantedDate = tree.plantedDate || tree.plantedAt;
@@ -64,13 +62,6 @@ export function TreeCard({ tree, showActions = false, onAddUpdate }: TreeProps) 
           alt={treeName} 
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           referrerPolicy="no-referrer"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            if (!target.dataset.triedFallback) {
-              target.dataset.triedFallback = "true";
-              target.src = "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800";
-            }
-          }}
         />
         <div className="absolute top-3 right-3">
           <Badge variant="outline" className={statusColors[treeStatus] || "bg-gray-100"}>

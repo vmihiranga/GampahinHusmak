@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Table,
   TableBody,
@@ -1422,6 +1423,7 @@ export default function Admin() {
                     src={selectedContact.image}
                     alt="Attached"
                     className="w-full h-auto max-h-[300px] object-contain bg-black/5"
+                    referrerPolicy="no-referrer"
                   />
                 </div>
               )}
@@ -1963,6 +1965,67 @@ export default function Admin() {
         }}
       />
 
+      <Dialog open={!!viewUserDetails} onOpenChange={(open) => !open && setViewUserDetails(null)}>
+        <DialogContent className="sm:max-w-[500px] border-none shadow-2xl rounded-3xl overflow-hidden p-0">
+          <ScrollArea className="max-h-[85vh]">
+            <div className="bg-primary p-8 text-white relative">
+              <div className="flex items-center gap-6">
+                <Avatar className="w-20 h-20 border-4 border-white/20 shadow-xl">
+                  <AvatarImage src={viewUserDetails?.profileImage} />
+                  <AvatarFallback className="bg-white/10 text-2xl font-bold uppercase">
+                    {viewUserDetails?.fullName ? viewUserDetails.fullName.charAt(0) : (viewUserDetails?.username?.charAt(0) || "?")}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="space-y-1">
+                  <h2 className="text-2xl font-bold font-heading">{viewUserDetails?.fullName || viewUserDetails?.username}</h2>
+                  <div className="flex items-center gap-2 opacity-90 text-sm">
+                    <Badge className="bg-white/20 hover:bg-white/30 text-white border-none px-2 py-0 text-[10px] uppercase font-black tracking-widest">
+                      {viewUserDetails?.role}
+                    </Badge>
+                    {viewUserDetails?.isVerified && (
+                      <CheckCircle2 className="w-4 h-4 text-white" />
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="p-6 space-y-6">
+              <div className="space-y-4">
+                <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-muted-foreground border-b pb-2">Contribution Statistics</h3>
+                {viewUserDetails && <UserStatsSummary userId={viewUserDetails._id} />}
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-muted-foreground border-b pb-2">User Information</h3>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground font-medium">Email Address</p>
+                    <p className="font-bold truncate">{viewUserDetails?.email}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground font-medium">Phone Number</p>
+                    <p className="font-bold">{viewUserDetails?.phoneNumber || "Not provided"}</p>
+                  </div>
+                  <div className="space-y-1 col-span-2">
+                    <p className="text-muted-foreground font-medium">Home Address</p>
+                    <p className="font-bold leading-relaxed">{viewUserDetails?.address || "No address saved"}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground font-medium">Joined Date</p>
+                    <p className="font-bold">
+                      {viewUserDetails?.createdAt ? format(new Date(viewUserDetails.createdAt), "MMMM d, yyyy") : "Unknown"}
+                    </p>
+                  </div>
+                  <div className="space-y-1 text-right">
+                    <p className="text-muted-foreground font-medium">System ID</p>
+                    <p className="font-mono text-[10px] font-bold opacity-40 uppercase truncate">{viewUserDetails?._id}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
       {/* Confirmation Dialog for Deleting Notifications */}
       <Dialog open={!!confirmDeleteContact} onOpenChange={(open) => !open && setConfirmDeleteContact(null)}>
         <DialogContent className="sm:max-w-[400px] border-none shadow-2xl rounded-3xl overflow-hidden p-0">

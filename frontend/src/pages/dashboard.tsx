@@ -133,7 +133,7 @@ export default function Dashboard() {
     }
   }, [isAddDialogOpen]);
 
-  const handleGetLocation = () => {
+  const handleGetLocation = (retryCount = 0) => {
     setIsLocating(true);
     if (!navigator.geolocation) {
       toast({
@@ -169,17 +169,31 @@ export default function Dashboard() {
         }
       },
       (error) => {
+        console.error(`Location error (Attempt ${retryCount + 1}):`, error.message);
+        
+        if (retryCount < 4) {
+          toast({
+            title: "Location issue",
+            description: `Retrying to get GPS coordinates... (Attempt ${retryCount + 1}/5)`,
+          });
+          
+          setTimeout(() => {
+            handleGetLocation(retryCount + 1);
+          }, 5000);
+          return;
+        }
+
         let msg = error.message;
         if (error.code === error.PERMISSION_DENIED) {
-          msg = "Location permission denied. Please enable location access in your browser settings to use this feature.";
+          msg = "Location permission denied. Please enable location access.";
         } else if (error.code === error.POSITION_UNAVAILABLE) {
           msg = "Location information is unavailable.";
         } else if (error.code === error.TIMEOUT) {
-          msg = "Location request timed out.";
+          msg = "Location request timed out after multiple attempts.";
         }
         
         toast({
-          title: "Location error",
+          title: "Location failed",
           description: msg,
           variant: "destructive",
         });
@@ -203,10 +217,12 @@ export default function Dashboard() {
       return;
     }
 
-    if (!coordinates) {
+    const address = formData.get('location') as string;
+
+    if (!coordinates && (!address || address.trim() === "")) {
       toast({
-        title: "Location required",
-        description: "Please detect your GPS location before submitting.",
+        title: "Location missing",
+        description: "Please provide either GPS coordinates or an address.",
         variant: "destructive",
       });
       return;
@@ -556,7 +572,7 @@ export default function Dashboard() {
                   <div className="space-y-2">
                     <Label htmlFor="location">{t.dashboard.dialogs.add_tree.location}</Label>
                     <div className="flex gap-2">
-                      <Input id="location" name="location" placeholder={t.dashboard.dialogs.add_tree.location_placeholder} required className="flex-1" />
+                      <Input id="location" name="location" placeholder={t.dashboard.dialogs.add_tree.location_placeholder} required={!coordinates} className="flex-1" />
                       <Button 
                         type="button" 
                         variant="outline" 

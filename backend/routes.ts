@@ -355,6 +355,24 @@ export async function registerRoutes(
         plantedBy: userId,
       });
 
+      // Send "First Plantation" message if this is their first tree
+      const treeCount = await Tree.countDocuments({ plantedBy: userId });
+      if (treeCount === 1) {
+        await Contact.create({
+          userId,
+          name: "System",
+          email: "system@gampahinhusmak.lk",
+          subject: "Welcome to Gampahin Husmak! 🌱",
+          message: `Congratulations on planting your very first tree (${tree.commonName})! Thank you for joining our mission to make Gampaha greener. You can now track your tree's growth and earn badges.`,
+          status: 'replied',
+          responses: [{
+            message: `Congratulations on planting your very first tree (${tree.commonName})! Thank you for joining our mission to make Gampaha greener. You can now track your tree's growth and earn badges.`,
+            respondedBy: userId,
+            respondedAt: new Date()
+          }]
+        });
+      }
+
       // Dynamic Achievement Logic
       await checkAchievements(userId, 'trees_planted');
 

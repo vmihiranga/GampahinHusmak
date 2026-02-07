@@ -69,8 +69,11 @@ export default function TreeMap({ trees, center, zoom = 12, height = '500px' }: 
     const map = mapInstanceRef.current;
     const markerGroup = markersRef.current;
 
-    // Clear existing markers
-    markerGroup.clearLayers();
+    // Clear existing markers safely
+    if (map.getContainer()) {
+      map.closePopup();
+      markerGroup.clearLayers();
+    }
 
     // Health status colors
     const healthColors: Record<string, string> = {
@@ -108,9 +111,9 @@ export default function TreeMap({ trees, center, zoom = 12, height = '500px' }: 
       // Create popup content
       const popupContent = `
         <div style="padding: 2px; min-width: 220px; font-family: 'Inter', sans-serif;">
-          ${tree.images?.length > 0 ? `
+          ${treeImage ? `
             <div style="width: 100%; height: 120px; border-radius: 8px; overflow: hidden; margin-bottom: 10px; border: 1px solid #e5e7eb;">
-              <img src="${treeImage}" style="width: 100%; height: 100%; object-fit: cover;" alt="${tree.commonName}" />
+              <img src="${treeImage}" style="width: 100%; height: 100%; object-fit: cover;" alt="${tree.commonName}" referrerpolicy="no-referrer" />
             </div>
           ` : ''}
           <h3 style="margin: 0 0 6px 0; font-size: 15px; font-weight: 800; color: #111827;">
