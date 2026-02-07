@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import type { Server } from "http";
 import connectDB from "./db";
-import { User, Tree, TreeUpdate, Event, Contact, Achievement } from "./models";
+import { User, Tree, TreeUpdate, Event, Contact, Achievement, BadgeTemplate } from "./models";
 import bcrypt from "bcryptjs";
 import session from "express-session";
 import MongoStore from "connect-mongo";
@@ -342,43 +342,90 @@ export async function registerRoutes(
         plantedBy: userId,
       });
 
-      // Achievement Logic
-      const treeCount = await Tree.countDocuments({ plantedBy: userId });
-      
-      const badgeTemplates = [
-        { count: 1, name: "First Seed", type: "trees_planted", desc: "Planted your very first tree!", icon: "🌱" },
-        { count: 5, name: "Green Thumb", type: "trees_planted", desc: "Planted 5 trees. You're making a difference!", icon: "🌿" },
-        { count: 10, name: "Forest Guardian", type: "trees_planted", desc: "Planted 10 trees. A true environmental hero!", icon: "🌳" },
-        { count: 25, name: "Nature's Champion", type: "trees_planted", desc: "Planted 25 trees. Gampaha thanks you!", icon: "👑" }
-      ];
+      // Dynamic Achievement Logic
+      await checkAchievements(userId, 'trees_planted');
 
-      const badge = badgeTemplates.find(b => b.count === treeCount);
-      if (badge) {
+      res.status(201).json({ message: "Tree registered successfully", tree });
+    } catch (error: any) {
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Something went wrong. Please try again later." });
+    }
+  });
+
+  // Helper function to check and award badges based on counts
+  async function checkAchievements(userId: string, type: 'trees_planted' | 'events_attended' | 'updates_submitted' | 'special') {
+    try {
+      let count = 0;
+      if (type === 'trees_planted') {
+        count = await Tree.countDocuments({ plantedBy: userId });
+      } else if (type === 'events_attended') {
+        const joinedEvents = await Event.countDocuments({ participants: userId });
+        count = joinedEvents;
+      } else if (type === 'updates_submitted') {
+        count = await TreeUpdate.countDocuments({ updatedBy: userId });
+      }
+
+      // Find all active badge templates for this type that the user hasn't earned yet
+      const earnedBadgeIds = (await Achievement.find({ userId })).map(a => a.badgeTemplateId?.toString());
+      
+      const templates = await BadgeTemplate.find({ 
+        badgeType: type, 
+        isActive: true,
+        triggerCount: { $lte: count },
+        _id: { $nin: earnedBadgeIds.filter(id => !!id) }
+      });
+
+      for (const template of templates) {
+        // Double check for duplicate name just in case
+        const alreadyHasNamedBadge = await Achievement.findOne({ userId, badgeName: template.name });
+        if (alreadyHasNamedBadge) continue;
+
         await Achievement.create({
           userId,
-          badgeName: badge.name,
-          badgeType: badge.type,
-          description: badge.desc,
-          icon: badge.icon
+          badgeTemplateId: template._id,
+          badgeName: template.name,
+          badgeType: template.badgeType,
+          description: template.description,
+          icon: template.icon,
+          earnedAt: new Date()
         });
 
-        // Add a notification for the user
+        // Send system notification
         await Contact.create({
           userId,
           name: "System",
           email: "system@gampahinhusmak.lk",
-          subject: "Achievement Unlocked!",
-          message: `Congratulations! You've earned the "${badge.name}" badge for planting ${treeCount} tree${treeCount > 1 ? 's' : ''}. Check your profile to see your new badge!`,
+          subject: "Achievement Unlocked! 🏆",
+          message: `Congratulations! You've earned the "${template.name}" badge for your ${count} ${type.replace('_', ' ')}. Check your profile to see your new badge!`,
           status: 'replied',
           responses: [{
-            message: `Congratulations! You've earned the "${badge.name}" badge for planting ${treeCount} tree${treeCount > 1 ? 's' : ''}. Check your profile to see your new badge!`,
-            respondedBy: userId, // Self-responded as system
+            message: `Congratulations! You've earned the "${template.name}" badge for your ${count} ${type.replace('_', ' ')}. Check your profile to see your new badge!`,
+            respondedBy: userId, // Self-assigned as it's a notification
             respondedAt: new Date()
           }]
         });
       }
+    } catch (err) {
+      console.error("Error checking achievements:", err);
+    }
+  }
 
-      res.status(201).json({ message: "Tree registered successfully", tree });
+  // Get single tree
+  app.get("/api/trees/:id", async (req, res) => {
+    try {
+      const tree = await Tree.findById(req.params.id)
+        .populate("plantedBy", "username fullName email phoneNumber");
+      
+      if (!tree) {
+        return res.status(404).json({ message: "Tree not found" });
+      }
+
+      // Get updates for this tree
+      const updates = await TreeUpdate.find({ treeId: tree._id })
+        .populate("updatedBy", "username fullName")
+        .sort({ updateDate: -1 });
+
+      res.json({ tree, updates });
     } catch (error: any) {
       console.error("API Error:", error);
       res.status(500).json({ message: "Something went wrong. Please try again later." });
@@ -429,6 +476,9 @@ export async function registerRoutes(
       if (req.body.height) tree.currentHeight = req.body.height;
       if (req.body.health) tree.currentHealth = req.body.health;
       await tree.save();
+
+      // Dynamic Achievement Logic
+      await checkAchievements(userId, 'updates_submitted');
 
       res.status(201).json({ message: "Update added successfully", update });
     } catch (error: any) {
@@ -534,6 +584,9 @@ export async function registerRoutes(
 
       event.participants.push(userId);
       await event.save();
+
+      // Dynamic Achievement Logic
+      await checkAchievements(userId, 'events_attended');
 
       res.json({ message: "Joined event successfully", event });
     } catch (error: any) {
@@ -1167,6 +1220,40 @@ export async function registerRoutes(
     }
   });
 
+  // Delete contact/issue (Super Admin only)
+  app.delete("/api/admin/contacts/:id", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const contact = await Contact.findByIdAndDelete(req.params.id);
+      if (!contact) {
+        return res.status(404).json({ message: "Contact message not found" });
+      }
+      res.json({ message: "Message deleted successfully" });
+    } catch (error: any) {
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Failed to delete message" });
+    }
+  });
+
+  // Update contact/notification content (Super Admin only)
+  app.put("/api/admin/contacts/:id", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const { subject, message } = req.body;
+      const contact = await Contact.findByIdAndUpdate(
+        req.params.id,
+        { subject, message },
+        { new: true, runValidators: true }
+      );
+      
+      if (!contact) {
+        return res.status(404).json({ message: "Contact message not found" });
+      }
+      res.json({ message: "Message updated successfully", contact });
+    } catch (error: any) {
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Failed to update message" });
+    }
+  });
+
   // Send update reminder for a tree (admin only)
   app.post("/api/admin/trees/:id/remind", requireAuth, requireAdmin, async (req, res) => {
     try {
@@ -1276,6 +1363,180 @@ export async function registerRoutes(
     } catch (error: any) {
       console.error("API Error:", error);
       res.status(500).json({ message: "Something went wrong. Please try again later." });
+    }
+  });
+
+  // ============ BADGE MANAGEMENT ROUTES (Super Admin) ============
+  console.log('🏅 Setting up Badge Management routes...');
+
+  // Get all badge templates
+  app.get("/api/admin/badge-templates", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const templates = await BadgeTemplate.find()
+        .populate("createdBy", "username fullName")
+        .sort({ createdAt: -1 });
+      res.json({ templates });
+    } catch (error: any) {
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Failed to fetch badge templates" });
+    }
+  });
+
+  // Create badge template (Super Admin only)
+  app.post("/api/admin/badge-templates", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const { name, badgeType, description, icon, triggerCount } = req.body;
+      
+      const template = await BadgeTemplate.create({
+        name,
+        badgeType,
+        description,
+        icon,
+        triggerCount,
+        createdBy: req.user._id
+      });
+
+      res.status(201).json({ message: "Badge template created successfully", template });
+    } catch (error: any) {
+      console.error("API Error:", error);
+      if (error.code === 11000) {
+        return res.status(400).json({ message: "Badge template with this name already exists" });
+      }
+      res.status(500).json({ message: "Failed to create badge template" });
+    }
+  });
+
+  // Update badge template (Super Admin only)
+  app.put("/api/admin/badge-templates/:id", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const { name, badgeType, description, icon, triggerCount, isActive } = req.body;
+      
+      const template = await BadgeTemplate.findByIdAndUpdate(
+        req.params.id,
+        { name, badgeType, description, icon, triggerCount, isActive },
+        { new: true, runValidators: true }
+      );
+
+      if (!template) {
+        return res.status(404).json({ message: "Badge template not found" });
+      }
+
+      res.json({ message: "Badge template updated successfully", template });
+    } catch (error: any) {
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Failed to update badge template" });
+    }
+  });
+
+  // Delete badge template (Super Admin only)
+  app.delete("/api/admin/badge-templates/:id", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const template = await BadgeTemplate.findByIdAndDelete(req.params.id);
+      
+      if (!template) {
+        return res.status(404).json({ message: "Badge template not found" });
+      }
+
+      res.json({ message: "Badge template deleted successfully" });
+    } catch (error: any) {
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Failed to delete badge template" });
+    }
+  });
+
+  // Award badge to user (Super Admin only)
+  app.post("/api/admin/users/:userId/badges", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { badgeTemplateId } = req.body;
+
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const template = await BadgeTemplate.findById(badgeTemplateId);
+      if (!template) {
+        return res.status(404).json({ message: "Badge template not found" });
+      }
+
+      // Check if user already has this badge
+      const existingBadge = await Achievement.findOne({
+        userId,
+        badgeTemplateId
+      });
+
+      if (existingBadge) {
+        return res.status(400).json({ message: "User already has this badge" });
+      }
+
+      const achievement = await Achievement.create({
+        userId,
+        badgeTemplateId: template._id,
+        badgeName: template.name,
+        badgeType: template.badgeType,
+        description: template.description,
+        icon: template.icon,
+        awardedBy: req.user._id
+      });
+
+      // Send notification to user
+      await Contact.create({
+        userId,
+        name: "System Administrator",
+        email: "admin@gampahinhusmak.lk",
+        subject: "Badge Awarded!",
+        message: `Congratulations! You've been awarded the "${template.name}" badge by an administrator. ${template.description}`,
+        status: 'replied',
+        responses: [{
+          message: `Congratulations! You've been awarded the "${template.name}" badge by an administrator. ${template.description}`,
+          respondedBy: req.user._id,
+          respondedAt: new Date()
+        }]
+      });
+
+      res.status(201).json({ message: "Badge awarded successfully", achievement });
+    } catch (error: any) {
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Failed to award badge" });
+    }
+  });
+
+  // Remove badge from user (Super Admin only)
+  app.delete("/api/admin/users/:userId/badges/:badgeId", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const { userId, badgeId } = req.params;
+
+      const achievement = await Achievement.findOneAndDelete({
+        _id: badgeId,
+        userId
+      });
+
+      if (!achievement) {
+        return res.status(404).json({ message: "Badge not found for this user" });
+      }
+
+      res.json({ message: "Badge removed successfully" });
+    } catch (error: any) {
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Failed to remove badge" });
+    }
+  });
+
+  // Get user's badges (Admin can view any user)
+  app.get("/api/admin/users/:userId/badges", requireAuth, requireAdmin, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      
+      const badges = await Achievement.find({ userId })
+        .populate("badgeTemplateId")
+        .populate("awardedBy", "username fullName")
+        .sort({ earnedAt: -1 });
+
+      res.json({ badges });
+    } catch (error: any) {
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Failed to fetch user badges" });
     }
   });
 

@@ -42,6 +42,9 @@ import {
   UserPlus,
   ShieldAlert,
   Save,
+  Award,
+  Plus,
+  Eye,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -97,6 +100,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useState, useEffect } from "react";
+import BadgeManagementTab from "@/components/BadgeManagementTab";
+import UserBadgesDialog from "@/components/UserBadgesDialog";
 
 export default function Admin() {
   const { t, language, getPathWithLang } = useLanguage();
@@ -146,6 +151,15 @@ export default function Admin() {
     queryFn: () => adminAPI.getDbStats(),
   });
 
+  // Fetch badge templates
+  const { data: badgeTemplatesData } = useQuery<any>({
+    queryKey: ["badge-templates"],
+    queryFn: () => adminAPI.getBadgeTemplates(),
+    enabled: isSuperAdmin,
+  });
+
+  const badgeTemplates = badgeTemplatesData?.templates || [];
+
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -164,8 +178,33 @@ export default function Admin() {
   const [deleteUser, setDeleteUser] = useState<string | null>(null);
   const [editUser, setEditUser] = useState<any | null>(null);
   const [deleteTree, setDeleteTree] = useState<string | null>(null);
+  const [confirmDeleteContact, setConfirmDeleteContact] = useState<string | null>(null);
   const [editTree, setEditTree] = useState<any | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Badge management states
+  const [badgeTemplateDialog, setBadgeTemplateDialog] = useState(false);
+  const [editBadgeTemplate, setEditBadgeTemplate] = useState<any | null>(null);
+  const [deleteBadgeTemplate, setDeleteBadgeTemplate] = useState<string | null>(null);
+  const [awardBadgeDialog, setAwardBadgeDialog] = useState<{ userId: string; userName: string } | null>(null);
+  const [viewUserBadges, setViewUserBadges] = useState<{ userId: string; userName: string } | null>(null);
+  const [badgeFormData, setBadgeFormData] = useState({
+    name: "",
+    badgeType: "special" as "trees_planted" | "events_attended" | "updates_submitted" | "special",
+    description: "",
+    icon: "🏆",
+    triggerCount: undefined as number | undefined,
+  });
+
+  // Fetch badges for specific user
+  const { data: userBadgesData, refetch: refetchUserBadges } = useQuery<any>({
+    queryKey: ["user-badges", viewUserBadges?.userId],
+    queryFn: () => viewUserBadges ? adminAPI.getUserBadges(viewUserBadges.userId) : Promise.resolve({ badges: [] }),
+    enabled: !!viewUserBadges,
+  });
+
+  const userBadges = userBadgesData?.badges || [];
+
 
   // Manual refresh all data handler  
   const handleRefreshAll = async () => {
@@ -325,6 +364,87 @@ export default function Admin() {
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" })
   });
 
+  // Badge management mutations
+  const createBadgeTemplateMutation = useMutation({
+    mutationFn: (data: any) => adminAPI.createBadgeTemplate(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["badge-templates"] });
+      setBadgeTemplateDialog(false);
+      setBadgeFormData({ name: "", badgeType: "special", description: "", icon: "🏆", triggerCount: undefined });
+      toast({ title: "Success", description: "Badge template created successfully" });
+    },
+    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" })
+  });
+
+  const updateBadgeTemplateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string, data: any }) => adminAPI.updateBadgeTemplate(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["badge-templates"] });
+      setEditBadgeTemplate(null);
+      toast({ title: "Success", description: "Badge template updated successfully" });
+    },
+    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" })
+  });
+
+  const deleteBadgeTemplateMutation = useMutation({
+    mutationFn: (id: string) => adminAPI.deleteBadgeTemplate(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["badge-templates"] });
+      setDeleteBadgeTemplate(null);
+      toast({ title: "Success", description: "Badge template deleted successfully" });
+    },
+    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" })
+  });
+
+  const awardBadgeMutation = useMutation({
+    mutationFn: ({ userId, badgeTemplateId }: { userId: string, badgeTemplateId: string }) => 
+      adminAPI.awardBadge(userId, badgeTemplateId),
+    onSuccess: () => {
+      setAwardBadgeDialog(null);
+      queryClient.invalidateQueries({ queryKey: ["user-badges"] });
+      refetchUserBadges();
+      toast({ title: "Success", description: "Badge awarded to user successfully" });
+    },
+    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" })
+  });
+
+  const removeBadgeMutation = useMutation({
+    mutationFn: ({ userId, badgeId }: { userId: string, badgeId: string }) => 
+      adminAPI.removeBadge(userId, badgeId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user-badges"] });
+      toast({ title: "Success", description: "Badge removed from user" });
+    },
+    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" })
+  });
+
+  const deleteContactMutation = useMutation({
+    mutationFn: (id: string) => adminAPI.deleteContact(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-summary"] });
+      toast({ 
+        title: "Success", 
+        description: "Message deleted successfully",
+        className: "bg-green-50 border-green-200"
+      });
+    },
+    onError: (e: any) => toast({ 
+      title: "Error", 
+      description: e.message || "Failed to delete message", 
+      variant: "destructive" 
+    })
+  });
+  const updateContactContentMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string, data: { subject: string; message: string } }) => 
+      adminAPI.updateContactContent(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-contacts"] });
+      setSelectedContact(null);
+      toast({ title: "Success", description: "Notification updated successfully" });
+    },
+    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" })
+  });
   const trees = treesData?.trees || [];
   const contacts = contactsData?.contacts || [];
 
@@ -413,7 +533,7 @@ export default function Admin() {
         </div>
 
         <Tabs defaultValue="trees" className="w-full">
-          <TabsList className="grid grid-cols-2 md:grid-cols-5 w-full md:w-auto h-auto p-1 bg-muted/50 rounded-2xl">
+          <TabsList className={`grid ${isSuperAdmin ? 'grid-cols-3 md:grid-cols-6' : 'grid-cols-2 md:grid-cols-4'} w-full md:w-auto h-auto p-1 bg-muted/50 rounded-2xl`}>
             <TabsTrigger value="trees" className="rounded-xl flex items-center gap-2 py-2">
               <TreePine className="w-4 h-4" />
               {t.admin.tabs.registry}
@@ -427,13 +547,21 @@ export default function Admin() {
               {t.admin.tabs.users}
             </TabsTrigger>
             <TabsTrigger value="issues" className="rounded-xl flex items-center gap-2 py-2">
-              <AlertTriangle className="w-4 h-4" />
-              {t.admin.tabs.issues}
+              <MessageSquare className="w-4 h-4" />
+              Messages
             </TabsTrigger>
-            <TabsTrigger value="db" className="rounded-xl flex items-center gap-2 py-2">
-              <Database className="w-4 h-4" />
-              {t.admin.tabs.db_mgmt}
-            </TabsTrigger>
+            {isSuperAdmin && (
+              <>
+                <TabsTrigger value="badges" className="rounded-xl flex items-center gap-2 py-2">
+                  <Award className="w-4 h-4" />
+                  Badges
+                </TabsTrigger>
+                <TabsTrigger value="db" className="rounded-xl flex items-center gap-2 py-2">
+                  <Database className="w-4 h-4" />
+                  {t.admin.tabs.db_mgmt}
+                </TabsTrigger>
+              </>
+            )}
           </TabsList>
 
           <TabsContent value="trees">
@@ -478,6 +606,20 @@ export default function Admin() {
                           </TableCell>
                           <TableCell className="text-right whitespace-nowrap">
                             <div className="flex items-center justify-end gap-2">
+                              {/* All Admin can view details */}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 gap-2 hover:bg-primary/5 border-primary/10"
+                                onClick={() => {
+                                  // This should ideally navigate or open a detail view
+                                  window.location.href = `/trees/${tree._id}`;
+                                }}
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                                Details
+                              </Button>
+
                               {isSuperAdmin && (
                                 <>
                                   <Button
@@ -614,8 +756,13 @@ export default function Admin() {
                       {usersData?.users?.map((user: any) => (
                         <TableRow key={user._id}>
                           <TableCell>
-                            <div className="font-medium whitespace-nowrap text-sm">
+                            <div 
+                              className="font-medium whitespace-nowrap text-sm cursor-pointer hover:text-primary transition-colors flex items-center gap-2 group"
+                              onClick={() => setViewUserBadges({ userId: user._id, userName: user.fullName || user.username })}
+                              title="View user badges"
+                            >
                               {user.fullName || user.username}
+                              <Award className="w-3.5 h-3.5 text-amber-600 opacity-0 group-hover:opacity-100 transition-opacity" />
                             </div>
                             <div className="text-xs text-muted-foreground whitespace-nowrap">
                               {user.email}
@@ -780,11 +927,26 @@ export default function Admin() {
 
           <TabsContent value="issues">
             <Card>
-              <CardHeader>
-                <CardTitle>{t.admin.tabs.issues}</CardTitle>
-                <CardDescription>
-                  {t.admin.tabs.descriptions.issues}
-                </CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                <div>
+                  <CardTitle>{t.admin.tabs.issues}</CardTitle>
+                  <CardDescription>
+                    {t.admin.tabs.descriptions.issues}
+                  </CardDescription>
+                </div>
+                {isSuperAdmin && (
+                  <Button 
+                    className="gap-2 bg-primary hover:bg-primary/90 rounded-xl"
+                    onClick={() => {
+                      // We can reuse the messaging state but maybe with a list of users
+                      // For now, let's just use the existing sendMessage dialog by picking a user first
+                      toast({ title: "Note", description: "To create a message, click on a user in the Users tab and select Message/Award." });
+                    }}
+                  >
+                    <Plus className="w-4 h-4" />
+                    Create Message
+                  </Button>
+                )}
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -796,9 +958,21 @@ export default function Admin() {
                     contacts.slice(0, 10).map((contact: any) => (
                       <div
                         key={contact._id}
-                        className="p-4 border rounded-lg bg-card space-y-3"
+                        className="p-4 border rounded-lg bg-card space-y-3 relative group"
                       >
-                        <div className="flex justify-between items-start">
+                        {isSuperAdmin && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute top-2 right-2 h-7 w-7 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => {
+                              setConfirmDeleteContact(contact._id);
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                        <div className="flex justify-between items-start pr-8">
                           <div>
                             <div className="flex flex-wrap gap-2 mb-2">
                               <Badge 
@@ -816,7 +990,7 @@ export default function Admin() {
                             </div>
                             <h4 className="font-semibold">{contact.subject}</h4>
                             <p className="text-sm text-muted-foreground">
-                              {contact.name} - {contact.email}
+                              {contact.name || "System Notification"} - {contact.email}
                             </p>
                           </div>
                           <span className="text-sm text-muted-foreground">
@@ -861,30 +1035,48 @@ export default function Admin() {
                               }
                             }}
                           >
+                            <Eye className="w-3.5 h-3.5 mr-1" />
                             View Details
                           </Button>
-                          {(contact as any).isStale ? (
-                            <Button
-                              size="sm"
-                              className="bg-orange-500 hover:bg-orange-600 text-white gap-1"
-                              onClick={() => {
-                                sendReminderMutation.mutate(contact.relatedTreeId._id);
-                              }}
-                              disabled={sendReminderMutation.isPending}
-                            >
-                              {sendReminderMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Bell className="w-3 h-3" />}
-                              Send Reminder
-                            </Button>
-                          ) : (
-                            <Button
-                              size="sm"
-                              onClick={() => {
-                                setSelectedContact(contact);
-                                setReplyText(contact.reply || "");
-                              }}
-                            >
-                              Respond
-                            </Button>
+                          
+                          {/* Hide Respond/Edit for Auto-System Messages unless SuperAdmin needs to delete */}
+                          {!(contact.name === "System" || contact.subject.includes("Achievement")) && (
+                            <>
+                              {(contact as any).isStale ? (
+                                <Button
+                                  size="sm"
+                                  className="bg-orange-500 hover:bg-orange-600 text-white gap-1"
+                                  onClick={() => {
+                                    sendReminderMutation.mutate(contact.relatedTreeId._id);
+                                  }}
+                                  disabled={sendReminderMutation.isPending}
+                                >
+                                  {sendReminderMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Bell className="w-3 h-3" />}
+                                  Send Reminder
+                                </Button>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  className="gap-1 bg-primary hover:bg-primary/90"
+                                  onClick={() => {
+                                    setSelectedContact(contact);
+                                    setReplyText(contact.reply || "");
+                                  }}
+                                >
+                                  {isSuperAdmin ? (
+                                    <>
+                                      <Edit className="w-3.5 h-3.5 mr-1" />
+                                      Edit / Respond
+                                    </>
+                                  ) : (
+                                    <>
+                                      <MessageSquare className="w-3.5 h-3.5 mr-1" />
+                                      Respond
+                                    </>
+                                  )}
+                                </Button>
+                              )}
+                            </>
                           )}
                         </div>
                       </div>
@@ -1080,6 +1272,17 @@ export default function Admin() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {isSuperAdmin && (
+            <TabsContent value="badges">
+              <BadgeManagementTab 
+                badgeTemplates={badgeTemplates}
+                onCreateTemplate={() => setBadgeTemplateDialog(true)}
+                onEditTemplate={(template) => setEditBadgeTemplate(template)}
+                onDeleteTemplate={(id) => setDeleteBadgeTemplate(id)}
+              />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
       <AlertDialog
@@ -1125,16 +1328,39 @@ export default function Admin() {
       >
         <DialogContent className="w-[95vw] sm:max-w-[600px] max-h-[95vh] overflow-y-auto custom-scrollbar">
           <DialogHeader>
-            <DialogTitle>{selectedContact?.subject}</DialogTitle>
+            <DialogTitle>
+              {isSuperAdmin ? (
+                <div className="space-y-2 mt-2">
+                  <Label className="text-xs uppercase tracking-wider text-muted-foreground">Notification Subject</Label>
+                  <Input 
+                    value={selectedContact?.subject || ""} 
+                    onChange={(e) => setSelectedContact({ ...selectedContact, subject: e.target.value })}
+                    className="font-bold text-lg"
+                  />
+                </div>
+              ) : selectedContact?.subject}
+            </DialogTitle>
             <DialogDescription>
-              From: {selectedContact?.name} ({selectedContact?.email})
+              From: {selectedContact?.name || "System"} ({selectedContact?.email})
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-3">
-              <div className="p-4 bg-muted rounded-lg text-sm whitespace-pre-wrap">
-                {selectedContact?.message}
-              </div>
+              {isSuperAdmin ? (
+                <div className="space-y-2">
+                  <Label className="text-xs uppercase tracking-wider text-muted-foreground">Notification Message</Label>
+                  <Textarea 
+                    value={selectedContact?.message || ""} 
+                    onChange={(e) => setSelectedContact({ ...selectedContact, message: e.target.value })}
+                    className="min-h-[150px] leading-relaxed"
+                  />
+                </div>
+              ) : (
+                <div className="p-4 bg-muted rounded-lg text-sm whitespace-pre-wrap leading-relaxed">
+                  {selectedContact?.message}
+                </div>
+              )}
+              
               {selectedContact?.image && (
                 <div className="rounded-lg border overflow-hidden">
                   <img
@@ -1150,8 +1376,7 @@ export default function Admin() {
                     <div className="flex items-center gap-2">
                       <TreePine className="w-4 h-4 text-primary" />
                       <span>
-                        Related Tree: <b>{selectedContact.relatedTreeId.commonName}</b> (
-                        {selectedContact.relatedTreeId.treeId})
+                        Related Tree: <b>{selectedContact.relatedTreeId.commonName}</b> ({selectedContact.relatedTreeId.treeId})
                       </span>
                     </div>
                     {selectedContact.relatedTreeId.location && (
@@ -1175,7 +1400,7 @@ export default function Admin() {
                 </div>
               )}
 
-              {/* Responses History */}
+              {/* Only show response history if not editing (or show below) */}
               {selectedContact?.responses && selectedContact.responses.length > 0 && (
                 <div className="space-y-3 pt-2">
                   <div className="flex items-center gap-2">
@@ -1183,7 +1408,7 @@ export default function Admin() {
                     <Label className="text-[10px] uppercase tracking-wider text-muted-foreground shrink-0">{t.admin.dialogs.respond.history}</Label>
                     <div className="h-px flex-1 bg-border" />
                   </div>
-                  <div className="space-y-3 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+                  <div className="space-y-3 max-h-[150px] overflow-y-auto pr-2 custom-scrollbar">
                     {selectedContact.responses.map((resp: any, i: number) => (
                       <div key={i} className="flex flex-col items-end gap-1">
                         <div className="p-3 bg-primary text-primary-foreground rounded-2xl rounded-tr-none text-sm shadow-sm max-w-[90%]">
@@ -1191,7 +1416,7 @@ export default function Admin() {
                         </div>
                         <span className="text-[9px] text-muted-foreground mr-1">
                           {format(new Date(resp.respondedAt), "MMM d, h:mm a")}
-                        </span >
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -1199,32 +1424,53 @@ export default function Admin() {
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="reply">{t.admin.dialogs.respond.reply_label}</Label>
-              <Textarea
-                id="reply"
-                placeholder={t.admin.dialogs.respond.reply_placeholder}
-                className="min-h-[150px]"
-                value={replyText}
-                onChange={(e) => setReplyText(e.target.value)}
-              />
-            </div>
+            {/* Standard Admin Response Section (Hidden for SuperAdmin when they are editing metadata) */}
+            {!isSuperAdmin && (
+              <div className="space-y-2 bg-primary/5 p-4 rounded-2xl border border-primary/10">
+                <Label htmlFor="reply" className="text-primary font-bold">{t.admin.dialogs.respond.reply_label}</Label>
+                <Textarea
+                  id="reply"
+                  placeholder={t.admin.dialogs.respond.reply_placeholder}
+                  className="min-h-[120px] bg-background"
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                />
+              </div>
+            )}
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setSelectedContact(null)}>
+          <DialogFooter className="border-t p-6 bg-muted/30">
+            <Button variant="outline" onClick={() => setSelectedContact(null)} className="rounded-xl">
               {t.common.close}
             </Button>
-            <Button
-              onClick={() =>
-                respondMutation.mutate({
-                  id: selectedContact._id,
-                  reply: replyText,
-                })
-              }
-              disabled={respondMutation.isPending || !replyText.trim()}
-            >
-              {respondMutation.isPending ? t.admin.dialogs.respond.saving : t.admin.dialogs.respond.save_btn}
-            </Button>
+            {isSuperAdmin ? (
+              <Button
+                className="rounded-xl shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90"
+                onClick={() =>
+                  updateContactContentMutation.mutate({
+                    id: selectedContact._id,
+                    data: { subject: selectedContact.subject, message: selectedContact.message },
+                  })
+                }
+                disabled={updateContactContentMutation.isPending || !selectedContact?.subject || !selectedContact?.message}
+              >
+                {updateContactContentMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                Update Notification
+              </Button>
+            ) : (
+              <Button
+                className="rounded-xl shadow-lg shadow-primary/20"
+                onClick={() =>
+                  respondMutation.mutate({
+                    id: selectedContact._id,
+                    reply: replyText,
+                  })
+                }
+                disabled={respondMutation.isPending || !replyText.trim()}
+              >
+                {respondMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                {t.admin.dialogs.respond.save_btn}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1465,6 +1711,235 @@ export default function Admin() {
               disabled={updateTreeMutation.isPending}
             >
               {t.common.save}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Badge Template Create/Edit Dialog */}
+      <Dialog open={badgeTemplateDialog || !!editBadgeTemplate} onOpenChange={(open) => {
+        if (!open) {
+          setBadgeTemplateDialog(false);
+          setEditBadgeTemplate(null);
+          setBadgeFormData({ name: "", badgeType: "special", description: "", icon: "🏆", triggerCount: undefined });
+        }
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editBadgeTemplate ? "Edit Badge Template" : "Create Badge Template"}</DialogTitle>
+            <DialogDescription>
+              {editBadgeTemplate ? "Modify the badge template details" : "Create a new badge template that can be awarded to users"}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Badge Name</Label>
+              <Input 
+                value={editBadgeTemplate?.name || badgeFormData.name}
+                onChange={(e) => editBadgeTemplate 
+                  ? setEditBadgeTemplate({ ...editBadgeTemplate, name: e.target.value })
+                  : setBadgeFormData({ ...badgeFormData, name: e.target.value })
+                }
+                placeholder="e.g., Tree Champion"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Badge Type</Label>
+              <Select 
+                value={editBadgeTemplate?.badgeType || badgeFormData.badgeType}
+                onValueChange={(val: any) => editBadgeTemplate
+                  ? setEditBadgeTemplate({ ...editBadgeTemplate, badgeType: val })
+                  : setBadgeFormData({ ...badgeFormData, badgeType: val })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="trees_planted">Trees Planted</SelectItem>
+                  <SelectItem value="events_attended">Events Attended</SelectItem>
+                  <SelectItem value="updates_submitted">Updates Submitted</SelectItem>
+                  <SelectItem value="special">Special</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Description</Label>
+              <Textarea 
+                value={editBadgeTemplate?.description || badgeFormData.description}
+                onChange={(e) => editBadgeTemplate
+                  ? setEditBadgeTemplate({ ...editBadgeTemplate, description: e.target.value })
+                  : setBadgeFormData({ ...badgeFormData, description: e.target.value })
+                }
+                placeholder="Achievement description"
+                rows={3}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Icon (Emoji)</Label>
+              <Input 
+                value={editBadgeTemplate?.icon || badgeFormData.icon}
+                onChange={(e) => editBadgeTemplate
+                  ? setEditBadgeTemplate({ ...editBadgeTemplate, icon: e.target.value })
+                  : setBadgeFormData({ ...badgeFormData, icon: e.target.value })
+                }
+                placeholder="🏆"
+                maxLength={4}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Trigger Count (Optional)</Label>
+              <Input 
+                type="number"
+                value={editBadgeTemplate?.triggerCount || badgeFormData.triggerCount || ""}
+                onChange={(e) => {
+                  const val = e.target.value ? parseInt(e.target.value) : undefined;
+                  editBadgeTemplate
+                    ? setEditBadgeTemplate({ ...editBadgeTemplate, triggerCount: val })
+                    : setBadgeFormData({ ...badgeFormData, triggerCount: val });
+                }}
+                placeholder="e.g., 10"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setBadgeTemplateDialog(false);
+              setEditBadgeTemplate(null);
+            }}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => {
+                if (editBadgeTemplate) {
+                  updateBadgeTemplateMutation.mutate({ id: editBadgeTemplate._id, data: editBadgeTemplate });
+                } else {
+                  createBadgeTemplateMutation.mutate(badgeFormData);
+                }
+              }}
+              disabled={createBadgeTemplateMutation.isPending || updateBadgeTemplateMutation.isPending}
+            >
+              {editBadgeTemplate ? "Update" : "Create"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Award Badge Dialog */}
+      <Dialog open={!!awardBadgeDialog} onOpenChange={(open) => !open && setAwardBadgeDialog(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Award Badge to {awardBadgeDialog?.userName}</DialogTitle>
+            <DialogDescription>Select a badge template to award to this user</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Select Badge</Label>
+              <Select onValueChange={(badgeTemplateId) => {
+                if (awardBadgeDialog) {
+                  awardBadgeMutation.mutate({ userId: awardBadgeDialog.userId, badgeTemplateId });
+                }
+              }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose a badge..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {badgeTemplates.map((template: any) => (
+                    <SelectItem key={template._id} value={template._id}>
+                      {template.icon} {template.name} - {template.description}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAwardBadgeDialog(null)}>Cancel</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Badge Template Dialog */}
+      <AlertDialog open={!!deleteBadgeTemplate} onOpenChange={(open) => !open && setDeleteBadgeTemplate(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Badge Template</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteBadgeTemplate && deleteBadgeTemplateMutation.mutate(deleteBadgeTemplate)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* User Badges Dialog */}
+      <UserBadgesDialog
+        open={!!viewUserBadges}
+        onClose={() => setViewUserBadges(null)}
+        userId={viewUserBadges?.userId || ""}
+        userName={viewUserBadges?.userName || ""}
+        userBadges={userBadges}
+        onRemoveBadge={(badgeId) => {
+          if (viewUserBadges) {
+            removeBadgeMutation.mutate({ userId: viewUserBadges.userId, badgeId });
+          }
+        }}
+        onAwardBadge={() => {
+          if (viewUserBadges) {
+            setAwardBadgeDialog({
+              userId: viewUserBadges.userId,
+              userName: viewUserBadges.userName,
+            });
+          }
+        }}
+      />
+
+      {/* Confirmation Dialog for Deleting Notifications */}
+      <Dialog open={!!confirmDeleteContact} onOpenChange={(open) => !open && setConfirmDeleteContact(null)}>
+        <DialogContent className="sm:max-w-[400px] border-none shadow-2xl rounded-3xl overflow-hidden p-0">
+          <div className="bg-destructive/10 p-6 flex flex-col items-center text-center space-y-4">
+            <div className="w-16 h-16 bg-destructive/20 rounded-full flex items-center justify-center">
+              <Trash2 className="w-8 h-8 text-destructive" />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-xl font-bold text-foreground font-heading">Are you sure?</h3>
+              <p className="text-sm text-muted-foreground">
+                This will permanently delete this notification. This action cannot be undone.
+              </p>
+            </div>
+          </div>
+          <DialogFooter className="p-6 pt-0 flex gap-2">
+            <Button 
+              variant="outline" 
+              className="flex-1 rounded-xl border-muted-foreground/20 hover:bg-muted"
+              onClick={() => setConfirmDeleteContact(null)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              className="flex-1 rounded-xl shadow-lg shadow-destructive/20"
+              onClick={() => {
+                if (confirmDeleteContact) {
+                  deleteContactMutation.mutate(confirmDeleteContact);
+                  setConfirmDeleteContact(null);
+                }
+              }}
+              disabled={deleteContactMutation.isPending}
+            >
+              {deleteContactMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Delete Message"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -198,18 +198,51 @@ ContactSchema.index({ userId: 1 });
 ContactSchema.index({ status: 1 });
 ContactSchema.index({ email: 1 });
 
+// Badge Template Schema (for super admin to create badge types)
+export interface IBadgeTemplate extends Document {
+  name: string;
+  badgeType: 'trees_planted' | 'events_attended' | 'updates_submitted' | 'special';
+  description: string;
+  icon: string;
+  triggerCount?: number; // For auto-awarding (e.g., 5 trees planted)
+  isActive: boolean;
+  createdBy: mongoose.Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const BadgeTemplateSchema = new Schema<IBadgeTemplate>({
+  name: { type: String, required: true, unique: true },
+  badgeType: { 
+    type: String, 
+    enum: ['trees_planted', 'events_attended', 'updates_submitted', 'special'], 
+    required: true 
+  },
+  description: { type: String, required: true },
+  icon: { type: String, required: true },
+  triggerCount: { type: Number }, // Optional: for automatic awarding
+  isActive: { type: Boolean, default: true },
+  createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+}, { timestamps: true });
+
+BadgeTemplateSchema.index({ badgeType: 1 });
+BadgeTemplateSchema.index({ isActive: 1 });
+
 // Achievement/Badge Schema
 export interface IAchievement extends Document {
   userId: mongoose.Types.ObjectId;
+  badgeTemplateId?: mongoose.Types.ObjectId; // Reference to badge template
   badgeName: string;
   badgeType: 'trees_planted' | 'events_attended' | 'updates_submitted' | 'special';
   description: string;
   icon: string;
   earnedAt: Date;
+  awardedBy?: mongoose.Types.ObjectId; // If manually awarded by admin
 }
 
 const AchievementSchema = new Schema<IAchievement>({
   userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  badgeTemplateId: { type: Schema.Types.ObjectId, ref: 'BadgeTemplate' },
   badgeName: { type: String, required: true },
   badgeType: { 
     type: String, 
@@ -219,6 +252,7 @@ const AchievementSchema = new Schema<IAchievement>({
   description: { type: String, required: true },
   icon: { type: String, required: true },
   earnedAt: { type: Date, default: Date.now },
+  awardedBy: { type: Schema.Types.ObjectId, ref: 'User' },
 });
 
 AchievementSchema.index({ userId: 1 });
@@ -230,4 +264,5 @@ export const Tree = mongoose.models.Tree || mongoose.model<ITree>('Tree', TreeSc
 export const TreeUpdate = mongoose.models.TreeUpdate || mongoose.model<ITreeUpdate>('TreeUpdate', TreeUpdateSchema);
 export const Event = mongoose.models.Event || mongoose.model<IEvent>('Event', EventSchema);
 export const Contact = mongoose.models.Contact || mongoose.model<IContact>('Contact', ContactSchema);
+export const BadgeTemplate = mongoose.models.BadgeTemplate || mongoose.model<IBadgeTemplate>('BadgeTemplate', BadgeTemplateSchema);
 export const Achievement = mongoose.models.Achievement || mongoose.model<IAchievement>('Achievement', AchievementSchema);

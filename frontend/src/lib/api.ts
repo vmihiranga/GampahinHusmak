@@ -171,6 +171,15 @@ export const adminAPI = {
   sendTreeReminder: (id: string) => fetchAPI<MessageResponse>(`/admin/trees/${id}/remind`, {
     method: 'POST'
   }),
+  
+  deleteContact: (id: string) => fetchAPI<MessageResponse>(`/admin/contacts/${id}`, {
+    method: 'DELETE'
+  }),
+  
+  updateContactContent: (id: string, data: { subject: string; message: string }) => fetchAPI<any>(`/admin/contacts/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
 
   sendMessage: (userId: string, data: { subject: string; message: string }) => fetchAPI<any>(`/admin/message/${userId}`, {
     method: 'POST',
@@ -192,6 +201,35 @@ export const adminAPI = {
   }),
 
   deleteTree: (treeId: string) => fetchAPI<MessageResponse>(`/admin/trees/${treeId}`, {
+    method: 'DELETE',
+  }),
+
+  // Badge Template Management
+  getBadgeTemplates: () => fetchAPI<any>('/admin/badge-templates'),
+  
+  createBadgeTemplate: (data: any) => fetchAPI<MessageResponse>('/admin/badge-templates', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  
+  updateBadgeTemplate: (id: string, data: any) => fetchAPI<MessageResponse>(`/admin/badge-templates/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+  
+  deleteBadgeTemplate: (id: string) => fetchAPI<MessageResponse>(`/admin/badge-templates/${id}`, {
+    method: 'DELETE',
+  }),
+
+  // User Badge Management
+  getUserBadges: (userId: string) => fetchAPI<any>(`/admin/users/${userId}/badges`),
+  
+  awardBadge: (userId: string, badgeTemplateId: string) => fetchAPI<MessageResponse>(`/admin/users/${userId}/badges`, {
+    method: 'POST',
+    body: JSON.stringify({ badgeTemplateId }),
+  }),
+  
+  removeBadge: (userId: string, badgeId: string) => fetchAPI<MessageResponse>(`/admin/users/${userId}/badges/${badgeId}`, {
     method: 'DELETE',
   }),
 };
