@@ -606,19 +606,6 @@ export default function Admin() {
                           </TableCell>
                           <TableCell className="text-right whitespace-nowrap">
                             <div className="flex items-center justify-end gap-2">
-                              {/* All Admin can view details */}
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-8 gap-2 hover:bg-primary/5 border-primary/10"
-                                onClick={() => {
-                                  // This should ideally navigate or open a detail view
-                                  window.location.href = `/trees/${tree._id}`;
-                                }}
-                              >
-                                <Eye className="w-3.5 h-3.5" />
-                                Details
-                              </Button>
 
                               {isSuperAdmin && (
                                 <>

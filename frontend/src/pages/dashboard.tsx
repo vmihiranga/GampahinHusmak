@@ -194,6 +194,15 @@ export default function Dashboard() {
     const formData = new FormData(e.target as HTMLFormElement);
     const imageFile = (document.getElementById('image') as HTMLInputElement).files?.[0];
 
+    if (!imageFile) {
+      toast({
+        title: "Photo required",
+        description: "Please capture or upload a photo of the tree.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!coordinates) {
       toast({
         title: "Location required",
@@ -267,6 +276,15 @@ export default function Dashboard() {
 
     const formData = new FormData(e.target as HTMLFormElement);
     const imageFile = (document.getElementById('update-image') as HTMLInputElement).files?.[0];
+
+    if (!imageFile) {
+      toast({
+        title: "Photo required",
+        description: "Please capture or upload a current photo of the tree.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setIsUploading(true);
     let imageUrl = "";
@@ -569,7 +587,7 @@ export default function Dashboard() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="image" className="flex items-center justify-between">
-                      {t.dashboard.dialogs.add_tree.photo_label}
+                      {t.dashboard.dialogs.add_tree.photo_label} <span className="text-destructive font-bold text-[10px] uppercase tracking-wider">{language === 'en' ? '(Required)' : 'අත්‍යවශ්‍යයි'}</span>
                       <Button 
                         type="button" 
                         variant="ghost" 
@@ -581,7 +599,7 @@ export default function Dashboard() {
                         {t.dashboard.dialogs.add_tree.capture || "Capture"}
                       </Button>
                     </Label>
-                    <Input id="image" name="image" type="file" accept="image/*" capture="environment" className="cursor-pointer" />
+                    <Input id="image" name="image" type="file" accept="image/*" capture="environment" className="cursor-pointer" required />
                   </div>
                   <div className="pt-4 flex justify-end gap-2">
                     <Button variant="outline" type="button" onClick={() => setIsAddDialogOpen(false)}>{t.dashboard.dialogs.add_tree.cancel}</Button>
@@ -635,7 +653,7 @@ export default function Dashboard() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="update-image" className="flex items-center justify-between">
-                      Update Photo
+                      Update Photo <span className="text-destructive font-bold text-[10px] uppercase tracking-wider">{language === 'en' ? '(Required)' : 'අත්‍යවශ්‍යයි'}</span>
                       <Button 
                         type="button" 
                         variant="ghost" 
@@ -647,7 +665,7 @@ export default function Dashboard() {
                         Capture
                       </Button>
                     </Label>
-                    <Input id="update-image" name="image" type="file" accept="image/*" capture="environment" className="cursor-pointer" />
+                    <Input id="update-image" name="image" type="file" accept="image/*" capture="environment" className="cursor-pointer" required />
                   </div>
                   <div className="pt-4 flex justify-end gap-2">
                     <Button variant="outline" type="button" onClick={() => setIsUpdateDialogOpen(false)}>Cancel</Button>
