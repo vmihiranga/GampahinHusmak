@@ -70,10 +70,12 @@ export default function Auth() {
     try {
       // 1. Upload profile image if exists
       if (profileImageFile) {
+        console.log("📤 Uploading profile photo to ImgBB...");
+        const apiKey = import.meta.env.VITE_IMGBB_API_KEY;
         const imgFormData = new FormData();
         imgFormData.append("image", profileImageFile);
         
-        const response = await fetch(`https://api.imgbb.com/1/upload?key=${import.meta.env.VITE_IMGBB_API_KEY}`, {
+        const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
           method: "POST",
           body: imgFormData,
         });
@@ -81,6 +83,10 @@ export default function Auth() {
         const resData = await response.json();
         if (resData.success) {
           profileImageUrl = resData.data.url;
+          console.log("✅ Profile photo uploaded:", profileImageUrl);
+        } else {
+          console.error("❌ ImgBB Registration Error:", resData.error);
+          throw new Error(`Profile photo upload failed: ${resData.error?.message || "Unknown error"}`);
         }
       }
 

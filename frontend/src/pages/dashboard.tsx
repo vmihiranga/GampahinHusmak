@@ -35,6 +35,8 @@ export default function Dashboard() {
   const [requestTreeId, setRequestTreeId] = useState("");
   const [requestType, setRequestType] = useState("");
   const [selectedViewContact, setSelectedViewContact] = useState<any>(null);
+  const [updateHealth, setUpdateHealth] = useState<string>("good");
+  const [isUpdateLoading, setIsUpdateLoading] = useState(false);
 
   // Fetch user profile
   const { data: userData, isLoading: isUserLoading } = useQuery<AuthResponse>({
@@ -201,28 +203,36 @@ export default function Dashboard() {
     let imageUrl = "";
 
     try {
-      // 1. Upload to ImgBB
       if (imageFile) {
+        console.log("📤 Starting image upload to ImgBB...");
+        const apiKey = import.meta.env.VITE_IMGBB_API_KEY;
+        if (!apiKey) {
+          throw new Error("ImgBB API Key is missing. Please check your .env file.");
+        }
+
         const imgFormData = new FormData();
         imgFormData.append("image", imageFile);
         
-        const response = await fetch(`https://api.imgbb.com/1/upload?key=${import.meta.env.VITE_IMGBB_API_KEY}`, {
+        const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
           method: "POST",
           body: imgFormData,
         });
         
         const resData = await response.json();
+        console.log("📥 ImgBB Response:", resData);
+
         if (resData.success) {
           imageUrl = resData.data.url;
+          console.log("✅ Image uploaded:", imageUrl);
         } else {
-          throw new Error("Image upload failed");
+          const errorMsg = resData.error?.message || "Unknown upload error";
+          throw new Error(`Image upload failed: ${errorMsg}`);
         }
       }
 
-      // 2. Create Tree in MongoDB
       const treeData = {
         commonName: formData.get('tree-type'),
-        species: formData.get('sci-name') || formData.get('tree-type'), // Use sci-name or fallback to common name
+        species: formData.get('sci-name') || formData.get('tree-type'),
         plantedDate: formData.get('date'),
         location: {
           address: formData.get('location'),
@@ -236,8 +246,9 @@ export default function Dashboard() {
 
       createTreeMutation.mutate(treeData);
     } catch (error: any) {
+      console.error("❌ Add Tree Error:", error);
       toast({
-        title: "Upload Failed",
+        title: "Action Failed",
         description: error.message,
         variant: "destructive",
       });
@@ -258,31 +269,46 @@ export default function Dashboard() {
 
     try {
       if (imageFile) {
+        console.log("📤 Starting update image upload to ImgBB...");
+        const apiKey = import.meta.env.VITE_IMGBB_API_KEY;
+        if (!apiKey) {
+          throw new Error("ImgBB API Key is missing.");
+        }
+
         const imgFormData = new FormData();
         imgFormData.append("image", imageFile);
         
-        const response = await fetch(`https://api.imgbb.com/1/upload?key=${import.meta.env.VITE_IMGBB_API_KEY}`, {
+        const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
           method: "POST",
           body: imgFormData,
         });
         
         const resData = await response.json();
-        if (resData.success) imageUrl = resData.data.url;
+        console.log("📥 ImgBB Update Response:", resData);
+
+        if (resData.success) {
+          imageUrl = resData.data.url;
+        } else {
+          throw new Error(`Image upload failed: ${resData.error?.message || "Unknown error"}`);
+        }
       }
 
       const updateData = {
         height: Number(formData.get('height')),
-        health: formData.get('health'),
+        health: updateHealth,
         notes: formData.get('notes'),
         images: imageUrl ? [imageUrl] : [],
         updateDate: new Date(),
       };
+
+      console.log("🚀 Submitting Tree Update:", updateData);
 
       updateTreeMutation.mutate({ 
         id: selectedTree._id || selectedTree.id, 
         data: updateData 
       });
     } catch (error: any) {
+      console.error("❌ Update Tree Error:", error);
       toast({
         title: "Update Failed",
         description: error.message,
@@ -303,14 +329,21 @@ export default function Dashboard() {
 
     try {
       if (imageFile) {
+        console.log("📤 Uploading request image...");
+        const apiKey = import.meta.env.VITE_IMGBB_API_KEY;
         const imgFormData = new FormData();
         imgFormData.append("image", imageFile);
-        const response = await fetch(`https://api.imgbb.com/1/upload?key=${import.meta.env.VITE_IMGBB_API_KEY}`, {
+        const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
           method: "POST",
           body: imgFormData,
         });
         const resData = await response.json();
-        if (resData.success) imageUrl = resData.data.url;
+        if (resData.success) {
+          imageUrl = resData.data.url;
+          console.log("✅ Request image uploaded:", imageUrl);
+        } else {
+          throw new Error(`Image upload failed: ${resData.error?.message || "Unknown error"}`);
+        }
       }
 
       const requestData = {
@@ -469,10 +502,12 @@ export default function Dashboard() {
             {/* Add Tree Dialog */}
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="gap-2 shadow-lg shadow-primary/20">
-                  <Plus className="w-4 h-4" />
-                  {t.dashboard.btn_add_tree}
-                </Button>
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button className="gap-2 shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 rounded-2xl h-12 px-6">
+                    <Plus className="w-5 h-5" />
+                    <span className="font-bold">{t.dashboard.btn_add_tree}</span>
+                  </Button>
+                </motion.div>
               </DialogTrigger>
               <DialogContent className="w-[95vw] sm:max-w-[550px] max-h-[95vh] overflow-y-auto custom-scrollbar">
                 <DialogHeader>
@@ -576,7 +611,7 @@ export default function Dashboard() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="health">{t.dashboard.dialogs.update.health}</Label>
-                      <Select required name="health">
+                      <Select required value={updateHealth} onValueChange={setUpdateHealth}>
                         <SelectTrigger>
                           <SelectValue placeholder={t.dashboard.dialogs.update.health_placeholder} />
                         </SelectTrigger>
