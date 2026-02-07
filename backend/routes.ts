@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import type { Server } from "http";
 import connectDB from "./db";
-import { User, Tree, TreeUpdate, Event, Gallery, Contact, Achievement } from "./models";
+import { User, Tree, TreeUpdate, Event, Contact, Achievement } from "./models";
 import bcrypt from "bcryptjs";
 import session from "express-session";
 import MongoStore from "connect-mongo";
@@ -43,51 +43,7 @@ export async function registerRoutes(
     })
   );
 
-  // ============ SECURITY MIDDLEWARE ============
-  console.log('🛡️  Applying security headers and rate limiters...');
-  
-  // Apply Helmet with Content Security Policy
-  app.use(helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: [
-          "'self'",
-          "'unsafe-inline'", // Required for Vite in development
-          "'unsafe-eval'", // Required for Vite HMR in development
-          "https://cdn.jsdelivr.net", // For external libraries
-        ],
-        styleSrc: [
-          "'self'",
-          "'unsafe-inline'", // Required for inline styles
-          "https://fonts.googleapis.com",
-        ],
-        fontSrc: [
-          "'self'",
-          "data:",
-          "https://fonts.gstatic.com",
-        ],
-        imgSrc: [
-          "'self'",
-          "data:",
-          "blob:",
-          "https:", // Allow images from any HTTPS source
-          "http://localhost:*", // Development
-        ],
-        connectSrc: [
-          "'self'",
-          "https://api.cloudinary.com",
-          "https://res.cloudinary.com",
-          "http://localhost:*", // Development
-          "ws://localhost:*", // WebSocket for Vite HMR
-        ],
-        frameSrc: ["'self'"],
-        objectSrc: ["'none'"],
-        upgradeInsecureRequests: process.env.NODE_ENV === "production" ? [] : null,
-      },
-    },
-    crossOriginEmbedderPolicy: false,
-  }));
+  // ============ RATE LIMITERS ============
 
   // Generic rate limiter for API calls
   const apiLimiter = rateLimit({
@@ -585,116 +541,75 @@ export async function registerRoutes(
     }
   });
 
-  // ============ GALLERY ROUTES ============
+  // ============ GALLERY ROUTES (Unified Trees Gallery) ============
 
-  // Get gallery items
-  // Get gallery items (merged with latest trees)
+  // Get gallery items (Exclusively from Trees table)
   app.get("/api/gallery", async (req, res) => {
     try {
       const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 30;
+      const limit = parseInt(req.query.limit as string) || 20;
       const skip = (page - 1) * limit;
 
-      // 1. Fetch curated gallery items
-      const galleryItems = await Gallery.find()
-        .populate("uploadedBy", "username fullName")
-        .populate("relatedTree")
-        .populate("relatedEvent", "title")
-        .sort({ createdAt: -1 });
+      // 1. Get IDs of all trees that have progress updates with images
+      const updatesWithImages = await TreeUpdate.find({ 
+        images: { $exists: true, $not: { $size: 0 } } 
+      }).distinct("treeId");
 
-      // 2. Fetch latest trees with images to show community plantings
-      const latestTrees = await Tree.find({ images: { $not: { $size: 0 } } })
+      // 2. Build query: Tree has images OR Tree has updates with images
+      const imageQuery = { 
+        $or: [
+          { images: { $exists: true, $not: { $size: 0 } } },
+          { _id: { $in: updatesWithImages } }
+        ]
+      };
+
+      const treesCount = await Tree.countDocuments(imageQuery);
+      const trees = await Tree.find(imageQuery)
         .populate("plantedBy", "username fullName")
-        .sort({ createdAt: -1 });
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
 
-      // 3. Process curated items to include growth updates
-      const processedCurated = await Promise.all(
-        galleryItems.map(async (item: any) => {
-          let allImages = [...(item.images || [])];
+      const items = await Promise.all(
+        trees.map(async (tree) => {
+          // Get all images from THIS tree's updates
+          const updates = await TreeUpdate.find({ treeId: tree._id }).sort({ updateDate: -1 });
+          const updateImages = updates.flatMap(u => u.images || []);
           
-          if (item.relatedTree) {
-            const updates = await TreeUpdate.find({ treeId: item.relatedTree._id }).sort({ updateDate: 1 });
-            const updateImages = updates.flatMap(u => u.images || []);
-            allImages = Array.from(new Set([...allImages, ...updateImages]));
-          }
-          
+          // Combine images from main record and all updates, ensuring uniqueness
+          const allImages = Array.from(new Set([...(tree.images || []), ...updateImages]));
+
           return {
-            ...item.toObject(),
-            images: allImages
+            _id: tree._id,
+            title: `${tree.commonName} Tree`,
+            description: tree.notes || `A thriving ${tree.commonName} planted in Gampaha.`,
+            images: allImages,
+            uploadedBy: tree.plantedBy,
+            relatedTree: tree,
+            tags: ["community", tree.commonName.toLowerCase(), tree.currentHealth],
+            likes: tree.likes || [],
+            createdAt: tree.createdAt,
+            isCommunityPost: true
           };
         })
       );
 
-      // 4. Create items for trees not already in gallery
-      const curatedTreeIds = galleryItems
-        .filter(item => item.relatedTree)
-        .map(item => item.relatedTree._id.toString());
-
-      const treeGalleryItems = await Promise.all(
-        latestTrees
-          .filter(tree => !curatedTreeIds.includes(tree._id.toString()))
-          .map(async (tree) => {
-            const updates = await TreeUpdate.find({ treeId: tree._id }).sort({ updateDate: 1 });
-            const updateImages = updates.flatMap(u => u.images || []);
-            const allImages = Array.from(new Set([...(tree.images || []), ...updateImages]));
-
-            return {
-              _id: tree._id,
-              title: `${tree.commonName} Planting`,
-              description: tree.notes || `A young ${tree.commonName} tree planted in Gampaha.`,
-              images: allImages,
-              uploadedBy: tree.plantedBy,
-              relatedTree: tree,
-              tags: ["community", tree.commonName.toLowerCase()],
-              createdAt: tree.createdAt,
-              likes: [],
-              isCommunityPost: true
-            };
-          })
-      );
-
-      const allItems = [...processedCurated, ...treeGalleryItems]
-        .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-      const totalItems = allItems.length;
-      const paginatedItems = allItems.slice(skip, skip + limit);
-
       res.json({ 
-        items: paginatedItems,
+        items,
         pagination: {
-          totalItems,
-          totalPages: Math.ceil(totalItems / limit),
+          totalItems: treesCount,
+          totalPages: Math.ceil(treesCount / limit),
           currentPage: page,
           limit
         }
       });
     } catch (error: any) {
-      console.error("API Error:", error);
-      res.status(500).json({ message: "Something went wrong. Please try again later." });
+      console.error("Gallery API Error:", error);
+      res.status(500).json({ message: "Failed to fetch gallery items." });
     }
   });
 
-  // Upload to gallery
-  app.post("/api/gallery", async (req, res) => {
-    try {
-      const userId = (req.session as any).userId;
-      if (!userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-
-      const item = await Gallery.create({
-        ...req.body,
-        uploadedBy: userId,
-      });
-
-      res.status(201).json({ message: "Gallery item created", item });
-    } catch (error: any) {
-      console.error("API Error:", error);
-      res.status(500).json({ message: "Something went wrong. Please try again later." });
-    }
-  });
-
-  // Like gallery item
+  // Like a gallery item (Now likes the Tree record)
   app.post("/api/gallery/:id/like", async (req, res) => {
     try {
       const userId = (req.session as any).userId;
@@ -702,23 +617,25 @@ export async function registerRoutes(
         return res.status(401).json({ message: "Not authenticated" });
       }
 
-      const item = await Gallery.findById(req.params.id);
-      if (!item) {
-        return res.status(404).json({ message: "Gallery item not found" });
+      const tree = await Tree.findById(req.params.id);
+      if (!tree) {
+        return res.status(404).json({ message: "Item not found" });
       }
 
-      const likeIndex = item.likes.indexOf(userId);
+      if (!tree.likes) tree.likes = [];
+      const likeIndex = tree.likes.indexOf(userId);
+
       if (likeIndex > -1) {
-        item.likes.splice(likeIndex, 1);
+        tree.likes.splice(likeIndex, 1);
       } else {
-        item.likes.push(userId);
+        tree.likes.push(userId);
       }
 
-      await item.save();
-      res.json({ message: "Like toggled", likes: item.likes.length });
+      await tree.save();
+      res.json({ message: "Success", likes: tree.likes.length });
     } catch (error: any) {
       console.error("API Error:", error);
-      res.status(500).json({ message: "Something went wrong. Please try again later." });
+      res.status(500).json({ message: "Something went wrong." });
     }
   });
 

@@ -444,17 +444,17 @@ export const translations = {
     }
   },
   si: {
-    nav: {
-      home: "මුල් පිටුව",
-      gallery: "ඡායාරූප ",
-      contact: "සම්බන්ධ වන්න",
-      dashboard: "දත්ත පුවරුව",
-      admin: "පරිපාලක",
-      login: "ඇතුළු වන්න",
-      logout: "පිටවෙන්න",
-      admin_panel: "පරිපාලක පැනලය",
-      leaderboard: "නායක පුවරුව",
-    },
+nav: {
+  home: "මුල",
+  gallery: "ඡායාරූප",
+  contact: "ඇමතුම්",
+  dashboard: "පුවරුව",
+  admin: "පාලක",
+  login: "පිවිසුම",
+  logout: "පිටවීම",
+  admin_panel: "පාලක",
+  leaderboard: "පෙරමුණ",
+},
     home: {
       hero: {
         badge: "නිදහස් දින සමරු රුක් රෝපණ වැඩසටහන",
@@ -882,17 +882,17 @@ export const translations = {
     }
   },
   ta: {
-    nav: {
-      home: "முகப்பு",
-      gallery: "புகைப்படங்கள்",
-      contact: "தொடர்பு",
-      dashboard: "டாஷ்போர்டு",
-      admin: "நிர்வாகி",
-      login: "உள்நுழை",
-      logout: "வெளியேறு",
-      admin_panel: "நிர்வாகக் குழு",
-      leaderboard: "தலைமைப் பலகை",
-    },
+nav: {
+  home: "முகப்பு",       
+  gallery: "படங்கள்",     
+  contact: "தொடர்பு",     
+  dashboard: "முகப்பு",    
+  admin: "நிர்வாகம்",    
+  login: "நுழை",        
+  logout: "வெளியேறு",     
+  admin_panel: "நிர்வாகம்", 
+  leaderboard: "தரவரிசை",  
+},
     home: {
       hero: {
         badge: "சுதந்திர தினத்தை முன்னிட்டு மரம் நடுதல்",

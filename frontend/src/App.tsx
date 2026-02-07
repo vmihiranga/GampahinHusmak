@@ -16,10 +16,9 @@ import Leaderboard from "@/pages/leaderboard";
 import PendingApproval from "@/pages/pending-approval";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import NotAuthorized from "@/pages/not-authorized";
-import { useLanguage } from "@/hooks/use-language";
+import { Language } from "./lib/translations";
 
-function Router() {
-  const { language } = useLanguage();
+function AppRouter() {
   const [location, setLocation] = useLocation();
 
   // Handle redirects for paths without language prefix
@@ -113,7 +112,7 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
-          <Router />
+          <AppRouter />
         </TooltipProvider>
       </QueryClientProvider>
     </LanguageProvider>

@@ -46,6 +46,7 @@ export interface ITree extends Document {
   notes?: string;
   qrCode?: string;
   status: 'active' | 'removed' | 'dead';
+  likes: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -72,6 +73,7 @@ const TreeSchema = new Schema<ITree>({
   notes: { type: String },
   qrCode: { type: String },
   status: { type: String, enum: ['active', 'removed', 'dead'], default: 'active' },
+  likes: [{ type: Schema.Types.ObjectId, ref: 'User' }],
 }, { timestamps: true });
 
 TreeSchema.index({ location: '2dsphere' });
@@ -148,31 +150,6 @@ const EventSchema = new Schema<IEvent>({
     enum: ['upcoming', 'ongoing', 'completed', 'cancelled'], 
     default: 'upcoming' 
   },
-}, { timestamps: true });
-
-// Gallery Schema
-export interface IGallery extends Document {
-  title: string;
-  description?: string;
-  images: string[];
-  uploadedBy: mongoose.Types.ObjectId;
-  relatedTree?: mongoose.Types.ObjectId;
-  relatedEvent?: mongoose.Types.ObjectId;
-  tags: string[];
-  likes: mongoose.Types.ObjectId[];
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-const GallerySchema = new Schema<IGallery>({
-  title: { type: String, required: true },
-  description: { type: String },
-  images: [{ type: String, required: true }],
-  uploadedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  relatedTree: { type: Schema.Types.ObjectId, ref: 'Tree' },
-  relatedEvent: { type: Schema.Types.ObjectId, ref: 'Event' },
-  tags: [{ type: String }],
-  likes: [{ type: Schema.Types.ObjectId, ref: 'User' }],
 }, { timestamps: true });
 
 // Contact/Inquiry Schema
@@ -252,6 +229,5 @@ export const User = mongoose.models.User || mongoose.model<IUser>('User', UserSc
 export const Tree = mongoose.models.Tree || mongoose.model<ITree>('Tree', TreeSchema);
 export const TreeUpdate = mongoose.models.TreeUpdate || mongoose.model<ITreeUpdate>('TreeUpdate', TreeUpdateSchema);
 export const Event = mongoose.models.Event || mongoose.model<IEvent>('Event', EventSchema);
-export const Gallery = mongoose.models.Gallery || mongoose.model<IGallery>('Gallery', GallerySchema);
 export const Contact = mongoose.models.Contact || mongoose.model<IContact>('Contact', ContactSchema);
 export const Achievement = mongoose.models.Achievement || mongoose.model<IAchievement>('Achievement', AchievementSchema);

@@ -28,6 +28,7 @@ export interface Tree {
   images?: string[];
   notes?: string;
   plantedBy?: any; // Can be ID or populated User object
+  likes?: string[];
   createdAt: string;
   updatedAt: string;
 }
