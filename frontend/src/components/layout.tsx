@@ -190,7 +190,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               variant="ghost" 
               size="sm" 
               className={cn(
-                "gap-0.5 px-2 py-1 h-8 border border-transparent hover:border-primary/20 transition-all rounded-full",
+                "gap-0.5 px-1.5 py-0.5 h-7 border border-transparent hover:border-primary/20 transition-all rounded-full",
                 isHome ? "text-white hover:bg-white/10" : "text-foreground hover:bg-primary/5"
               )}
               onClick={() => {
@@ -200,17 +200,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               }}
               title={language === 'en' ? "සිංහලට මාරු වන්න" : language === 'si' ? "தமிழ் மொழிக்கு மாற்றவும்" : "Switch to English"}
             >
-              <div className="flex items-center gap-0.5">
+              <Languages className="w-3 h-3 text-primary flex-shrink-0" />
+              <div className="flex items-center gap-0">
                 <span className={cn(
-                  "text-[8px] font-bold transition-all px-1 py-0.5 rounded",
+                  "text-[7px] font-bold transition-all px-0.5 py-0 rounded",
                   language === 'en' ? "bg-primary text-white" : "opacity-40"
                 )}>EN</span>
                 <span className={cn(
-                  "text-[8px] font-bold transition-all px-1 py-0.5 rounded",
+                  "text-[7px] font-bold transition-all px-0.5 py-0 rounded",
                   language === 'si' ? "bg-primary text-white" : "opacity-40"
                 )}>සිං</span>
                 <span className={cn(
-                  "text-[8px] font-bold transition-all px-1 py-0.5 rounded",
+                  "text-[7px] font-bold transition-all px-0.5 py-0 rounded",
                   language === 'ta' ? "bg-primary text-white" : "opacity-40"
                 )}>தமிழ்</span>
               </div>
