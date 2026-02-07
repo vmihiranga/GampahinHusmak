@@ -10,6 +10,7 @@ import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
 import crypto from "crypto";
 import sanitize from "mongo-sanitize";
+import { getGampahaWeatherAlert } from "./weather";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -880,25 +881,10 @@ export async function registerRoutes(
         }
       });
 
-      // Weather & Alert Logic (Simulated for Gampaha)
-      const currentHour = new Date().getHours();
-      const isDrySeason = [1, 2, 3, 7, 8].includes(now.getMonth() + 1); // Jan-Mar, Jul-Aug are drier
+      // Weather & Alert Logic (Using OpenWeather API)
       let weatherAlert = null;
-      
       if (treesPlanted > 0) {
-        if (isDrySeason) {
-          weatherAlert = {
-            type: "watering",
-            message: "Dry weather detected in Gampaha. Please water your trees today!",
-            urgency: "high"
-          };
-        } else if (currentHour > 6 && currentHour < 10) {
-          weatherAlert = {
-            type: "maintenance",
-            message: "Good morning! Perfect time for basic tree maintenance.",
-            urgency: "low"
-          };
-        }
+        weatherAlert = await getGampahaWeatherAlert();
       }
 
       res.json({
