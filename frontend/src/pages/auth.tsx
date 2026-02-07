@@ -11,6 +11,11 @@ import { useState, useRef } from "react";
 import { authAPI } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/use-language";
+import Cropper from 'react-easy-crop';
+import getCroppedImg from "@/lib/canvasUtils";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Slider } from "@/components/ui/slider";
+import { Camera } from "lucide-react";
 
 export default function Auth() {
   const { t, language } = useLanguage();
@@ -18,7 +23,13 @@ export default function Auth() {
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isCropDialogOpen, setIsCropDialogOpen] = useState(false);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+  const [tempImageUrl, setTempImageUrl] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -130,20 +141,40 @@ export default function Auth() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setProfileImageFile(file);
-      // Create preview
       const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        setImagePreview(result);
+      reader.onload = () => {
+        setTempImageUrl(reader.result as string);
+        setIsCropDialogOpen(true);
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const triggerFileInput = () => {
-    fileInputRef.current?.click();
+  const onCropComplete = (_croppedArea: any, croppedAreaPixels: any) => {
+    setCroppedAreaPixels(croppedAreaPixels);
   };
+
+  const handleApplyCrop = async () => {
+    try {
+      const croppedImage = await getCroppedImg(tempImageUrl, croppedAreaPixels);
+      if (croppedImage) {
+        const file = new File([croppedImage], "profile-picture.jpg", { type: "image/jpeg" });
+        setProfileImageFile(file);
+        setImagePreview(URL.createObjectURL(croppedImage));
+        setIsCropDialogOpen(false);
+      }
+    } catch (e) {
+      console.error(e);
+      toast({
+        title: "Crop failed",
+        description: "Could not process image crop.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const triggerFileInput = () => fileInputRef.current?.click();
+  const triggerCameraInput = () => cameraInputRef.current?.click();
   const searchParams = new URLSearchParams(window.location.search);
   const defaultTab = searchParams.get('mode') === 'register' ? 'register' : 'login';
 
@@ -204,17 +235,52 @@ export default function Auth() {
                 <form onSubmit={handleRegister}>
                   <CardContent className="space-y-4">
                     {/* Profile Photo Upload */}
-                    <div className="flex flex-col items-center space-y-3">
-                      <Avatar className="w-24 h-24 cursor-pointer" onClick={triggerFileInput}>
-                        <AvatarImage src={imagePreview} alt="Profile" />
-                        <AvatarFallback className="bg-primary/10">
-                          {imagePreview ? (
-                            <User className="w-12 h-12 text-primary" />
-                          ) : (
-                            <Upload className="w-8 h-8 text-muted-foreground" />
-                          )}
-                        </AvatarFallback>
-                      </Avatar>
+                    <div className="flex flex-col items-center space-y-4">
+                      <div className="relative group">
+                        <Avatar className="w-32 h-32 border-4 border-white shadow-xl cursor-pointer hover:opacity-90 transition-opacity" onClick={triggerFileInput}>
+                          <AvatarImage src={imagePreview} className="object-cover" alt="Profile" />
+                          <AvatarFallback className="bg-primary/5 text-primary">
+                            {imagePreview ? (
+                              <User className="w-16 h-16" />
+                            ) : (
+                              <Upload className="w-10 h-10 text-muted-foreground/50" />
+                            )}
+                          </AvatarFallback>
+                        </Avatar>
+                        <Button 
+                          type="button"
+                          size="icon" 
+                          variant="secondary"
+                          className="absolute bottom-0 right-0 rounded-full shadow-lg border-2 border-white hover:scale-110 transition-transform"
+                          onClick={triggerCameraInput}
+                        >
+                          <Camera className="w-4 h-4" />
+                        </Button>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-9 px-4 rounded-full border-primary/20 hover:bg-primary/5"
+                            onClick={triggerFileInput}
+                        >
+                          <Upload className="w-4 h-4 mr-2" />
+                          {t.auth.register.upload_photo}
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-9 px-4 rounded-full border-primary/20 hover:bg-primary/5"
+                            onClick={triggerCameraInput}
+                        >
+                          <Camera className="w-4 h-4 mr-2" />
+                          Capture
+                        </Button>
+                      </div>
+
                       <input
                           ref={fileInputRef}
                           type="file"
@@ -222,17 +288,56 @@ export default function Auth() {
                           onChange={handleImageChange}
                           className="hidden"
                       />
-                      <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={triggerFileInput}
-                      >
-                        <Upload className="w-4 h-4 mr-2" />
-                        {t.auth.register.upload_photo}
-                      </Button>
-                      <p className="text-xs text-muted-foreground">{t.auth.register.optional_photo}</p>
+                      <input
+                          ref={cameraInputRef}
+                          type="file"
+                          accept="image/*"
+                          capture="user"
+                          onChange={handleImageChange}
+                          className="hidden"
+                      />
+                      
+                      <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{t.auth.register.optional_photo}</p>
                     </div>
+
+                    {/* Crop Dialog */}
+                    <Dialog open={isCropDialogOpen} onOpenChange={setIsCropDialogOpen}>
+                      <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden bg-black border-none">
+                        <DialogHeader className="p-4 bg-background border-b">
+                          <DialogTitle>Adjust Profile Picture</DialogTitle>
+                        </DialogHeader>
+                        <div className="relative h-[400px] w-full bg-slate-900">
+                          <Cropper
+                            image={tempImageUrl}
+                            crop={crop}
+                            zoom={zoom}
+                            aspect={1}
+                            cropShape="round"
+                            showGrid={false}
+                            onCropChange={setCrop}
+                            onCropComplete={onCropComplete}
+                            onZoomChange={setZoom}
+                          />
+                        </div>
+                        <div className="p-6 bg-background space-y-4">
+                          <div className="flex items-center gap-4">
+                            <span className="text-sm font-medium">Zoom</span>
+                            <Slider
+                              value={[zoom]}
+                              min={1}
+                              max={3}
+                              step={0.1}
+                              onValueChange={(value) => setZoom(value[0])}
+                              className="flex-1"
+                            />
+                          </div>
+                          <DialogFooter className="flex-row gap-3 pt-2">
+                            <Button variant="outline" className="flex-1" onClick={() => setIsCropDialogOpen(false)}>Cancel</Button>
+                            <Button className="flex-1 bg-green-600 hover:bg-green-700" onClick={handleApplyCrop}>Apply Crop</Button>
+                          </DialogFooter>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
