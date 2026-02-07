@@ -105,7 +105,7 @@ function AppRouter() {
 }
 
 import { LanguageProvider } from "@/hooks/use-language";
-import { NativePWAInstallPrompt } from "@/components/NativePWAInstallPrompt";
+import { PWAInstallBanner } from "@/components/PWAInstallBanner";
 
 function App() {
   return (
@@ -114,7 +114,7 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <AppRouter />
-          <NativePWAInstallPrompt />
+          <PWAInstallBanner />
         </TooltipProvider>
       </QueryClientProvider>
     </LanguageProvider>
