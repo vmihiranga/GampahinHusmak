@@ -63,9 +63,13 @@ export function TreeCard({ tree, showActions = false, onAddUpdate }: TreeProps) 
           src={treeImage} 
           alt={treeName} 
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          referrerPolicy="no-referrer"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
-            target.src = "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800";
+            if (!target.dataset.triedFallback) {
+              target.dataset.triedFallback = "true";
+              target.src = "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800";
+            }
           }}
         />
         <div className="absolute top-3 right-3">

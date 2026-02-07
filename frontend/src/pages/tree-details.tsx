@@ -153,9 +153,11 @@ export default function TreeDetails({ params }: { params: { id: string } }) {
                   src={allImages[0]}
                   alt={tree.commonName}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  referrerPolicy="no-referrer"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
-                    if (target.src !== "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=1200") {
+                    if (!target.dataset.triedFallback) {
+                      target.dataset.triedFallback = "true";
                       target.src = "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=1200";
                     }
                   }}
@@ -312,9 +314,11 @@ export default function TreeDetails({ params }: { params: { id: string } }) {
                           src={img} 
                           alt={`Growth step ${idx}`} 
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                          referrerPolicy="no-referrer"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
-                            if (target.src !== "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800") {
+                            if (!target.dataset.triedFallback) {
+                              target.dataset.triedFallback = "true";
                               target.src = "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800";
                             }
                           }}
@@ -387,9 +391,11 @@ export default function TreeDetails({ params }: { params: { id: string } }) {
                                     src={update.images[0]}
                                     alt="Update"
                                     className="w-full h-full object-cover"
+                                    referrerPolicy="no-referrer"
                                     onError={(e) => {
                                       const target = e.target as HTMLImageElement;
-                                      if (target.src !== "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=400") {
+                                      if (!target.dataset.triedFallback) {
+                                        target.dataset.triedFallback = "true";
                                         target.src = "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=400";
                                       }
                                     }}
@@ -446,9 +452,11 @@ export default function TreeDetails({ params }: { params: { id: string } }) {
                   src={allImages[previewImageIndex]}
                   alt="Preview"
                   className="w-full h-full object-contain"
+                  referrerPolicy="no-referrer"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
-                    if (target.src !== "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=1200") {
+                    if (!target.dataset.triedFallback) {
+                      target.dataset.triedFallback = "true";
                       target.src = "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=1200";
                     }
                   }}

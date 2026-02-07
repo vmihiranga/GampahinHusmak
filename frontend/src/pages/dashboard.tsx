@@ -858,7 +858,7 @@ export default function Dashboard() {
                         <p className="text-sm leading-relaxed">{contact.message}</p>
                         {contact.image && (
                           <div className="w-32 h-32 rounded-lg overflow-hidden border">
-                            <img src={contact.image} alt="Attachment" className="w-full h-full object-cover" />
+                            <img src={contact.image} alt="Attachment" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                           </div>
                         )}
                       </div>
@@ -986,7 +986,7 @@ export default function Dashboard() {
                   <p>{selectedViewContact.message}</p>
                   {selectedViewContact.image && (
                     <div className="mt-3 rounded-lg overflow-hidden border max-w-xs">
-                      <img src={selectedViewContact.image} alt="Attached" className="w-full h-auto" />
+                      <img src={selectedViewContact.image} alt="Attached" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                     </div>
                   )}
                 </div>
