@@ -41,12 +41,41 @@ export default defineConfig({
       workbox: {
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/res\.cloudinary\.com\/.*/i,
+            // ImgBB images - aggressive caching for fast loading
+            urlPattern: /^https:\/\/i\.ibb\.co\/.*/i,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'cloudinary-images',
+              cacheName: 'imgbb-images',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 * 90 // 90 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
+            // API responses - network first with fallback
+            urlPattern: /^https:\/\/.*\/api\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api-cache',
               expiration: {
                 maxEntries: 50,
+                maxAgeSeconds: 60 * 5 // 5 minutes
+              },
+              networkTimeoutSeconds: 10
+            }
+          },
+          {
+            // Static assets - cache first for fast loading
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|ico)$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'static-images',
+              expiration: {
+                maxEntries: 60,
                 maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
               }
             }
@@ -88,7 +117,7 @@ export default defineConfig({
     allowedHosts: true,
     fs: {
       strict: true,
-      deny: ["**/.*"],
+      deny: [".env", "**/.env", "**/.*"],
     },
   },
 });
