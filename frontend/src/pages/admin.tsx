@@ -1434,6 +1434,7 @@ export default function Admin() {
             <div className="space-y-2">
               <Label>{t.admin.dialogs.edit_tree.scientific_name}</Label>
               <Input 
+                className="italic"
                 value={editTree?.scientificName || ""} 
                 onChange={(e) => setEditTree({ ...editTree, scientificName: e.target.value })} 
               />

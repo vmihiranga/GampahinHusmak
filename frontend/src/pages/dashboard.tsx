@@ -489,7 +489,7 @@ export default function Dashboard() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="sci-name">{t.dashboard.dialogs.add_tree.scientific_name}</Label>
-                      <Input id="sci-name" name="sci-name" defaultValue="Mangifera" placeholder={t.dashboard.dialogs.add_tree.scientific_name_placeholder} />
+                      <Input id="sci-name" name="sci-name" className="italic" placeholder={t.dashboard.dialogs.add_tree.scientific_name_placeholder} />
                     </div>
                   </div>
                   <div className="space-y-2">
