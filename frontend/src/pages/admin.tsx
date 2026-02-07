@@ -1412,7 +1412,7 @@ export default function Admin() {
                   />
                 </div>
               ) : (
-                <div className="p-4 bg-muted rounded-lg text-sm whitespace-pre-wrap leading-relaxed">
+                <div className="p-4 bg-white rounded-xl text-sm whitespace-pre-wrap leading-relaxed border shadow-sm">
                   {selectedContact?.message}
                 </div>
               )}
@@ -1470,7 +1470,7 @@ export default function Admin() {
                   <div className="space-y-3 max-h-[150px] overflow-y-auto pr-2 custom-scrollbar">
                     {selectedContact.responses.map((resp: any, i: number) => (
                       <div key={i} className="flex flex-col items-end gap-1">
-                        <div className="p-3 bg-primary text-primary-foreground rounded-2xl rounded-tr-none text-sm shadow-sm max-w-[90%]">
+                        <div className="p-3 bg-green-600 text-white rounded-2xl rounded-tr-none text-sm shadow-md max-w-[90%] border border-green-700/20">
                           {resp.message}
                         </div>
                         <span className="text-[9px] text-muted-foreground mr-1">
@@ -2026,6 +2026,7 @@ export default function Admin() {
           </ScrollArea>
         </DialogContent>
       </Dialog>
+
       {/* Confirmation Dialog for Deleting Notifications */}
       <Dialog open={!!confirmDeleteContact} onOpenChange={(open) => !open && setConfirmDeleteContact(null)}>
         <DialogContent className="sm:max-w-[400px] border-none shadow-2xl rounded-3xl overflow-hidden p-0">

@@ -997,8 +997,8 @@ export default function Dashboard() {
                   <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground" />
                   Your Message
                 </div>
-                <div className="p-4 bg-muted/50 rounded-2xl text-sm border">
-                  <p className="font-semibold mb-1">{selectedViewContact.subject}</p>
+                <div className="p-4 bg-white rounded-2xl text-sm border shadow-sm">
+                  <p className="font-bold mb-1 text-primary/80">{selectedViewContact.subject}</p>
                   <p>{selectedViewContact.message}</p>
                   {selectedViewContact.image && (
                     <div className="mt-3 rounded-lg overflow-hidden border max-w-xs">
@@ -1030,9 +1030,9 @@ export default function Dashboard() {
                   {selectedViewContact.responses && selectedViewContact.responses.length > 0 ? (
                     selectedViewContact.responses.map((resp: any, i: number) => (
                       <div key={i} className="flex flex-col gap-1">
-                        <div className="p-4 bg-primary/10 text-foreground rounded-2xl rounded-tl-none text-sm border border-primary/20">
-                          {resp.message}
-                        </div>
+                <div className="p-4 bg-green-600 text-white rounded-2xl rounded-tl-none text-sm border border-green-700/20 shadow-md">
+                  {resp.message}
+                </div>
                         <span className="text-[10px] text-muted-foreground ml-2">
                           {format(new Date(resp.respondedAt), "MMM d, h:mm a")}
                         </span>
@@ -1041,9 +1041,9 @@ export default function Dashboard() {
                   ) : (
                     selectedViewContact.reply ? (
                       <div className="flex flex-col gap-1">
-                        <div className="p-4 bg-primary/10 text-foreground rounded-2xl rounded-tl-none text-sm border border-primary/20">
-                          {selectedViewContact.reply}
-                        </div>
+                      <div className="p-4 bg-green-600 text-white rounded-2xl rounded-tl-none text-sm border border-green-700/20 shadow-md">
+                        {selectedViewContact.reply}
+                      </div>
                         {selectedViewContact.repliedAt && (
                           <span className="text-[10px] text-muted-foreground ml-2">
                             {format(new Date(selectedViewContact.repliedAt), "MMM d, h:mm a")}

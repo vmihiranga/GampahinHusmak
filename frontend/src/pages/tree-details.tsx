@@ -21,6 +21,7 @@ import { format } from "date-fns";
 import { Loader2, ExternalLink, ChevronLeft, ChevronRight, Camera as CameraIcon } from "lucide-react";
 import { useState } from "react";
 import { useLanguage } from "@/hooks/use-language";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function TreeDetails({ params }: { params: { id: string } }) {
   const { t, language, getPathWithLang } = useLanguage();
@@ -417,43 +418,45 @@ export default function TreeDetails({ params }: { params: { id: string } }) {
             <X className="w-5 h-5" />
           </button>
           
-          <div className="relative w-full h-full flex items-center justify-center group/slider">
-            {previewImageIndex !== null && (
-              <>
-                <img
-                  src={allImages[previewImageIndex]}
-                  alt="Preview"
-                  className="w-full h-full object-contain"
-                  referrerPolicy="no-referrer"
-                />
+          <ScrollArea className="w-full h-full">
+            <div className="relative w-full h-[85vh] flex items-center justify-center group/slider p-4">
+              {previewImageIndex !== null && (
+                <>
+                  <img
+                    src={allImages[previewImageIndex]}
+                    alt="Preview"
+                    className="max-w-full max-h-full object-contain"
+                    referrerPolicy="no-referrer"
+                  />
 
-                {allImages.length > 1 && (
-                  <>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-white bg-white/10 hover:bg-white/20 rounded-full w-12 h-12 opacity-0 group-hover/slider:opacity-100 transition-opacity"
-                      onClick={prevImage}
-                    >
-                      <ChevronLeft className="w-8 h-8" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-white bg-white/10 hover:bg-white/20 rounded-full w-12 h-12 opacity-0 group-hover/slider:opacity-100 transition-opacity"
-                      onClick={nextImage}
-                    >
-                      <ChevronRight className="w-8 h-8" />
-                    </Button>
-                    
-                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-md px-4 py-2 rounded-full text-white text-sm font-medium border border-white/10">
-                      {t.tree_details.photo_counter} {previewImageIndex + 1} {t.tree_details.of} {allImages.length}
-                    </div>
-                  </>
-                )}
-              </>
-            )}
-          </div>
+                  {allImages.length > 1 && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute left-4 top-1/2 -translate-y-1/2 text-white bg-white/10 hover:bg-white/20 rounded-full w-12 h-12 opacity-0 group-hover/slider:opacity-100 transition-opacity"
+                        onClick={prevImage}
+                      >
+                        <ChevronLeft className="w-8 h-8" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-white bg-white/10 hover:bg-white/20 rounded-full w-12 h-12 opacity-0 group-hover/slider:opacity-100 transition-opacity"
+                        onClick={nextImage}
+                      >
+                        <ChevronRight className="w-8 h-8" />
+                      </Button>
+                      
+                      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-md px-4 py-2 rounded-full text-white text-sm font-medium border border-white/10">
+                        {t.tree_details.photo_counter} {previewImageIndex + 1} {t.tree_details.of} {allImages.length}
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+          </ScrollArea>
         </DialogContent>
       </Dialog>
     </>
