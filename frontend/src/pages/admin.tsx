@@ -53,6 +53,12 @@ import {
   BarChart3,
   Waves,
   User,
+  Activity,
+  Server,
+  UserPlus,
+  ShieldAlert,
+  Save,
+  X,
 } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
