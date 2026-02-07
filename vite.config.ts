@@ -14,22 +14,42 @@ export default defineConfig({
     metaImagesPlugin(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.png', 'logo.png'],
+      includeAssets: ['favicon.png', 'logo.png', '2logo.png'],
       manifest: {
-        name: 'Gampahin Husmak',
-        short_name: 'GHusmak',
-        description: 'Planting Hope for Gampaha\'s Future',
+        name: 'Gampahin Husmak - Gampaha Tree Planting',
+        short_name: 'Gampahin Husmak',
+        description: 'Planting Hope for Gampaha\'s Future - Track and manage your planted trees',
         theme_color: '#16a34a',
+        background_color: '#ffffff',
+        display: 'standalone',
+        start_url: '/',
         icons: [
           {
-            src: 'favicon.png',
+            src: '/favicon.png',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any maskable'
           },
           {
-            src: 'favicon.png',
+            src: '/favicon.png',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any maskable'
+          }
+        ]
+      },
+      workbox: {
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/res\.cloudinary\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'cloudinary-images',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+              }
+            }
           }
         ]
       }
