@@ -73,11 +73,19 @@ export async function registerRoutes(
   app.use("/api/auth", authLimiter);
  
  
-   // Prevents NoSQL Injection
+  // Prevents NoSQL Injection
   app.use((req, res, next) => {
-    req.body = sanitize(req.body);
-    req.query = sanitize(req.query);
-    req.params = sanitize(req.params);
+    if (req.body) req.body = sanitize(req.body);
+    if (req.query) {
+      Object.keys(req.query).forEach(key => {
+        req.query[key] = sanitize(req.query[key]);
+      });
+    }
+    if (req.params) {
+      Object.keys(req.params).forEach(key => {
+        req.params[key] = sanitize(req.params[key]);
+      });
+    }
     next();
   });
 
@@ -780,8 +788,7 @@ export async function registerRoutes(
       const survivalRate = totalTrees > 0 
         ? Math.round((activeTrees / totalTrees) * 100) 
         : 100;
-      
-      const totalUsers = await User.countDocuments();
+      const totalUsers = await User.countDocuments({ role: "volunteer" });
       const totalEvents = await Event.countDocuments();
       const upcomingEvents = await Event.countDocuments({ status: "upcoming" });
       
@@ -938,8 +945,8 @@ export async function registerRoutes(
       const limit = parseInt(req.query.limit as string) || 50;
       const skip = (page - 1) * limit;
 
-      const totalItems = await User.countDocuments();
-      const users = await User.find()
+      const totalItems = await User.countDocuments({ role: "volunteer" });
+      const users = await User.find({ role: "volunteer" })
         .select("-password")
         .sort({ createdAt: -1 })
         .skip(skip)
@@ -991,14 +998,14 @@ export async function registerRoutes(
     try {
       const totalTrees = await Tree.countDocuments();
       const activeTrees = await Tree.countDocuments({ status: "active" });
-      const totalUsers = await User.countDocuments();
+      const totalUsers = await User.countDocuments({ role: "volunteer" });
       const totalAdmins = await User.countDocuments({ role: { $in: ['admin', 'superadmin'] } });
       const totalEvents = await Event.countDocuments();
       const upcomingEvents = await Event.countDocuments({ status: "upcoming" });
       const pendingContacts = await Contact.countDocuments({ status: "new" });
       
       // Recent activity
-      const recentUsers = await User.find()
+      const recentUsers = await User.find({ role: "volunteer" })
         .select("-password")
         .limit(5)
         .sort({ createdAt: -1 });
