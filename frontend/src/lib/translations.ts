@@ -44,6 +44,18 @@ export const translations = {
         button: "Start Planting Today",
       }
     },
+    pwa: {
+      title: "Take Gampahin Husmak Anywhere",
+      subtitle: "Install our progressive web app for a faster, smoother experience. Works offline and takes up almost zero space.",
+      install_btn: "Install App Now",
+      installed: "App Already Installed!",
+      installed_desc: "Thank you for installing Gampahin Husmak on your device. You can now access it directly from your home screen.",
+      ios_guide_title: "How to install on iPhone:",
+      ios_guide_1: "Open this site in Safari browser",
+      ios_guide_2: "Tap the 'Share' button at the bottom",
+      ios_guide_3: "Scroll down and tap 'Add to Home Screen'",
+      note: "Note: If the install button is disabled, use 'Add to Home Screen' in your browser menu."
+    },
     gallery: {
       title: "Community Tree Gallery",
       subtitle: "Explore the planted trees across Gampaha District and track their latest growth updates.",
@@ -474,6 +486,18 @@ export const translations = {
         button: "අද සිටම පැළ සිටුවීම අරඹන්න",
       }
     },
+    pwa: {
+      title: "ගම්පහින් හුස්මක් ඕනෑම තැනක ගෙන යන්න",
+      subtitle: "ඉක්මන් සහ සුමට අත්දැකීමක් සඳහා අපගේ යෙදුම ස්ථාපනය කරගන්න. මෙය offline ද ක්‍රියාකරන අතර ඉතා අඩු ඉඩ ප්‍රමාණයක් පමණක් වැය වේ.",
+      install_btn: "දැන්ම ස්ථාපනය කරන්න",
+      installed: "යෙදුම දැනටමත් ස්ථාපනය කර ඇත!",
+      installed_desc: "ගම්පහින් හුස්මක් ඔබේ උපාංගයට ස්ථාපනය කිරීම ගැන ස්තූතියි. දැන් ඔබට එය ඔබගේ මුල් තිරයෙන් සෘජුවම භාවිතා කළ හැක.",
+      ios_guide_title: "iPhone එකට ස්ථාපනය කරන ආකාරය:",
+      ios_guide_1: "Safari browser එකෙන් මෙම අඩවිය විවෘත කරන්න",
+      ios_guide_2: "පහල ඇති 'Share' බොත්තම ඔබන්න",
+      ios_guide_3: "පහලට ගොස් 'Add to Home Screen' තෝරන්න",
+      note: "සටහන: Install බොත්තම ක්‍රියා විරහිත නම්, browser menu එකෙන් 'Add to Home Screen' තෝරන්න."
+    },
     gallery: {
       title: "ප්‍රජා රුක් ගැලරිය",
       subtitle: "ගම්පහ දිස්ත්‍රික්කය පුරා සිටුවා ඇති පැළ නිරීක්ෂණය කර ඒවායේ නැවුම් වර්ධන තොරතුරු දැනගන්න.",
@@ -899,6 +923,18 @@ export const translations = {
         subtitle: "இன்றே உங்கள் பயணத்தைத் தொடங்குங்கள். ஒரு கணக்கைப் பதிவு செய்யுங்கள், ஒரு மரத்தை நடுங்கள், உங்கள் பங்களிப்பு வளர்வதைப் பாருங்கள்.",
         button: "இன்றே மரம் நடுதலை தொடங்குங்கள்",
       }
+    },
+    pwa: {
+      title: "எந்த இடத்திற்கும் கம்பஹின் ஹுஸ்மக் கொண்டு செல்லுங்கள்",
+      subtitle: "வேகமான மற்றும் சீரான அனுபவத்திற்கு எமது செயலியை நிறுவுங்கள். இது ஆஃப்லைனிலும் வேலை செய்யும் மற்றும் மிகக் குறைந்த இடத்தையே எடுக்கும்.",
+      install_btn: "இப்போதே நிறுவுங்கள்",
+      installed: "செயலி ஏற்கனவே நிறுவப்பட்டுள்ளது!",
+      installed_desc: "எமது செயலியை உங்கள் சாதனத்தில் நிறுவியமைக்கு நன்றி. இப்போது நீங்கள் உங்கள் முகப்புத் திரையிலிருந்து நேரடியாக அணுகலாம்.",
+      ios_guide_title: "iPhone இல் நிறுவுவது எப்படி:",
+      ios_guide_1: "இந்தத் தளத்தை Safari உலாவியில் திறக்கவும்",
+      ios_guide_2: "கீழே உள்ள 'பகிர்' (Share) பொத்தானைத் தட்டவும்",
+      ios_guide_3: "கீழே உருட்டி 'முகப்புத் திரையில் சேர்' என்பதைத் தட்டவும்",
+      note: "குறிப்பு: நிறுவல் பொத்தான் முடக்கப்பட்டிருந்தால், உங்கள் உலாவி மெனுவில் உள்ள 'முகப்புத் திரையில் சேர்' என்பதைப் பயன்படுத்தவும்."
     },
     gallery: {
       title: "சமூக மர புகைப்படங்கள்",

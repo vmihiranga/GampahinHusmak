@@ -5,7 +5,7 @@ import { useLanguage } from "@/hooks/use-language";
 
 export function PWAInstallSection() {
   const { isInstallable, isInstalled, installPWA, isIOS } = usePWA();
-  const { language } = useLanguage();
+  const { t } = useLanguage();
 
   if (isInstalled) {
     return (
@@ -16,12 +16,10 @@ export function PWAInstallSection() {
               <CheckCircle2 className="w-10 h-10 text-primary" />
             </div>
             <h2 className="text-3xl font-black text-foreground mb-4">
-              {language === 'en' ? 'App Already Installed!' : 'යෙදුම දැනටමත් ස්ථාපනය කර ඇත!'}
+              {t.pwa.installed}
             </h2>
             <p className="text-muted-foreground font-medium">
-              {language === 'en' 
-                ? 'Thank you for installing Gampahin Husmak on your device. You can now access it directly from your home screen.' 
-                : 'ගම්පහින් හුස්මක් ඔබේ උපාංගයට ස්ථාපනය කිරීම ගැන ස්තූතියි. දැන් ඔබට එය ඔබගේ මුල් තිරයෙන් සෘජුවම භාවිතා කළ හැක.'}
+              {t.pwa.installed_desc}
             </p>
           </div>
         </div>
@@ -57,13 +55,11 @@ export function PWAInstallSection() {
               </div>
               
               <h2 className="text-4xl md:text-5xl font-black text-foreground leading-tight mb-6">
-                {language === 'en' ? 'Take Gampahin Husmak Anywhere' : 'ගම්පහින් හුස්මක් ඕනෑම තැනක ගෙන යන්න'}
+                {t.pwa.title}
               </h2>
               
               <p className="text-lg text-muted-foreground font-medium leading-relaxed mb-10">
-                {language === 'en' 
-                  ? 'Install our progressive web app for a faster, smoother experience. Works offline and takes up almost zero space.' 
-                  : 'ඉක්මන් සහ සුමට අත්දැකීමක් සඳහා අපගේ යෙදුම ස්ථාපනය කරගන්න. මෙය offline ද ක්‍රියාකරන අතර ඉතා අඩු ඉඩ ප්‍රමාණයක් පමණක් වැය වේ.'}
+                {t.pwa.subtitle}
               </p>
               
               <div className="flex flex-wrap gap-4">
@@ -71,32 +67,30 @@ export function PWAInstallSection() {
                    <div className="p-6 bg-primary/5 border border-primary/20 rounded-3xl w-full">
                      <p className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
                        <Smartphone className="w-5 h-5 text-primary" />
-                       {language === 'en' ? 'How to install on iPhone:' : 'iPhone එකට ස්ථාපනය කරන ආකාරය:'}
+                       {t.pwa.ios_guide_title}
                      </p>
                      <ol className="text-sm space-y-3 text-muted-foreground font-medium list-decimal list-inside">
-                       <li>{language === 'en' ? 'Open this site in Safari browser' : 'Safari browser එකෙන් මෙම අඩවිය විවෘත කරන්න'}</li>
-                       <li>{language === 'en' ? 'Tap the "Share" button at the bottom' : 'පහල ඇති "Share" $(\share)$ බොත්තම ඔබන්න'}</li>
-                       <li>{language === 'en' ? 'Scroll down and tap "Add to Home Screen"' : 'පහලට ගොස් "Add to Home Screen" තෝරන්න'}</li>
+                       <li>{t.pwa.ios_guide_1}</li>
+                       <li>{t.pwa.ios_guide_2}</li>
+                       <li>{t.pwa.ios_guide_3}</li>
                      </ol>
                    </div>
                 ) : (
-                  <Button 
+                   <Button 
                     onClick={installPWA}
                     disabled={!isInstallable}
                     size="lg"
                     className="rounded-full h-16 px-10 text-lg font-black gap-3 shadow-xl shadow-primary/20 hover:scale-105 transition-all"
                   >
                     <Download className="w-6 h-6" />
-                    {language === 'en' ? 'Install App Now' : 'දැන්ම ස්ථාපනය කරන්න'}
+                    {t.pwa.install_btn}
                   </Button>
                 )}
                 
                 {!isInstallable && !isInstalled && !isIOS && (
                   <p className="w-full text-xs text-muted-foreground mt-4 font-bold flex items-center gap-2 italic">
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                    {language === 'en' 
-                      ? 'Note: If the install button is disabled, use "Add to Home Screen" in your browser menu.' 
-                      : 'සටහන: Install බොත්තම ක්‍රියා විරහිත නම්, browser menu එකෙන් "Add to Home Screen" තෝරන්න.'}
+                    {t.pwa.note}
                   </p>
                 )}
               </div>
