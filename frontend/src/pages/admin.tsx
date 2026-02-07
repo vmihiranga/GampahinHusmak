@@ -96,7 +96,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function Admin() {
   const { t, language, getPathWithLang } = useLanguage();
@@ -127,10 +127,11 @@ export default function Admin() {
 
   const stats = adminSummary?.stats;
 
-  // Fetch contacts/issues
-  const { data: contactsData } = useQuery<ContactsResponse>({
+  // Fetch contacts/issues with auto-refresh for stale tree detection
+  const { data: contactsData, refetch: refetchContacts } = useQuery<ContactsResponse>({
     queryKey: ["admin-contacts", contactPage],
     queryFn: () => contactAPI.getAll({ page: contactPage, limit: 10 }),
+    refetchInterval: 60000, // Auto-refresh every 60 seconds for stale tree alerts
   });
 
   // Fetch users
@@ -160,11 +161,28 @@ export default function Admin() {
   const [msgBody, setMsgBody] = useState("");
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
 
-  // Superadmin States
   const [deleteUser, setDeleteUser] = useState<string | null>(null);
   const [editUser, setEditUser] = useState<any | null>(null);
   const [deleteTree, setDeleteTree] = useState<string | null>(null);
   const [editTree, setEditTree] = useState<any | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Manual refresh all data handler  
+  const handleRefreshAll = async () => {
+    setIsRefreshing(true);
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["admin-trees"] }),
+      queryClient.invalidateQueries({ queryKey: ["admin-summary"] }),
+      queryClient.invalidateQueries({ queryKey: ["admin-contacts"] }),
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] }),
+      queryClient.invalidateQueries({ queryKey: ["admin-db-stats"] }),
+    ]);
+    setTimeout(() => setIsRefreshing(false), 500);
+    toast({
+      title: "Data Refreshed",
+      description: "All admin data has been updated.",
+    });
+  };
 
   const verifyMutation = useMutation({
     mutationFn: ({
