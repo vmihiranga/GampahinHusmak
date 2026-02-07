@@ -23,7 +23,7 @@ app.use(helmet({
       scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.jsdelivr.net", "https://*.imgbb.com"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
-      imgSrc: ["'self'", "data:", "blob:", "https:", "http:"],
+      imgSrc: ["'self'", "data:", "blob:", "https://*.ibb.co", "https://i.ibb.co", "https://images.unsplash.com", "https://res.cloudinary.com", "https:", "http:"],
       connectSrc: ["'self'", "https://*.imgbb.com", "https://res.cloudinary.com", "https://api.cloudinary.com", "http://localhost:*", "ws://localhost:*"],
       frameSrc: ["'self'"],
       objectSrc: ["'none'"],

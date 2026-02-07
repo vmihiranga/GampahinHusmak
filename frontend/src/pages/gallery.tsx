@@ -87,6 +87,12 @@ export default function Gallery() {
                           src={item.images[0]} 
                           alt={item.title} 
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            if (target.src !== "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800") {
+                              target.src = "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800";
+                            }
+                          }}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col justify-end p-6 transition-all duration-500">
                           <div className="transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
@@ -115,6 +121,12 @@ export default function Gallery() {
                           src={item.images[currentIndex]} 
                           alt={item.title} 
                           className="w-full h-full object-contain transition-all duration-500"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            if (target.src !== "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800") {
+                              target.src = "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800";
+                            }
+                          }}
                         />
                         
                         {item.images.length > 1 && (

@@ -148,6 +148,12 @@ export default function TreeDetails({ params }: { params: { id: string } }) {
                   src={allImages[0]}
                   alt={tree.commonName}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    if (target.src !== "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=1200") {
+                      target.src = "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=1200";
+                    }
+                  }}
                 />
                 <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
                    <div className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-full border border-white/30 text-white flex items-center gap-2">
@@ -297,7 +303,17 @@ export default function TreeDetails({ params }: { params: { id: string } }) {
                         className="relative group aspect-square rounded-xl overflow-hidden cursor-pointer border shadow-sm hover:shadow-md transition-all"
                         onClick={() => setPreviewImageIndex(idx)}
                       >
-                        <img src={img} alt={`Growth step ${idx}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                        <img 
+                          src={img} 
+                          alt={`Growth step ${idx}`} 
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            if (target.src !== "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800") {
+                              target.src = "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800";
+                            }
+                          }}
+                        />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                            <CameraIcon className="w-6 h-6 text-white" />
                         </div>
@@ -366,6 +382,12 @@ export default function TreeDetails({ params }: { params: { id: string } }) {
                                     src={update.images[0]}
                                     alt="Update"
                                     className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      const target = e.target as HTMLImageElement;
+                                      if (target.src !== "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=400") {
+                                        target.src = "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=400";
+                                      }
+                                    }}
                                   />
                                 </div>
                               )}
@@ -419,6 +441,12 @@ export default function TreeDetails({ params }: { params: { id: string } }) {
                   src={allImages[previewImageIndex]}
                   alt="Preview"
                   className="w-full h-full object-contain"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    if (target.src !== "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=1200") {
+                      target.src = "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=1200";
+                    }
+                  }}
                 />
 
                 {allImages.length > 1 && (
