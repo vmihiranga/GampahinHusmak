@@ -112,6 +112,40 @@ import { useState, useEffect } from "react";
 import BadgeManagementTab from "@/components/BadgeManagementTab";
 import UserBadgesDialog from "@/components/UserBadgesDialog";
 
+const UserStatsSummary = ({ userId }: { userId: string }) => {
+  const { data: stats, isLoading } = useQuery({
+    queryKey: ['user-stats', userId],
+    queryFn: () => statsAPI.getUser(userId),
+    enabled: !!userId,
+  });
+
+  if (isLoading) return (
+    <div className="grid grid-cols-3 gap-3">
+      {[1, 2, 3].map(i => <div key={i} className="h-16 rounded-xl bg-muted animate-pulse" />)}
+    </div>
+  );
+
+  return (
+    <div className="grid grid-cols-3 gap-3">
+      <div className="p-3 rounded-xl border bg-green-50/30 flex flex-col items-center text-center">
+        <TreePine className="w-4 h-4 text-green-600 mb-1" />
+        <span className="text-lg font-bold text-green-700 leading-tight">{stats?.treesPlanted || 0}</span>
+        <span className="text-[9px] uppercase font-bold text-green-600/70 tracking-tighter">Trees</span>
+      </div>
+      <div className="p-3 rounded-xl border bg-blue-50/30 flex flex-col items-center text-center">
+        <RefreshCw className="w-4 h-4 text-blue-600 mb-1" />
+        <span className="text-lg font-bold text-blue-700 leading-tight">{stats?.updatesSubmitted || 0}</span>
+        <span className="text-[9px] uppercase font-bold text-blue-600/70 tracking-tighter">Updates</span>
+      </div>
+      <div className="p-3 rounded-xl border bg-amber-50/30 flex flex-col items-center text-center">
+        <Trophy className="w-4 h-4 text-amber-600 mb-1" />
+        <span className="text-lg font-bold text-amber-700 leading-tight">{stats?.achievements?.length || 0}</span>
+        <span className="text-[9px] uppercase font-bold text-amber-600/70 tracking-tighter">Badges</span>
+      </div>
+    </div>
+  );
+};
+
 export default function Admin() {
   const { t, language, getPathWithLang } = useLanguage();
   const [treePage, setTreePage] = useState(1);
@@ -183,6 +217,7 @@ export default function Admin() {
   const [msgSubject, setMsgSubject] = useState("");
   const [msgBody, setMsgBody] = useState("");
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+  const [viewUserDetails, setViewUserDetails] = useState<any | null>(null);
 
   const [deleteUser, setDeleteUser] = useState<string | null>(null);
   const [editUser, setEditUser] = useState<any | null>(null);
@@ -828,9 +863,17 @@ export default function Admin() {
                                  >
                                    <Trash2 className="w-4 h-4" />
                                  </Button>
-                               </>
+                                </>
                             )}
                             <Button
+                               size="icon"
+                               variant="outline"
+                               className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-100"
+                               onClick={() => setViewUserDetails(user)}
+                             >
+                               <Eye className="w-4 h-4" />
+                             </Button>
+                             <Button
                               size="icon"
                               variant="outline"
                               className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/5 border-primary/10"
