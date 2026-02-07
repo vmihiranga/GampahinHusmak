@@ -77,13 +77,16 @@ export default function TreeDetails({ params }: { params: { id: string } }) {
   const currentStatus = tree.currentHealth || tree.status || "active";
 
   // Aggregate all images for the slider
+  const MOCKUP_URL = "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=1200";
   const treeImages = tree.images || [];
   const updateImages = updates?.flatMap((u: any) => u.images || []) || [];
-  let allImages = [...treeImages, ...updateImages].filter(img => !!img);
+  
+  // Filter out the mockup URL if there are ANY other real images
+  let allImages = [...treeImages, ...updateImages].filter(img => img && img !== MOCKUP_URL);
 
-  // Only show mockup if there are absolutely no images at all
+  // If after filtering we have images, great. If not, only then show the mockup.
   if (allImages.length === 0) {
-    allImages = ["https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=1200"];
+    allImages = [MOCKUP_URL];
   }
 
   const nextImage = (e: React.MouseEvent) => {

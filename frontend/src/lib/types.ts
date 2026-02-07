@@ -112,6 +112,13 @@ export interface UserStats {
     type: string;
     message: string;
     urgency: string;
+    details?: {
+      temp: number;
+      humidity: number;
+      windSpeed: number;
+      description: string;
+      icon: string;
+    };
   };
 }
 

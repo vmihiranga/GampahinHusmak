@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Filter, AlertCircle, MapPin as MapPinIcon, LocateFixed, Loader2, Clock, MessageSquare, CheckCircle2, History, TreePine, Camera, Trophy, Sprout, CloudRain, Droplets } from "lucide-react";
+import { Plus, Search, Filter, AlertCircle, MapPin as MapPinIcon, LocateFixed, Loader2, Clock, MessageSquare, CheckCircle2, History, TreePine, Camera, Trophy, Sprout, CloudRain, Droplets, Wind, Thermometer } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/use-language";
@@ -51,7 +51,7 @@ export default function Dashboard() {
     queryKey: ['user-trees'],
     queryFn: () => treesAPI.getAll(),
     enabled: !!user?.isVerified,
-    refetchInterval: 30000, // Real-time updates every 30s
+    refetchInterval: 5000, // Near real-time updates every 5s
   });
 
   // Fetch user's requests/contacts
@@ -59,7 +59,7 @@ export default function Dashboard() {
     queryKey: ['my-contacts'],
     queryFn: () => contactAPI.getMyContacts(),
     enabled: !!user,
-    refetchInterval: 30000, // Check for new messages every 30s
+    refetchInterval: 5000, // Check for new messages every 5s
   });
   const myContacts = contactsData?.contacts || [];
 
@@ -68,7 +68,7 @@ export default function Dashboard() {
     queryKey: ['user-stats', user?._id],
     queryFn: () => statsAPI.getUser(user!._id),
     enabled: !!user?._id,
-    refetchInterval: 30000, // Update CO2 and Weather alerts every 30s
+    refetchInterval: 5000, // Update CO2 and Weather alerts every 5s
   });
 
   const createTreeMutation = useMutation({
@@ -669,23 +669,59 @@ export default function Dashboard() {
         {/* Weather Alerts */}
         {userStats?.weatherAlert && (
           <div className={cn(
-            "p-4 rounded-3xl flex items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-500 shadow-sm",
-            userStats.weatherAlert.urgency === 'high' ? "bg-orange-500/10 border border-orange-500/20 text-orange-700" : "bg-blue-500/10 border border-blue-500/20 text-blue-700"
+            "p-5 rounded-3xl flex flex-col md:flex-row md:items-center gap-6 animate-in fade-in slide-in-from-top-4 duration-500 shadow-sm",
+            userStats.weatherAlert.urgency === 'high' ? "bg-orange-500/10 border border-orange-500/20 text-orange-900" : "bg-blue-500/10 border border-blue-500/20 text-blue-900"
           )}>
-            <div className={cn(
-              "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-lg",
-              userStats.weatherAlert.urgency === 'high' ? "bg-orange-500 text-white shadow-orange-500/20" : "bg-blue-500 text-white shadow-blue-500/20"
-            )}>
-              {userStats.weatherAlert.type === 'watering' ? <Droplets className="w-6 h-6" /> : <CloudRain className="w-6 h-6" />}
+            <div className="flex items-center gap-4 flex-1">
+              <div className={cn(
+                "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-lg",
+                userStats.weatherAlert.urgency === 'high' ? "bg-orange-500 text-white shadow-orange-500/30" : "bg-blue-500 text-white shadow-blue-500/30"
+              )}>
+                {userStats.weatherAlert.type === 'watering' ? <Droplets className="w-6 h-6" /> : 
+                 userStats.weatherAlert.type === 'storm' ? <CloudRain className="w-6 h-6 animate-pulse" /> :
+                 <CloudRain className="w-6 h-6" />}
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <p className="text-sm md:text-base font-bold leading-tight">{userStats.weatherAlert.message}</p>
+                  {userStats.weatherAlert.urgency === 'high' && (
+                    <Badge variant="outline" className="bg-orange-500/20 border-orange-500/30 text-orange-700 text-[9px] font-black h-4 px-1 flex sm:hidden">URGENT</Badge>
+                  )}
+                </div>
+                <p className="text-[10px] opacity-70 font-bold uppercase tracking-widest flex items-center gap-1">
+                  <MapPinIcon className="w-3 h-3" /> Environmental Advice • Gampaha
+                </p>
+              </div>
             </div>
-            <div className="flex-1">
-              <p className="text-sm md:text-base font-bold leading-tight">{userStats.weatherAlert.message}</p>
-              <p className="text-[10px] opacity-70 font-bold uppercase tracking-widest mt-0.5 flex items-center gap-1">
-                <MapPinIcon className="w-3 h-3" /> District Advice • Gampaha
-              </p>
-            </div>
-            {userStats.weatherAlert.urgency === 'high' && (
-              <Badge variant="outline" className="bg-orange-500/20 border-orange-500/30 text-orange-700 text-[10px] font-black hidden sm:flex">URGENT</Badge>
+
+            {/* Weather Details Grid */}
+            {userStats.weatherAlert.details && (
+              <div className="flex items-center gap-4 md:gap-8 bg-white/40 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/40">
+                <div className="flex items-center gap-2">
+                  <Thermometer className="w-4 h-4 text-orange-500" />
+                  <div>
+                    <p className="text-[9px] font-bold uppercase opacity-50 leading-none">Temp</p>
+                    <p className="text-sm font-black">{userStats.weatherAlert.details.temp}°C</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 border-l border-black/5 pl-4 md:pl-8">
+                  <Droplets className="w-4 h-4 text-blue-500" />
+                  <div>
+                    <p className="text-[9px] font-bold uppercase opacity-50 leading-none">Humidity</p>
+                    <p className="text-sm font-black">{userStats.weatherAlert.details.humidity}%</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 border-l border-black/5 pl-4 md:pl-8">
+                  <Wind className="w-4 h-4 text-teal-500" />
+                  <div>
+                    <p className="text-[9px] font-bold uppercase opacity-50 leading-none">Wind</p>
+                    <p className="text-sm font-black">{userStats.weatherAlert.details.windSpeed}m/s</p>
+                  </div>
+                </div>
+                {userStats.weatherAlert.urgency === 'high' && (
+                  <Badge variant="outline" className="bg-orange-500 border-orange-500 text-white text-[10px] font-black hidden sm:flex px-2 py-1 ml-2">URGENT ACTION</Badge>
+                )}
+              </div>
             )}
           </div>
         )}
