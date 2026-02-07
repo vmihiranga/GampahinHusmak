@@ -21,31 +21,40 @@ import {
 } from "@/components/ui/table";
 import {
   Check,
-  X,
   UserCheck,
   TreePine,
   MoreHorizontal,
   MessageSquare,
   AlertTriangle,
   Database,
-  Server,
-  Activity,
-  RefreshCw,
-  MapPin,
-  ExternalLink,
+  Search,
+  Users,
   Calendar,
-  Info,
-  Loader2,
-  Bell,
+  Filter,
   Trash2,
+  CheckCircle2,
+  AlertCircle,
+  Clock,
+  MapPin,
+  Camera,
   Edit,
-  UserPlus,
-  ShieldAlert,
-  Save,
-  Award,
+  ExternalLink,
+  Loader2,
   Plus,
+  RefreshCw,
   Eye,
+  Settings,
+  Shield,
+  Download,
+  Upload,
+  Trophy,
+  Award,
+  Bell,
+  BarChart3,
+  Waves,
+  User,
 } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -743,16 +752,26 @@ export default function Admin() {
                       {usersData?.users?.map((user: any) => (
                         <TableRow key={user._id}>
                           <TableCell>
-                            <div 
-                              className="font-medium whitespace-nowrap text-sm cursor-pointer hover:text-primary transition-colors flex items-center gap-2 group"
-                              onClick={() => setViewUserBadges({ userId: user._id, userName: user.fullName || user.username })}
-                              title="View user badges"
-                            >
-                              {user.fullName || user.username}
-                              <Award className="w-3.5 h-3.5 text-amber-600 opacity-0 group-hover:opacity-100 transition-opacity" />
-                            </div>
-                            <div className="text-xs text-muted-foreground whitespace-nowrap">
-                              {user.email}
+                            <div className="flex items-center gap-3">
+                              <Avatar className="h-9 w-9 border border-primary/10">
+                                <AvatarImage src={user.profileImage} alt={user.fullName || user.username} className="object-cover" />
+                                <AvatarFallback className="bg-primary/5 text-primary text-xs uppercase font-bold">
+                                  {user.fullName ? user.fullName.charAt(0) : user.username.charAt(0)}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <div 
+                                  className="font-semibold whitespace-nowrap text-sm cursor-pointer hover:text-primary transition-colors flex items-center gap-2 group"
+                                  onClick={() => setViewUserBadges({ userId: user._id, userName: user.fullName || user.username })}
+                                  title="View user badges"
+                                >
+                                  {user.fullName || user.username}
+                                  <Award className="w-3.5 h-3.5 text-amber-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                </div>
+                                <div className="text-[10px] text-muted-foreground whitespace-nowrap font-medium">
+                                  {user.email}
+                                </div>
+                              </div>
                             </div>
                           </TableCell>
                           <TableCell>
