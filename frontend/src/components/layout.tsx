@@ -123,7 +123,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <Link href={href}>
         <a 
           className={cn(
-            "flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors rounded-md",
+            "flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold transition-all rounded-full",
             isActive 
               ? (isHome ? "bg-white/20 text-white" : "bg-primary/10 text-primary")
               : (isHome ? "text-white/80 hover:text-white hover:bg-white/10" : "text-muted-foreground hover:text-primary hover:bg-primary/5")
@@ -149,14 +149,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         "absolute top-0 z-50 w-full transition-all duration-300",
         !isHome ? "relative bg-background/80 backdrop-blur-md border-b" : "bg-transparent"
       )}>
-        <div className="container mx-auto px-4 h-24 flex items-center justify-between">
+        <div className="container mx-auto px-4 h-20 flex items-center justify-between">
           <Link href={getPathWithLang("/")}>
             <a className="flex items-center gap-3 group">
               <div className="bg-transparent group-hover:scale-110 transition-all">
                 <img 
                   src="/favicon.png" 
                   alt="Gampahin Husmak" 
-                  className="h-12 md:h-18 w-auto object-contain" 
+                  className="h-14 md:h-18 w-auto object-contain" 
                 />
               </div>
             </a>
@@ -167,7 +167,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <img 
               src="/2logo.png" 
               alt="Sponsors" 
-              className="h-16 md:h-20 w-auto object-contain opacity-90 hover:opacity-100 transition-opacity" 
+              className="h-18 md:h-22 w-auto object-contain opacity-100 transition-opacity" 
             />
           </div>
 
@@ -254,7 +254,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                         {user.fullName?.charAt(0) || user.username?.charAt(0) || 'U'}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="hidden lg:inline font-bold text-xs">{user.fullName || user.username}</span>
+                    {/* User name hidden to save space */}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-64 p-2 rounded-2xl shadow-2xl border-primary/10 backdrop-blur-xl">
