@@ -180,6 +180,11 @@ export const adminAPI = {
     method: 'PUT',
     body: JSON.stringify(data),
   }),
+  
+  updateContactResponse: (id: string, index: number, message: string) => fetchAPI<any>(`/admin/contacts/${id}/responses/${index}`, {
+    method: 'PUT',
+    body: JSON.stringify({ message }),
+  }),
 
   sendMessage: (userId: string, data: { subject: string; message: string }) => fetchAPI<any>(`/admin/message/${userId}`, {
     method: 'POST',

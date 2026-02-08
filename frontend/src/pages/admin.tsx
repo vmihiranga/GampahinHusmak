@@ -223,12 +223,13 @@ export default function Admin() {
   const [messageUser, setMessageUser] = useState<{ id: string; name: string } | null>(null);
   const [msgSubject, setMsgSubject] = useState("");
   const [msgBody, setMsgBody] = useState("");
-  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+  const [selectedContact, setSelectedContact] = useState<any | null>(null);
   const [viewUserDetails, setViewUserDetails] = useState<any | null>(null);
 
   const [deleteUser, setDeleteUser] = useState<string | null>(null);
   const [editUser, setEditUser] = useState<any | null>(null);
   const [deleteTree, setDeleteTree] = useState<string | null>(null);
+  const [editingResponse, setEditingResponse] = useState<{ index: number; text: string } | null>(null);
   const [confirmDeleteContact, setConfirmDeleteContact] = useState<string | null>(null);
   const [editTree, setEditTree] = useState<any | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -489,10 +490,28 @@ export default function Admin() {
   const updateContactContentMutation = useMutation({
     mutationFn: ({ id, data }: { id: string, data: { subject: string; message: string } }) => 
       adminAPI.updateContactContent(id, data),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["admin-contacts"] });
-      setSelectedContact(null);
+      // If we are currently viewing this contact, update the local state too
+      if (selectedContact && selectedContact._id === data.contact?._id) {
+        setSelectedContact(data.contact);
+      }
       toast({ title: "Success", description: "Notification updated successfully" });
+    },
+    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" })
+  });
+
+  const updateResponseMutation = useMutation({
+    mutationFn: ({ id, index, message }: { id: string, index: number, message: string }) => 
+      adminAPI.updateContactResponse(id, index, message),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-contacts"] });
+      // Update selected contact state to reflect the edited response
+      if (selectedContact && selectedContact._id === data.contact?._id) {
+        setSelectedContact(data.contact);
+      }
+      setEditingResponse(null);
+      toast({ title: "Updated", description: "Response has been modified." });
     },
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" })
   });
@@ -1096,10 +1115,10 @@ export default function Admin() {
                             View Details
                           </Button>
                           
-                          {/* Hide Respond/Edit for Auto-System Messages unless SuperAdmin needs to delete */}
-                          {!(contact.name === "System" || contact.subject.includes("Achievement")) && (
+                          {/* Handle Respond/Edit logic based on roles and message type */}
+                          {(isSuperAdmin || !(contact.name === "System" || contact.subject.includes("Achievement"))) && (
                             <>
-                              {(contact as any).isStale ? (
+                              {!(contact.name === "System" || contact.subject.includes("Achievement")) && (contact as any).isStale ? (
                                 <Button
                                   size="sm"
                                   className="bg-orange-500 hover:bg-orange-600 text-white gap-1"
@@ -1114,7 +1133,12 @@ export default function Admin() {
                               ) : (
                                 <Button
                                   size="sm"
-                                  className="gap-1 bg-primary hover:bg-primary/90"
+                                  className={cn(
+                                    "gap-1",
+                                    (contact.name === "System" || contact.subject.includes("Achievement")) 
+                                      ? "bg-slate-500 hover:bg-slate-600 shadow-slate-200"
+                                      : "bg-primary hover:bg-primary/90 shadow-primary/20"
+                                  )}
                                   onClick={() => {
                                     setSelectedContact(contact);
                                     setReplyText(contact.reply || "");
@@ -1123,7 +1147,7 @@ export default function Admin() {
                                   {isSuperAdmin ? (
                                     <>
                                       <Edit className="w-3.5 h-3.5 mr-1" />
-                                      Edit / Respond
+                                      { (contact.name === "System" || contact.subject.includes("Achievement")) ? "Edit Notification" : "Edit / Respond" }
                                     </>
                                   ) : (
                                     <>
@@ -1413,7 +1437,7 @@ export default function Admin() {
                   />
                 </div>
               ) : (
-                <div className="p-4 bg-white rounded-xl text-sm whitespace-pre-wrap leading-relaxed border shadow-sm">
+                <div className="p-4 bg-green-600 text-white shadow-lg rounded-2xl text-sm whitespace-pre-wrap leading-relaxed border border-green-700/20">
                   {selectedContact?.message}
                 </div>
               )}
@@ -1470,9 +1494,40 @@ export default function Admin() {
                   </div>
                   <div className="space-y-3 max-h-[150px] overflow-y-auto pr-2 custom-scrollbar">
                     {selectedContact.responses.map((resp: any, i: number) => (
-                      <div key={i} className="flex flex-col items-end gap-1">
-                        <div className="p-3 bg-green-600 text-white rounded-2xl rounded-tr-none text-sm shadow-md max-w-[90%] border border-green-700/20">
-                          {resp.message}
+                      <div key={i} className="flex flex-col items-end gap-1 group/resp">
+                        <div className="relative p-3 bg-white text-slate-900 rounded-2xl rounded-tr-none text-sm shadow-sm max-w-[90%] border border-slate-200">
+                          {editingResponse?.index === i ? (
+                            <div className="space-y-2 min-w-[200px]">
+                              <Textarea 
+                                value={editingResponse.text} 
+                                onChange={(e) => setEditingResponse({ ...editingResponse, text: e.target.value })}
+                                className="text-xs min-h-[80px]"
+                              />
+                              <div className="flex justify-end gap-1">
+                                <Button size="sm" variant="ghost" className="h-6 text-[10px]" onClick={() => setEditingResponse(null)}>Cancel</Button>
+                                <Button 
+                                  size="sm" 
+                                  className="h-6 text-[10px] bg-primary" 
+                                  onClick={() => updateResponseMutation.mutate({ id: selectedContact._id, index: i, message: editingResponse.text })}
+                                  disabled={updateResponseMutation.isPending}
+                                >
+                                  {updateResponseMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : "Save"}
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              {resp.message}
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="absolute -left-9 top-0 h-8 w-8 text-muted-foreground opacity-0 group-hover/resp:opacity-100 transition-opacity hover:bg-primary/10 hover:text-primary rounded-full"
+                                onClick={() => setEditingResponse({ index: i, text: resp.message })}
+                              >
+                                <Edit className="w-3.5 h-3.5" />
+                              </Button>
+                            </>
+                          )}
                         </div>
                         <span className="text-[9px] text-muted-foreground mr-1">
                           {format(new Date(resp.respondedAt), "MMM d, h:mm a")}
@@ -1484,8 +1539,8 @@ export default function Admin() {
               )}
             </div>
 
-            {/* Standard Admin Response Section (Hidden for SuperAdmin when they are editing metadata) */}
-            {!isSuperAdmin && (
+            {/* Standard Admin Response Section (Hidden for System Messages OR when SuperAdmin is editing metadata) */}
+            {!(selectedContact?.name === "System" || selectedContact?.subject?.includes("Achievement")) && !isSuperAdmin && (
               <div className="space-y-2 bg-primary/5 p-4 rounded-2xl border border-primary/10">
                 <Label htmlFor="reply" className="text-primary font-bold">{t.admin.dialogs.respond.reply_label}</Label>
                 <Textarea
@@ -1496,6 +1551,14 @@ export default function Admin() {
                   onChange={(e) => setReplyText(e.target.value)}
                 />
               </div>
+            )}
+            
+            {(selectedContact?.name === "System" || selectedContact?.subject?.includes("Achievement")) && (
+               <div className="p-4 bg-muted/30 rounded-2xl border border-dashed border-muted-foreground/20 text-center">
+                 <ShieldAlert className="w-5 h-5 text-muted-foreground/50 mx-auto mb-2" />
+                 <p className="text-xs text-muted-foreground font-medium">Auto-system notification. Replying is disabled.</p>
+                 {isSuperAdmin && <p className="text-[10px] text-primary/60 mt-1">Super Admin: You can still edit the content above.</p>}
+               </div>
             )}
           </div>
           <DialogFooter className="border-t p-6 bg-muted/30">

@@ -1300,6 +1300,31 @@ export async function registerRoutes(
     }
   });
 
+  // Edit specific response (Super Admin / Admin who sent it)
+  app.put("/api/admin/contacts/:id/responses/:index", requireAuth, requireAdmin, async (req, res) => {
+    try {
+      const { message } = req.body;
+      const { id, index } = req.params;
+      const idx = parseInt(index);
+
+      const contact = await Contact.findById(id);
+      if (!contact) return res.status(404).json({ message: "Contact not found" });
+      if (!contact.responses || !contact.responses[idx]) {
+        return res.status(404).json({ message: "Response not found" });
+      }
+
+      // Permissions: Super Admin can edit any. Standard Admin can only edit if they sent it (optional, but safer)
+      // For now, let's allow all admins to edit if they have access to the dashboard.
+      contact.responses[idx].message = message;
+      await contact.save();
+
+      res.json({ message: "Response updated", contact });
+    } catch (error: any) {
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Failed to update response" });
+    }
+  });
+
   // Send update reminder for a tree (admin only)
   app.post("/api/admin/trees/:id/remind", requireAuth, requireAdmin, async (req, res) => {
     try {
