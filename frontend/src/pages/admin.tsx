@@ -182,11 +182,11 @@ export default function Admin() {
 
   const stats = adminSummary?.stats;
 
-  // Fetch contacts/issues with auto-refresh for stale tree detection
+  // Fetch contacts/issues with auto-refresh for real-time messaging
   const { data: contactsData, refetch: refetchContacts } = useQuery<ContactsResponse>({
     queryKey: ["admin-contacts", contactPage],
     queryFn: () => contactAPI.getAll({ page: contactPage, limit: 10 }),
-    refetchInterval: 60000, // Auto-refresh every 60 seconds for stale tree alerts
+    refetchInterval: 5000, // Real-time updates every 5 seconds for messaging
   });
 
   // Fetch users
@@ -232,6 +232,7 @@ export default function Admin() {
   const [editingResponse, setEditingResponse] = useState<{ index: number; text: string } | null>(null);
   const [confirmDeleteContact, setConfirmDeleteContact] = useState<string | null>(null);
   const [editTree, setEditTree] = useState<any | null>(null);
+  const [isEditingOriginal, setIsEditingOriginal] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Badge management states
@@ -1009,19 +1010,6 @@ export default function Admin() {
                     {t.admin.tabs.descriptions.issues}
                   </CardDescription>
                 </div>
-                {isSuperAdmin && (
-                  <Button 
-                    className="gap-2 bg-primary hover:bg-primary/90 rounded-xl"
-                    onClick={() => {
-                      // We can reuse the messaging state but maybe with a list of users
-                      // For now, let's just use the existing sendMessage dialog by picking a user first
-                      toast({ title: "Note", description: "To create a message, click on a user in the Users tab and select Message/Award." });
-                    }}
-                  >
-                    <Plus className="w-4 h-4" />
-                    Create Message
-                  </Button>
-                )}
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -1141,20 +1129,12 @@ export default function Admin() {
                                   )}
                                   onClick={() => {
                                     setSelectedContact(contact);
-                                    setReplyText(contact.reply || "");
+                                    setReplyText("");
+                                    setIsEditingOriginal(false);
                                   }}
                                 >
-                                  {isSuperAdmin ? (
-                                    <>
-                                      <Edit className="w-3.5 h-3.5 mr-1" />
-                                      { (contact.name === "System" || contact.subject.includes("Achievement")) ? "Edit Notification" : "Edit / Respond" }
-                                    </>
-                                  ) : (
-                                    <>
-                                      <MessageSquare className="w-3.5 h-3.5 mr-1" />
-                                      Respond
-                                    </>
-                                  )}
+                                  <MessageSquare className="w-3.5 h-3.5 mr-1" />
+                                  Respond
                                 </Button>
                               )}
                             </>
@@ -1407,38 +1387,77 @@ export default function Admin() {
         open={!!selectedContact}
         onOpenChange={(open) => !open && setSelectedContact(null)}
       >
-        <DialogContent className="w-[95vw] sm:max-w-[600px] max-h-[95vh] overflow-y-auto custom-scrollbar">
+        <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-[600px] max-h-[90vh] overflow-y-auto custom-scrollbar p-4 sm:p-6">
           <DialogHeader>
-            <DialogTitle>
-              {isSuperAdmin ? (
-                <div className="space-y-2 mt-2">
-                  <Label className="text-xs uppercase tracking-wider text-muted-foreground">Notification Subject</Label>
-                  <Input 
+            <DialogTitle className="flex items-center gap-2">
+              <MessageSquare className="w-5 h-5 text-primary" />
+              Messaging
+            </DialogTitle>
+            <DialogDescription className="space-y-1">
+              {isSuperAdmin && isEditingOriginal ? (
+                <div className="mt-2">
+                   <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Subject</Label>
+                   <Input 
                     value={selectedContact?.subject || ""} 
                     onChange={(e) => selectedContact && setSelectedContact({ ...selectedContact, subject: e.target.value })}
-                    className="font-bold text-lg"
+                    className="font-bold h-8 mt-1"
                   />
                 </div>
-              ) : selectedContact?.subject}
-            </DialogTitle>
-            <DialogDescription>
-              From: {selectedContact?.name || "System"} ({selectedContact?.email})
+              ) : (
+                <div className="flex items-center gap-2 group/subj">
+                  <span className="font-medium text-slate-800">{selectedContact?.subject}</span>
+                   {isSuperAdmin && (
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-5 w-5 opacity-0 group-hover/subj:opacity-100 transition-opacity"
+                      onClick={() => setIsEditingOriginal(true)}
+                    >
+                      <Edit className="w-3 h-3" />
+                    </Button>
+                  )}
+                </div>
+              )}
+              <div className="text-xs text-muted-foreground">
+                From: {selectedContact?.name || "System"} ({selectedContact?.email})
+              </div>
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-3">
-              {isSuperAdmin ? (
+              {isSuperAdmin && isEditingOriginal ? (
                 <div className="space-y-2">
-                  <Label className="text-xs uppercase tracking-wider text-muted-foreground">Notification Message</Label>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Original Message</Label>
+                    <Button variant="ghost" size="sm" className="h-6 text-[10px]" onClick={() => setIsEditingOriginal(false)}>Cancel Edit</Button>
+                  </div>
                   <Textarea 
                     value={selectedContact?.message || ""} 
                     onChange={(e) => selectedContact && setSelectedContact({ ...selectedContact, message: e.target.value })}
-                    className="min-h-[150px] leading-relaxed"
+                    className="min-h-[120px] leading-relaxed text-sm"
                   />
                 </div>
               ) : (
-                <div className="p-4 bg-green-600 text-white shadow-lg rounded-2xl text-sm whitespace-pre-wrap leading-relaxed border border-green-700/20">
-                  {selectedContact?.message}
+                <div className="relative group/orig">
+                  {/* Check if this is a user-initiated message (green) or admin/system message (white) */}
+                  <div className={cn(
+                    "p-4 shadow-lg rounded-2xl text-sm whitespace-pre-wrap leading-relaxed",
+                    selectedContact?.name === "System" || !selectedContact?.userId || selectedContact?.userId === selectedContact?.respondedBy
+                      ? "bg-white text-slate-900 border border-slate-200"
+                      : "bg-green-600 text-white border border-green-700/20"
+                  )}>
+                    {selectedContact?.message}
+                  </div>
+                  {isSuperAdmin && (
+                    <Button 
+                      variant="secondary" 
+                      size="icon" 
+                      className="absolute -right-2 -top-2 h-7 w-7 rounded-full shadow-md opacity-0 group-hover/orig:opacity-100 transition-opacity"
+                      onClick={() => setIsEditingOriginal(true)}
+                    >
+                      <Edit className="w-3.5 h-3.5" />
+                    </Button>
+                  )}
                 </div>
               )}
               
@@ -1493,9 +1512,18 @@ export default function Admin() {
                     <div className="h-px flex-1 bg-border" />
                   </div>
                   <div className="space-y-3 max-h-[150px] overflow-y-auto pr-2 custom-scrollbar">
-                    {selectedContact.responses.map((resp: any, i: number) => (
-                      <div key={i} className="flex flex-col items-end gap-1 group/resp">
-                        <div className="relative p-3 bg-white text-slate-900 rounded-2xl rounded-tr-none text-sm shadow-sm max-w-[90%] border border-slate-200">
+                    {selectedContact.responses.map((resp: any, i: number) => {
+                      // Check if this response is from the user (not admin)
+                      const isUserResponse = resp.respondedBy === selectedContact.userId;
+                      
+                      return (
+                      <div key={i} className={cn("flex flex-col gap-1 group/resp", isUserResponse ? "items-start" : "items-end")}>
+                        <div className={cn(
+                          "relative p-3 rounded-2xl text-sm shadow-md max-w-[90%]",
+                          isUserResponse 
+                            ? "bg-green-600 text-white border border-green-700/20 rounded-tl-none" 
+                            : "bg-white text-slate-900 border border-slate-200 rounded-tr-none"
+                        )}>
                           {editingResponse?.index === i ? (
                             <div className="space-y-2 min-w-[200px]">
                               <Textarea 
@@ -1518,22 +1546,25 @@ export default function Admin() {
                           ) : (
                             <>
                               {resp.message}
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="absolute -left-9 top-0 h-8 w-8 text-muted-foreground opacity-0 group-hover/resp:opacity-100 transition-opacity hover:bg-primary/10 hover:text-primary rounded-full"
-                                onClick={() => setEditingResponse({ index: i, text: resp.message })}
-                              >
-                                <Edit className="w-3.5 h-3.5" />
-                              </Button>
+                              {!isUserResponse && (
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="absolute -left-9 top-0 h-8 w-8 text-muted-foreground opacity-0 group-hover/resp:opacity-100 transition-opacity hover:bg-primary/10 hover:text-primary rounded-full"
+                                  onClick={() => setEditingResponse({ index: i, text: resp.message })}
+                                >
+                                  <Edit className="w-3.5 h-3.5" />
+                                </Button>
+                              )}
                             </>
                           )}
                         </div>
-                        <span className="text-[9px] text-muted-foreground mr-1">
+                        <span className={cn("text-[9px] text-muted-foreground", isUserResponse ? "ml-1" : "mr-1")}>
                           {format(new Date(resp.respondedAt), "MMM d, h:mm a")}
                         </span>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -1565,19 +1596,21 @@ export default function Admin() {
             <Button variant="outline" onClick={() => setSelectedContact(null)} className="rounded-xl">
               {t.common.close}
             </Button>
-            {isSuperAdmin ? (
+            {isSuperAdmin && isEditingOriginal ? (
               <Button
                 className="rounded-xl shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90"
                 onClick={() =>
                   selectedContact && updateContactContentMutation.mutate({
                     id: selectedContact._id,
                     data: { subject: selectedContact.subject, message: selectedContact.message },
+                  }, {
+                    onSuccess: () => setIsEditingOriginal(false)
                   })
                 }
                 disabled={updateContactContentMutation.isPending || !selectedContact?.subject || !selectedContact?.message}
               >
                 {updateContactContentMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                Update Notification
+                Save Changes
               </Button>
             ) : (
               <Button
@@ -1588,7 +1621,7 @@ export default function Admin() {
                     reply: replyText,
                   })
                 }
-                disabled={respondMutation.isPending || !replyText.trim()}
+                disabled={respondMutation.isPending || !replyText.trim() || (selectedContact?.name === "System" || selectedContact?.subject?.includes("Achievement"))}
               >
                 {respondMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                 {t.admin.dialogs.respond.save_btn}

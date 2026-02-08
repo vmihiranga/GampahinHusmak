@@ -800,6 +800,34 @@ export async function registerRoutes(
     }
   });
 
+  // Reply to own contact (user)
+  app.post("/api/my-contacts/:id/reply", requireAuth, async (req, res) => {
+    try {
+      const { message } = req.body;
+      const userId = (req.session as any).userId;
+      
+      const contact = await Contact.findOneAndUpdate(
+        { _id: req.params.id, userId },
+        { 
+          $set: { status: 'new' }, // Set back to new so admin sees it it's updated
+          $push: { 
+            responses: {
+              message,
+              respondedBy: userId,
+              respondedAt: new Date()
+            }
+          }
+        },
+        { new: true }
+      );
+      if (!contact) return res.status(404).json({ message: "Contact not found" });
+      res.json({ message: "Reply sent", contact });
+    } catch (error: any) {
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Something went wrong. Please try again later." });
+    }
+  });
+
   // Get all contacts (admin only)
   app.get("/api/contact", requireAuth, requireAdmin, async (req, res) => {
     try {

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Filter, AlertCircle, MapPin as MapPinIcon, LocateFixed, Loader2, Clock, MessageSquare, CheckCircle2, History, TreePine, Camera, Trophy, Sprout, CloudRain, Droplets, Wind, Thermometer } from "lucide-react";
+import { Plus, Search, Filter, AlertCircle, MapPin as MapPinIcon, LocateFixed, Loader2, Clock, MessageSquare, CheckCircle2, History, TreePine, Camera, Trophy, Sprout, CloudRain, Droplets, Wind, Thermometer, Eye } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/use-language";
@@ -18,6 +18,7 @@ import { format } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { motion } from "framer-motion";
 import imageCompression from 'browser-image-compression';
 
@@ -39,6 +40,8 @@ export default function Dashboard() {
   const [selectedViewContact, setSelectedViewContact] = useState<any>(null);
   const [updateHealth, setUpdateHealth] = useState<string>("good");
   const [isUpdateLoading, setIsUpdateLoading] = useState(false);
+  const [userReplyText, setUserReplyText] = useState("");
+  const [contactPage, setContactPage] = useState(1);
 
   // Fetch user profile
   const { data: userData, isLoading: isUserLoading } = useQuery<AuthResponse>({
@@ -57,8 +60,8 @@ export default function Dashboard() {
 
   // Fetch user's requests/contacts
   const { data: contactsData } = useQuery<ContactsResponse>({
-    queryKey: ['my-contacts'],
-    queryFn: () => contactAPI.getMyContacts(),
+    queryKey: ['my-contacts', contactPage],
+    queryFn: () => contactAPI.getMyContacts({ page: contactPage, limit: 10 }),
     enabled: !!user,
     refetchInterval: 5000, // Check for new messages every 5s
   });
@@ -106,6 +109,29 @@ export default function Dashboard() {
       toast({
         title: "Update Failed",
         description: error.message || "Failed to record update",
+        variant: "destructive",
+      });
+    }
+  });
+  
+  const replyMutation = useMutation({
+    mutationFn: ({ id, message }: { id: string, message: string }) => contactAPI.reply(id, message),
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['my-contacts'] });
+      // Update the local view contact state with updated data
+      if (data.contact) {
+        setSelectedViewContact(data.contact);
+      }
+      setUserReplyText("");
+      toast({
+        title: "Reply Sent",
+        description: "Your message has been sent to our administrators.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Reply Failed",
+        description: error.message || "Failed to send reply",
         variant: "destructive",
       });
     }
@@ -923,7 +949,8 @@ export default function Dashboard() {
                         )}
                       </div>
 
-                      {contact.status === 'replied' && (
+                      {/* Always show View Details button for all contact messages */}
+                      {true && (
                         <div className="pt-2">
                           <Button 
                             variant="outline" 
@@ -938,8 +965,8 @@ export default function Dashboard() {
                               }
                             }}
                           >
-                            <MessageSquare className="w-3 h-3" />
-                            View Response
+                            <Eye className="w-3.5 h-3.5" />
+                            View Messaging
                           </Button>
                         </div>
                       )}
@@ -948,6 +975,41 @@ export default function Dashboard() {
                 ))
               )}
             </div>
+            {/* Pagination for My Requests */}
+            {contactsData?.pagination && contactsData.pagination.totalPages > 1 && (
+              <div className="flex justify-center mt-6">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        href="#" 
+                        onClick={(e) => { e.preventDefault(); if (contactPage > 1) setContactPage(contactPage - 1); }}
+                        className={contactPage <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+                    {Array.from({ length: contactsData.pagination.totalPages }, (_, i) => i + 1).map(page => (
+                      <PaginationItem key={page}>
+                        <PaginationLink
+                          href="#"
+                          onClick={(e) => { e.preventDefault(); setContactPage(page); }}
+                          isActive={page === contactPage}
+                          className="cursor-pointer"
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+                    <PaginationItem>
+                      <PaginationNext 
+                        href="#" 
+                        onClick={(e) => { e.preventDefault(); if (contactPage < contactsData.pagination.totalPages) setContactPage(contactPage + 1); }}
+                        className={contactPage >= contactsData.pagination.totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="achievements" className="space-y-6">
@@ -1022,11 +1084,11 @@ export default function Dashboard() {
 
       {/* View Response Dialog */}
       <Dialog open={!!selectedViewContact} onOpenChange={(open) => !open && setSelectedViewContact(null)}>
-        <DialogContent className="w-[95vw] sm:max-w-[600px] max-h-[95vh] overflow-y-auto custom-scrollbar p-6 bg-background/95 backdrop-blur-md">
+        <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-[600px] max-h-[90vh] overflow-y-auto custom-scrollbar p-4 sm:p-6 bg-background/95 backdrop-blur-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <MessageSquare className="w-5 h-5 text-primary" />
-              Request Details
+              Messaging
             </DialogTitle>
             <DialogDescription>
               Sent on {selectedViewContact && format(new Date(selectedViewContact.createdAt), "MMMM d, yyyy")}
@@ -1041,7 +1103,7 @@ export default function Dashboard() {
                   <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground" />
                   Your Message
                 </div>
-                <div className="p-4 bg-white rounded-2xl text-sm border shadow-sm">
+                <div className="p-4 bg-green-600 text-white rounded-2xl text-sm border border-green-700/20 shadow-md">
                   <p className="font-bold mb-1 text-primary/80">{selectedViewContact.subject}</p>
                   <p>{selectedViewContact.message}</p>
                   {selectedViewContact.image && (
@@ -1067,25 +1129,35 @@ export default function Dashboard() {
               <div className="space-y-4">
                 <div className="flex items-center gap-2 text-xs font-bold text-primary uppercase tracking-wider">
                   <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                  Administrator Responses
+                  Conversation
                 </div>
                 
                 <div className="space-y-4">
                   {selectedViewContact.responses && selectedViewContact.responses.length > 0 ? (
-                    selectedViewContact.responses.map((resp: any, i: number) => (
-                      <div key={i} className="flex flex-col gap-1">
-                <div className="p-4 bg-green-600 text-white rounded-2xl rounded-tl-none text-sm border border-green-700/20 shadow-md">
-                  {resp.message}
-                </div>
-                        <span className="text-[10px] text-muted-foreground ml-2">
-                          {format(new Date(resp.respondedAt), "MMM d, h:mm a")}
-                        </span>
-                      </div>
-                    ))
+                    selectedViewContact.responses.map((resp: any, i: number) => {
+                      // Check if this response is from the user (not admin)
+                      const isUserReply = resp.respondedBy === user?._id;
+                      
+                      return (
+                        <div key={i} className={cn("flex flex-col gap-1", isUserReply ? "items-end" : "items-start")}>
+                          <div className={cn(
+                            "p-4 rounded-2xl text-sm shadow-md max-w-[85%] break-words",
+                            isUserReply 
+                              ? "bg-white text-slate-900 border border-slate-200 rounded-tr-none" 
+                              : "bg-green-600 text-white border border-green-700/20 rounded-tl-none"
+                          )}>
+                            {resp.message}
+                          </div>
+                          <span className={cn("text-[10px] text-muted-foreground", isUserReply ? "mr-2" : "ml-2")}>
+                            {format(new Date(resp.respondedAt), "MMM d, h:mm a")}
+                          </span>
+                        </div>
+                      );
+                    })
                   ) : (
                     selectedViewContact.reply ? (
                       <div className="flex flex-col gap-1">
-                      <div className="p-4 bg-green-600 text-white rounded-2xl rounded-tl-none text-sm border border-green-700/20 shadow-md">
+                      <div className="p-4 bg-green-600 text-white rounded-2xl rounded-tl-none text-sm border border-green-700/20 shadow-md max-w-[85%] break-words">
                         {selectedViewContact.reply}
                       </div>
                         {selectedViewContact.repliedAt && (
@@ -1100,6 +1172,32 @@ export default function Dashboard() {
                   )}
                 </div>
               </div>
+
+              {/* Reply Section (Disabled only for automated achievement notifications) */}
+              {!selectedViewContact.subject?.includes("Achievement") && (
+                <div className="space-y-3 pt-4 border-t">
+                  <div className="flex items-center gap-2 text-xs font-bold text-primary uppercase tracking-wider">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                    Your Reply
+                  </div>
+                  <Textarea 
+                    placeholder="Type your message here..."
+                    value={userReplyText}
+                    onChange={(e) => setUserReplyText(e.target.value)}
+                    className="min-h-[100px] rounded-2xl bg-white shadow-sm focus:ring-primary"
+                  />
+                  <div className="flex justify-end">
+                    <Button 
+                      className="bg-primary hover:bg-primary/90 rounded-xl px-6"
+                      onClick={() => replyMutation.mutate({ id: selectedViewContact._id, message: userReplyText })}
+                      disabled={replyMutation.isPending || !userReplyText.trim()}
+                    >
+                      {replyMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <MessageSquare className="w-4 h-4 mr-2" />}
+                      Send Message
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
           

@@ -129,8 +129,15 @@ export const contactAPI = {
     return fetchAPI<ContactsResponse>(`/contact${query ? `?${query}` : ''}`);
   },
   
-  getMyContacts: () => fetchAPI<ContactsResponse>('/my-contacts'),
+  getMyContacts: (params?: any) => {
+    const query = new URLSearchParams(params).toString();
+    return fetchAPI<ContactsResponse>(`/my-contacts${query ? `?${query}` : ''}`);
+  },
   markAsSeen: (id: string) => fetchAPI<MessageResponse>(`/my-contacts/${id}/seen`, { method: 'PUT' }),
+  reply: (id: string, message: string) => fetchAPI<MessageResponse>(`/my-contacts/${id}/reply`, {
+    method: 'POST',
+    body: JSON.stringify({ message }),
+  }),
 };
 
 // Stats API
