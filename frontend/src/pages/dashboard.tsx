@@ -10,6 +10,7 @@ import { Plus, Search, Filter, AlertCircle, MapPin as MapPinIcon, LocateFixed, L
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/use-language";
+import { useMessageNotifications } from "@/hooks/use-message-notifications";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { treesAPI, authAPI, contactAPI, statsAPI } from "@/lib/api";
 import { AuthResponse, TreesResponse, ContactsResponse } from "@/lib/types";
@@ -43,6 +44,9 @@ export default function Dashboard() {
   const [userReplyText, setUserReplyText] = useState("");
   const [contactPage, setContactPage] = useState(1);
 
+  // Initialize message notifications
+  const { checkForNewMessages } = useMessageNotifications();
+
   // Fetch user profile
   const { data: userData, isLoading: isUserLoading } = useQuery<AuthResponse>({
     queryKey: ['user-profile'],
@@ -66,6 +70,13 @@ export default function Dashboard() {
     refetchInterval: 5000, // Check for new messages every 5s
   });
   const myContacts = contactsData?.contacts || [];
+
+  // Check for new messages and trigger notifications
+  useEffect(() => {
+    if (contactsData?.pagination) {
+      checkForNewMessages(contactsData.pagination.totalItems, contactsData);
+    }
+  }, [contactsData?.pagination?.totalItems]);
 
   // Fetch user stats/achievements
   const { data: userStats } = useQuery({

@@ -118,6 +118,7 @@ import {
 import { useState, useEffect } from "react";
 import BadgeManagementTab from "@/components/BadgeManagementTab";
 import UserBadgesDialog from "@/components/UserBadgesDialog";
+import { useMessageNotifications } from "@/hooks/use-message-notifications";
 
 const UserStatsSummary = ({ userId }: { userId: string }) => {
   const { data: stats, isLoading } = useQuery({
@@ -156,6 +157,13 @@ const UserStatsSummary = ({ userId }: { userId: string }) => {
 export default function Admin() {
   const { t, language, getPathWithLang } = useLanguage();
   const [treePage, setTreePage] = useState(1);
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  
+  // Initialize message notifications
+  const { checkForNewMessages } = useMessageNotifications();
   const [userPage, setUserPage] = useState(1);
   const [contactPage, setContactPage] = useState(1);
   const limit = 20;
@@ -189,6 +197,13 @@ export default function Admin() {
     refetchInterval: 5000, // Real-time updates every 5 seconds for messaging
   });
 
+  // Check for new messages and trigger notifications for admins
+  useEffect(() => {
+    if (contactsData?.pagination) {
+      checkForNewMessages(contactsData.pagination.totalItems, contactsData);
+    }
+  }, [contactsData?.pagination?.totalItems]);
+
   // Fetch users
   const { data: usersData } = useQuery<UsersResponse>({
     queryKey: ["admin-users", userPage],
@@ -210,16 +225,12 @@ export default function Admin() {
 
   const badgeTemplates = badgeTemplatesData?.templates || [];
 
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-
   const [confirmUser, setConfirmUser] = useState<{
     id: string;
     name: string;
     isVerified: boolean;
   } | null>(null);
   const [replyText, setReplyText] = useState("");
-  const [, setLocation] = useLocation();
   const [messageUser, setMessageUser] = useState<{ id: string; name: string } | null>(null);
   const [msgSubject, setMsgSubject] = useState("");
   const [msgBody, setMsgBody] = useState("");
