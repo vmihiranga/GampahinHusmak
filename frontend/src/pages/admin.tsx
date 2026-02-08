@@ -160,7 +160,6 @@ export default function Admin() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
   
   // Initialize message notifications
   const { checkForNewMessages } = useMessageNotifications();
