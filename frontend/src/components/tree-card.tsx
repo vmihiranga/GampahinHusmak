@@ -1,6 +1,6 @@
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Calendar, Activity } from "lucide-react";
+import { MapPin, Calendar, Activity, TreePine } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
@@ -56,13 +56,20 @@ export function TreeCard({ tree, showActions = false, onAddUpdate }: TreeProps) 
 
   return (
     <Card className="overflow-hidden group hover:shadow-md transition-shadow">
-      <div className="relative h-48 overflow-hidden">
-        <img 
-          src={treeImage} 
-          alt={treeName} 
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          referrerPolicy="no-referrer"
-        />
+      <div className="relative h-48 overflow-hidden bg-muted flex items-center justify-center">
+        {treeImage ? (
+          <img 
+            src={treeImage} 
+            alt={treeName} 
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            referrerPolicy="no-referrer"
+          />
+        ) : (
+          <div className="flex flex-col items-center justify-center text-muted-foreground/40 gap-2">
+            <TreePine className="w-12 h-12" />
+            <span className="text-[10px] font-bold uppercase tracking-widest">{language === 'si' ? 'ඡායාරූපයක් නැත' : 'No photo available'}</span>
+          </div>
+        )}
         <div className="absolute top-3 right-3">
           <Badge variant="outline" className={statusColors[treeStatus] || "bg-gray-100"}>
             {statusLabels[treeStatus] || treeStatus}

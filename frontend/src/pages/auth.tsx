@@ -16,6 +16,7 @@ import getCroppedImg from "@/lib/canvasUtils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { Camera } from "lucide-react";
+import imageCompression from 'browser-image-compression';
 
 export default function Auth() {
   const { t, language } = useLanguage();
@@ -84,7 +85,22 @@ export default function Auth() {
         console.log("📤 Uploading profile photo to ImgBB...");
         const apiKey = import.meta.env.VITE_IMGBB_API_KEY;
         const imgFormData = new FormData();
-        imgFormData.append("image", profileImageFile);
+        
+        // Compress profile photo before upload
+        let fileToUpload = profileImageFile;
+        try {
+          const options = {
+            maxSizeMB: 0.5,
+            maxWidthOrHeight: 800,
+            useWebWorker: true
+          };
+          fileToUpload = await imageCompression(profileImageFile, options);
+          console.log(`✅ Compressed profile image to ${fileToUpload.size / 1024}KB`);
+        } catch (error) {
+          console.error("Compression error:", error);
+        }
+        
+        imgFormData.append("image", fileToUpload);
         
         const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
           method: "POST",
@@ -238,7 +254,7 @@ export default function Auth() {
                     <div className="flex flex-col items-center space-y-4">
                       <div className="relative group">
                         <Avatar className="w-32 h-32 border-4 border-white shadow-xl cursor-pointer hover:opacity-90 transition-opacity" onClick={triggerFileInput}>
-                          <AvatarImage src={imagePreview} className="object-cover" alt="Profile" />
+                          <AvatarImage src={imagePreview} className="object-cover" alt="Profile" referrerPolicy="no-referrer" />
                           <AvatarFallback className="bg-primary/5 text-primary">
                             {imagePreview ? (
                               <User className="w-16 h-16" />

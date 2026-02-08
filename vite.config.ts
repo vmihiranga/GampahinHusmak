@@ -51,37 +51,8 @@ export default defineConfig({
         ]
       },
       workbox: {
-        // Only cache images for optimization, everything else remains network-first/only
-        runtimeCaching: [
-          {
-            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|ico)$/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'local-images-cache',
-              expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 Days
-              },
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
-          },
-          {
-            urlPattern: /^https:\/\/(?:i\.ibb\.co|images\.unsplash\.com|res\.cloudinary\.com|.*\.imgbb\.com)/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'external-images-cache',
-              expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 Days
-              },
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
-          }
-        ]
+        // Disabled runtime caching for images to prevent stale content/caching issues
+        runtimeCaching: []
       }
     }),
     ...(process.env.NODE_ENV !== "production" &&

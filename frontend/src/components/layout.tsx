@@ -249,7 +249,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     )}
                   >
                     <Avatar className="w-8 h-8 border-2 border-primary/20">
-                      <AvatarImage src={user.profileImage} alt={user.fullName} />
+                      <AvatarImage src={user.profileImage} alt={user.fullName} referrerPolicy="no-referrer" />
                       <AvatarFallback className="text-xs bg-primary/10 text-primary">
                         {user.fullName?.charAt(0) || user.username?.charAt(0) || 'U'}
                       </AvatarFallback>
@@ -392,7 +392,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                       <div className="p-4 rounded-2xl bg-white border border-primary/5 shadow-sm">
                         <div className="flex items-center gap-4">
                           <Avatar className="w-12 h-12 border-2 border-primary/10">
-                            <AvatarImage src={user.profileImage} alt={user.fullName} />
+                            <AvatarImage src={user.profileImage} alt={user.fullName} referrerPolicy="no-referrer" />
                             <AvatarFallback className="bg-primary/10 text-primary font-bold">
                               {user.fullName?.charAt(0) || user.username?.charAt(0) || 'U'}
                             </AvatarFallback>

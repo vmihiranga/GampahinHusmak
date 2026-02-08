@@ -30,6 +30,7 @@ export default function Home() {
             loading="eager"
             decoding="async"
             fetchPriority="high"
+            referrerPolicy="no-referrer"
           />
           <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
         </div>
@@ -41,7 +42,7 @@ export default function Home() {
           </div>
           
           <div className="flex justify-center animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100 px-4">
-            <img src="/logo.png" alt="Gampahin Husmak" className="h-32 sm:h-48 md:h-64 w-auto object-contain" loading="eager" decoding="async" fetchPriority="high" />
+            <img src="/logo.png" alt="Gampahin Husmak" className="h-32 sm:h-48 md:h-64 w-auto object-contain" loading="eager" decoding="async" fetchPriority="high" referrerPolicy="no-referrer" />
           </div>
           
           <p className="text-lg md:text-xl text-white/90 max-w-2xl mx-auto leading-relaxed animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
@@ -104,6 +105,7 @@ export default function Home() {
                 className="relative rounded-2xl shadow-xl w-full h-[350px] md:h-[500px] object-cover"
                 loading="lazy"
                 decoding="async"
+                referrerPolicy="no-referrer"
               />
             </div>
           </div>

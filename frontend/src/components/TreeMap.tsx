@@ -105,8 +105,8 @@ export default function TreeMap({ trees, center, zoom = 12, height = '500px' }: 
 
       const marker = L.marker(position, { icon: customIcon });
 
-      // Get first image or use a reliable placeholder
-      const treeImage = tree.images?.[0] || 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=400';
+      // Get first image
+      const treeImage = (tree.images && tree.images.length > 0) ? tree.images[0] : null;
 
       // Create popup content
       const popupContent = `

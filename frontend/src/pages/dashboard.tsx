@@ -19,6 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
+import imageCompression from 'browser-image-compression';
 
 export default function Dashboard() {
   const { toast } = useToast();
@@ -240,7 +241,22 @@ export default function Dashboard() {
         }
 
         const imgFormData = new FormData();
-        imgFormData.append("image", imageFile);
+        
+        // Compress image before upload
+        let fileToUpload = imageFile;
+        try {
+          const options = {
+            maxSizeMB: 1,
+            maxWidthOrHeight: 1280,
+            useWebWorker: true
+          };
+          fileToUpload = await imageCompression(imageFile, options);
+          console.log(`✅ Compressed image from ${imageFile.size / 1024 / 1024}MB to ${fileToUpload.size / 1024 / 1024}MB`);
+        } catch (error) {
+          console.error("Compression error:", error);
+        }
+        
+        imgFormData.append("image", fileToUpload);
         
         const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
           method: "POST",
@@ -314,7 +330,21 @@ export default function Dashboard() {
         }
 
         const imgFormData = new FormData();
-        imgFormData.append("image", imageFile);
+        
+        // Compress image before upload
+        let fileToUpload = imageFile;
+        try {
+          const options = {
+            maxSizeMB: 1,
+            maxWidthOrHeight: 1280,
+            useWebWorker: true
+          };
+          fileToUpload = await imageCompression(imageFile, options);
+        } catch (error) {
+          console.error("Compression error:", error);
+        }
+        
+        imgFormData.append("image", fileToUpload);
         
         const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
           method: "POST",
@@ -370,7 +400,21 @@ export default function Dashboard() {
         console.log("📤 Uploading request image...");
         const apiKey = import.meta.env.VITE_IMGBB_API_KEY;
         const imgFormData = new FormData();
-        imgFormData.append("image", imageFile);
+        
+        // Compress image before upload
+        let fileToUpload = imageFile;
+        try {
+          const options = {
+            maxSizeMB: 1,
+            maxWidthOrHeight: 1280,
+            useWebWorker: true
+          };
+          fileToUpload = await imageCompression(imageFile, options);
+        } catch (error) {
+          console.error("Compression error:", error);
+        }
+        
+        imgFormData.append("image", fileToUpload);
         const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
           method: "POST",
           body: imgFormData,

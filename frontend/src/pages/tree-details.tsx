@@ -15,10 +15,15 @@ import {
   Ruler,
   Info,
   X,
+  TreePine,
+  Camera as CameraIcon,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  ExternalLink,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { format } from "date-fns";
-import { Loader2, ExternalLink, ChevronLeft, ChevronRight, Camera as CameraIcon } from "lucide-react";
 import { useState } from "react";
 import { useLanguage } from "@/hooks/use-language";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -140,24 +145,33 @@ export default function TreeDetails({ params }: { params: { id: string } }) {
             <div className="lg:col-span-2 space-y-8">
               {/* Image */}
               <div
-                className="rounded-2xl overflow-hidden aspect-video bg-muted relative shadow-md cursor-pointer group"
-                onClick={() => setPreviewImageIndex(0)}
+                className="rounded-2xl overflow-hidden aspect-video bg-muted relative shadow-md cursor-pointer group flex items-center justify-center"
+                onClick={() => allImages.length > 0 && setPreviewImageIndex(0)}
               >
-                <img
-                  src={allImages[0]}
-                  alt={tree.commonName}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  referrerPolicy="no-referrer"
-                />
-                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                   <div className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-full border border-white/30 text-white flex items-center gap-2">
-                     <CameraIcon className="w-4 h-4" />
-                     <span className="text-sm font-medium">{t.tree_details.view_gallery} ({allImages.length})</span>
-                   </div>
-                </div>
-                {allImages.length > 1 && (
-                  <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-lg text-white text-xs font-bold border border-white/10">
-                    1 / {allImages.length}
+                {allImages.length > 0 ? (
+                  <>
+                    <img
+                      src={allImages[0]}
+                      alt={tree.commonName}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                      <div className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-full border border-white/30 text-white flex items-center gap-2">
+                        <CameraIcon className="w-4 h-4" />
+                        <span className="text-sm font-medium">{t.tree_details.view_gallery} ({allImages.length})</span>
+                      </div>
+                    </div>
+                    {allImages.length > 1 && (
+                      <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-lg text-white text-xs font-bold border border-white/10">
+                        1 / {allImages.length}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center text-muted-foreground/30 gap-4">
+                    <TreePine className="w-20 h-20" />
+                    <p className="text-sm font-bold uppercase tracking-widest leading-none">{language === 'si' ? 'රූප සටහන් කිසිවක් නොමැත' : 'No photos recorded'}</p>
                   </div>
                 )}
               </div>

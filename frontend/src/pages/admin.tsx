@@ -796,7 +796,7 @@ export default function Admin() {
                           <TableCell>
                             <div className="flex items-center gap-3">
                               <Avatar className="h-9 w-9 border border-primary/10">
-                                <AvatarImage src={user.profileImage} alt={user.fullName || user.username} className="object-cover" />
+                                <AvatarImage src={user.profileImage} alt={user.fullName || user.username} className="object-cover" referrerPolicy="no-referrer" />
                                 <AvatarFallback className="bg-primary/5 text-primary text-xs uppercase font-bold">
                                   {user.fullName ? user.fullName.charAt(0) : user.username.charAt(0)}
                                 </AvatarFallback>
@@ -1060,6 +1060,7 @@ export default function Admin() {
                                 src={contact.image}
                                 alt="Preview"
                                 className="w-full h-full object-cover"
+                                referrerPolicy="no-referrer"
                               />
                             </div>
                           )}
@@ -1971,7 +1972,7 @@ export default function Admin() {
             <div className="bg-primary p-8 text-white relative">
               <div className="flex items-center gap-6">
                 <Avatar className="w-20 h-20 border-4 border-white/20 shadow-xl">
-                  <AvatarImage src={viewUserDetails?.profileImage} />
+                  <AvatarImage src={viewUserDetails?.profileImage} referrerPolicy="no-referrer" />
                   <AvatarFallback className="bg-white/10 text-2xl font-bold uppercase">
                     {viewUserDetails?.fullName ? viewUserDetails.fullName.charAt(0) : (viewUserDetails?.username?.charAt(0) || "?")}
                   </AvatarFallback>
